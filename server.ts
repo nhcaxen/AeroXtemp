@@ -2291,13 +2291,116 @@ async function startServer() {
   app.listen(PORT, "0.0.0.0", async () => {
     console.log(`[BB Backend] Server running on port ${PORT}`);
     
-    // Database connection health check
+    // Database connection and auto-initialization check
     try {
-      console.log("[DB] Testing connection...");
-      const result = await db.execute(sql`SELECT NOW()`);
-      console.log("[DB] Connection successful. Server time:", result.rows[0]);
+      console.log("[DB INIT] Ensuring tables and unique constraints exist...");
+      
+      // 1. Create users table
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS "users" (
+          "id" SERIAL PRIMARY KEY,
+          "telegram_id" TEXT,
+          "username" TEXT,
+          "first_name" TEXT,
+          "role" TEXT DEFAULT 'free',
+          "plan" TEXT DEFAULT 'free',
+          "credits" INTEGER DEFAULT 20,
+          "joined_at" TEXT,
+          "last_active" TEXT,
+          "photo_url" TEXT,
+          "total_recoveries" INTEGER DEFAULT 0,
+          "referrer_id" TEXT,
+          "credit_reset_time" TEXT,
+          "plan_expiry" TEXT,
+          "created_at" TIMESTAMP DEFAULT NOW()
+        )
+      `);
+
+      // Ensure users has telegram_id as UNIQUE if it wasn't added
+      try {
+        await db.execute(sql`
+          ALTER TABLE "users" ADD CONSTRAINT "users_telegram_id_unique" UNIQUE ("telegram_id")
+        `);
+        console.log("[DB INIT] Added unique constraint to users.telegram_id");
+      } catch (e: any) {
+        // Ignored if constraint already exists
+        if (!e.message?.includes("already exists")) {
+          console.log("[DB INIT] Skip adding unique constraint on users.telegram_id:", e.message);
+        }
+      }
+
+      // 2. Create redeem_codes table
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS "redeem_codes" (
+          "id" SERIAL PRIMARY KEY,
+          "code" TEXT,
+          "credits" INTEGER DEFAULT 0,
+          "expires_at" TEXT,
+          "max_uses" INTEGER DEFAULT 1,
+          "used_count" INTEGER DEFAULT 0,
+          "created_at" TIMESTAMP DEFAULT NOW(),
+          "created_by" TEXT,
+          "plan" TEXT,
+          "role" TEXT,
+          "duration_days" INTEGER
+        )
+      `);
+
+      // Ensure redeem_codes has code as UNIQUE
+      try {
+        await db.execute(sql`
+          ALTER TABLE "redeem_codes" ADD CONSTRAINT "redeem_codes_code_unique" UNIQUE ("code")
+        `);
+        console.log("[DB INIT] Added unique constraint to redeem_codes.code");
+      } catch (e: any) {
+        if (!e.message?.includes("already exists")) {
+          console.log("[DB INIT] Skip adding unique constraint on redeem_codes.code:", e.message);
+        }
+      }
+
+      // 3. Create redemptions table
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS "redemptions" (
+          "id" SERIAL PRIMARY KEY,
+          "code" TEXT,
+          "telegram_id" TEXT,
+          "username" TEXT,
+          "redeemed_at" TIMESTAMP DEFAULT NOW()
+        )
+      `);
+
+      // 4. Create mailboxes table
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS "mailboxes" (
+          "id" SERIAL PRIMARY KEY,
+          "user_id" TEXT REFERENCES "users"("telegram_id"),
+          "provider" TEXT DEFAULT 'Mail.tm',
+          "email" TEXT,
+          "password" TEXT,
+          "access_token" TEXT,
+          "refresh_token" TEXT,
+          "created_at" TIMESTAMP DEFAULT NOW(),
+          "last_access" TIMESTAMP DEFAULT NOW(),
+          "last_refresh" TIMESTAMP DEFAULT NOW(),
+          "status" TEXT DEFAULT 'active'
+        )
+      `);
+
+      // Ensure mailboxes has email as UNIQUE
+      try {
+        await db.execute(sql`
+          ALTER TABLE "mailboxes" ADD CONSTRAINT "mailboxes_email_unique" UNIQUE ("email")
+        `);
+        console.log("[DB INIT] Added unique constraint to mailboxes.email");
+      } catch (e: any) {
+        if (!e.message?.includes("already exists")) {
+          console.log("[DB INIT] Skip adding unique constraint on mailboxes.email:", e.message);
+        }
+      }
+
+      console.log("[DB INIT] Database initialization completed successfully.");
     } catch (err) {
-      console.error("[DB] Connection test failed during startup:", err);
+      console.error("[DB INIT] Database auto-initialization failed:", err);
     }
   });
 }
