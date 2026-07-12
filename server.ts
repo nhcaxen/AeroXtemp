@@ -34,12 +34,80 @@ async function startServer() {
 
   app.use(express.json());
 
-  // Database connection check on startup
+  // Database connection check and automatic schema creation on startup
   try {
     await db.execute(sql`SELECT 1;`);
     console.log("[DB] Database connection verified successfully.");
+    
+    console.log("[DB] Running automatic database schema check & table creation...");
+    // 1. Create users table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        telegram_id TEXT UNIQUE,
+        username TEXT,
+        first_name TEXT,
+        role TEXT DEFAULT 'free',
+        plan TEXT DEFAULT 'free',
+        credits INTEGER DEFAULT 20,
+        joined_at TEXT,
+        last_active TEXT,
+        photo_url TEXT,
+        total_recoveries INTEGER DEFAULT 0,
+        referrer_id TEXT,
+        credit_reset_time TEXT,
+        plan_expiry TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    // 2. Create redeem_codes table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS redeem_codes (
+        id SERIAL PRIMARY KEY,
+        code TEXT UNIQUE,
+        credits INTEGER DEFAULT 0,
+        expires_at TEXT,
+        max_uses INTEGER DEFAULT 1,
+        used_count INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW(),
+        created_by TEXT,
+        plan TEXT,
+        role TEXT,
+        duration_days INTEGER
+      );
+    `);
+
+    // 3. Create redemptions table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS redemptions (
+        id SERIAL PRIMARY KEY,
+        code TEXT,
+        telegram_id TEXT,
+        username TEXT,
+        redeemed_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    // 4. Create mailboxes table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS mailboxes (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT REFERENCES users(telegram_id),
+        provider TEXT DEFAULT 'Mail.tm',
+        email TEXT UNIQUE,
+        password TEXT,
+        access_token TEXT,
+        refresh_token TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        last_access TIMESTAMP DEFAULT NOW(),
+        last_refresh TIMESTAMP DEFAULT NOW(),
+        status TEXT DEFAULT 'active'
+      );
+    `);
+    console.log("[DB] Automatic database schema check & table creation completed successfully.");
   } catch (err) {
-    console.warn("[DB WARNING] Database connection verification failed:", err);
+    console.warn("[DB WARNING] Database connection or table creation failed:", err);
   }
 
   // --- Helper to compute IP Trust & Fraud Risk Score ---
@@ -1202,7 +1270,7 @@ async function startServer() {
           firstName: displayName || "AeroX Guest",
           role: isOwner ? "owner" : "free",
           plan: isOwner ? "owner" : "free",
-          credits: typeof credits === "number" ? credits : 1250,
+          credits: typeof credits === "number" ? credits : 20,
           joinedAt: formattedDate,
           lastActive: formattedLastActive
         }).returning();

@@ -7,7 +7,7 @@ export const users = pgTable("users", {
   firstName: text("first_name"),
   role: text("role").default("free"), // "owner" | "premium" | "free"
   plan: text("plan").default("free"), // "owner" | "premium" | "free"
-  credits: integer("credits").default(1250),
+  credits: integer("credits").default(20),
   joinedAt: text("joined_at"), // Format: "11 Jul 2026"
   lastActive: text("last_active"), // Format: "11 Jul 2026 05:48:42" or similar
   photoUrl: text("photo_url"),
