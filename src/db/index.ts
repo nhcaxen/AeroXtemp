@@ -14,6 +14,9 @@ export const createPool = () => {
     return new Pool({
       connectionString,
       connectionTimeoutMillis: 15000,
+      ssl: connectionString.includes("localhost") || connectionString.includes("127.0.0.1") 
+        ? false 
+        : { rejectUnauthorized: false }
     });
   }
 

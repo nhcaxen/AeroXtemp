@@ -1891,10 +1891,14 @@ async function startServer() {
 
   // 0. Charge point for generating mailbox (costs 1 credit for FREE plan)
   app.post("/api/mailboxes/generate", async (req, res) => {
-    const { telegramId } = req.body;
-    if (!telegramId) {
+    const { telegramId: rawTelegramId } = req.body;
+    if (!rawTelegramId) {
       return res.status(400).json({ error: "telegramId is required" });
     }
+    
+    const telegramId = String(rawTelegramId).trim();
+    console.log(`[MAILBOX GEN] Attempting to charge user: "${telegramId}"`);
+
     try {
       const [user] = await db.select().from(users).where(eq(users.telegramId, telegramId)).limit(1);
       if (!user) {
@@ -1917,7 +1921,16 @@ async function startServer() {
       return res.json({ success: true, credits: updatedCredits });
     } catch (err: any) {
       console.error("[RECOVERY ERROR] Generate mailbox charge:", err);
-      return res.status(500).json({ error: "Failed to authorize mailbox generation." });
+      // Detailed logging for debugging
+      if (err.code) console.error("Error Code:", err.code);
+      if (err.detail) console.error("Error Detail:", err.detail);
+      if (err.hint) console.error("Error Hint:", err.hint);
+      if (err.message) console.error("Error Message:", err.message);
+      
+      return res.status(500).json({ 
+        error: "Failed to authorize mailbox generation.",
+        details: process.env.NODE_ENV !== "production" ? err.message : undefined
+      });
     }
   });
 
@@ -2275,8 +2288,17 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  app.listen(PORT, "0.0.0.0", async () => {
     console.log(`[BB Backend] Server running on port ${PORT}`);
+    
+    // Database connection health check
+    try {
+      console.log("[DB] Testing connection...");
+      const result = await db.execute(sql`SELECT NOW()`);
+      console.log("[DB] Connection successful. Server time:", result.rows[0]);
+    } catch (err) {
+      console.error("[DB] Connection test failed during startup:", err);
+    }
   });
 }
 
