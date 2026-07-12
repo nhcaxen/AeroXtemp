@@ -323,29 +323,37 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
     <div className="flex flex-col gap-5 px-4 pt-4 pb-8 select-none">
       {/* AeroX Brand Logo Card */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5 select-none">
-          <div className="relative w-11 h-11 flex items-center justify-center rounded-xl bg-gradient-to-tr from-cyber-purple to-indigo-600 border border-white/[0.08] shadow-[0_4px_12px_rgba(124,58,237,0.35)] shrink-0">
-            {/* Elegant purple organic leaf on top of the logo matching the uploaded reference image */}
-            <div className="absolute -top-2.5 -right-1 w-6 h-5 pointer-events-none drop-shadow-[0_2px_5px_rgba(168,85,247,0.6)]">
-              <svg viewBox="0 0 24 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-purple-400 fill-current">
-                <path d="M2 18C10 18 16 14 22 2C17 8 10 10 2 10C2 10 6 13 2 18Z" stroke="#d8b4fe" strokeWidth="1" />
-                <path d="M2 18C8 14 14 10 22 2" stroke="#f3e8ff" strokeWidth="0.8" strokeDasharray="1 1" />
+        <div className="flex items-center gap-2.5 select-none animate-fade-in">
+          <div className="relative w-11 h-11 flex items-center justify-center rounded-xl bg-gradient-to-tr from-[#3B82F6] via-[#4338CA] to-[#7C3AED] border border-[#38BDF8]/35 shadow-[0_0_15px_rgba(56,189,248,0.45)] shrink-0 transition-all duration-300 hover:scale-105 active:scale-95">
+            {/* Ambient neon radial backlighting */}
+            <div className="absolute inset-0 bg-[#38BDF8]/25 rounded-xl blur-[6px] opacity-70 pointer-events-none" />
+            
+            {/* Elegant premium cyan/purple organic leaf with glow matching the luxury cyber neon style */}
+            <div className="absolute -top-2.5 -right-1 w-6 h-5 pointer-events-none drop-shadow-[0_2px_8px_rgba(56,189,248,0.7)]">
+              <svg viewBox="0 0 24 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#38BDF8] fill-current">
+                <path d="M2 18C10 18 16 14 22 2C17 8 10 10 2 10C2 10 6 13 2 18Z" stroke="#38bdf8" strokeWidth="1" />
+                <path d="M2 18C8 14 14 10 22 2" stroke="#e0f2fe" strokeWidth="0.8" strokeDasharray="1 1" />
               </svg>
             </div>
-            {/* Italic dynamic lettering styled like the reference */}
-            <span className="text-white font-black text-base font-display italic tracking-tight leading-none">
-              Aero<span className="text-purple-300">X</span>
+            
+            {/* Italic dynamic lettering styled like reference with premium cyan glow */}
+            <span className="text-white font-black text-base font-display italic tracking-tight leading-none z-10 select-none">
+              Aero<span className="text-[#38BDF8] drop-shadow-[0_0_8px_rgba(56,189,248,0.85)] font-black">X</span>
             </span>
           </div>
           <div>
-            <span className="text-sm font-extrabold tracking-wide text-white block uppercase">AeroX CHANNELS</span>
-            <span className="text-[9px] text-neutral-400 font-medium tracking-widest uppercase">MINI PLATFORM</span>
+            <span className="text-sm font-extrabold tracking-wide text-white block uppercase">
+              Aero<span className="text-[#38BDF8]">X</span> CHANNELS
+            </span>
+            <span className="text-[9px] text-neutral-400 font-medium tracking-widest uppercase block mt-0.5">
+              MINI PLATFORM
+            </span>
           </div>
         </div>
 
         {/* Clean right side with developer suit removed */}
-        <div className="flex items-center gap-1.5 text-[9px] text-purple-400 font-bold bg-purple-500/10 px-2.5 py-1 rounded-full border border-purple-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+        <div className="flex items-center gap-1.5 text-[9px] text-[#38BDF8] font-bold bg-[#3b82f6]/10 px-2.5 py-1 rounded-full border border-[#3b82f6]/25 shadow-[0_0_10px_rgba(56,189,248,0.15)]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8] animate-pulse shadow-[0_0_6px_#38BDF8]" />
           <span>LIVE CORE</span>
         </div>
       </div>

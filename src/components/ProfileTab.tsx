@@ -37,7 +37,11 @@ interface ServerUserProfile {
   trialDaysRemaining?: number;
 }
 
-export default function ProfileTab() {
+interface ProfileTabProps {
+  onTabChange?: (tab: any) => void;
+}
+
+export default function ProfileTab({ onTabChange }: ProfileTabProps) {
   const [telegramId, setTelegramId] = useState("5834920194");
   const [username, setUsername] = useState("AeroX_Developer");
   const [displayName, setDisplayName] = useState("AeroX VIP Member");
@@ -49,6 +53,7 @@ export default function ProfileTab() {
 
   // Subscription & Upgrade states
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [isTelemetryModalOpen, setIsTelemetryModalOpen] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
 
@@ -272,20 +277,20 @@ export default function ProfileTab() {
   const OWNER_TELEGRAM_USERNAME = "Adityahuvai";
 
   const getPlanDescription = (planName: string) => {
-    if (planName === "core") return { credits: "250 CRD Daily", price: "$2.99", duration: "7 Days" };
-    if (planName === "prime") return { credits: "500 CRD Daily", price: "$5.99", duration: "14 Days" };
-    if (planName === "elite") return { credits: "750 CRD Daily", price: "$9.99", duration: "30 Days" };
-    return { credits: "20 CRD Daily", price: "$0.00", duration: "7 Days" };
+    if (planName === "core") return { credits: "300 CRD Total Pool", price: "$1.99", duration: "7 Days" };
+    if (planName === "prime") return { credits: "600 CRD Total Pool", price: "$3.99", duration: "14 Days" };
+    if (planName === "elite") return { credits: "1200 CRD Total Pool", price: "$7.99", duration: "30 Days" };
+    return { credits: "20 CRD Daily Limit", price: "$0.00", duration: "7 Days" };
   };
 
   const plans = [
     {
       id: "core",
       name: "Core Plan",
-      credits: "250 CRD Daily Reset",
-      price: "$2.99",
+      credits: "300 CRD Total Pool",
+      price: "$1.99",
       duration: "7 Days",
-      features: ["250 Credits Daily", "Temporary Mailbox Generation", "VIP Priority Recovery", "Premium Badge Indicator"],
+      features: ["300 Credits Total Pool", "Temporary Mailbox Generation", "VIP Priority Recovery", "Premium Badge Indicator"],
       color: "from-blue-600/20 to-cyan-500/10",
       borderColor: "border-cyan-500/20",
       accentColor: "text-cyan-400"
@@ -293,10 +298,10 @@ export default function ProfileTab() {
     {
       id: "prime",
       name: "Prime Plan",
-      credits: "500 CRD Daily Reset",
-      price: "$5.99",
+      credits: "600 CRD Total Pool",
+      price: "$3.99",
       duration: "14 Days",
-      features: ["500 Credits Daily", "Priority High-Speed Mailbox", "Unlimited Thread Processing", "Premium Badge Indicator"],
+      features: ["600 Credits Total Pool", "Priority High-Speed Mailbox", "Unlimited Thread Processing", "Premium Badge Indicator"],
       color: "from-purple-600/20 to-pink-500/10",
       borderColor: "border-purple-500/30",
       accentColor: "text-purple-400",
@@ -305,10 +310,10 @@ export default function ProfileTab() {
     {
       id: "elite",
       name: "Elite Plan",
-      credits: "750 CRD Daily Reset",
-      price: "$9.99",
+      credits: "1200 CRD Total Pool",
+      price: "$7.99",
       duration: "30 Days",
-      features: ["750 Credits Daily", "Ultimate Concurrent Spawning", "VIP Support & Free Recovery", "Premium Badge Indicator"],
+      features: ["1200 Credits Total Pool", "Ultimate Concurrent Spawning", "VIP Support & Free Recovery", "Premium Badge Indicator"],
       color: "from-amber-600/20 to-orange-500/10",
       borderColor: "border-amber-500/20",
       accentColor: "text-amber-400"
@@ -426,25 +431,27 @@ export default function ProfileTab() {
 
             <div>
               <span className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Credits Balance</span>
-              <span className="text-xs font-mono font-black text-pink-400 block">
+              <span className="text-xs font-mono font-bold text-pink-400 block">
                 {userProfile?.plan === "owner" 
                   ? "∞ UNLIMITED" 
                   : userProfile?.plan === "free"
                     ? `${userProfile?.credits ?? 0} / 20 CRD`
                     : userProfile?.plan === "core"
-                      ? `${userProfile?.credits ?? 0} / 250 CRD`
+                      ? `${userProfile?.credits ?? 0} / 300 CRD`
                       : userProfile?.plan === "prime"
-                        ? `${userProfile?.credits ?? 0} / 500 CRD`
-                        : `${userProfile?.credits ?? 0} / 750 CRD`}
+                        ? `${userProfile?.credits ?? 0} / 600 CRD`
+                        : `${userProfile?.credits ?? 0} / 1200 CRD`}
               </span>
             </div>
             
             <div>
               <span className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Daily Reset Countdown</span>
-              <span className="text-xs font-mono font-bold text-white block">
+              <span className="text-xs font-mono font-semibold text-white block">
                 {userProfile?.plan === "owner" 
                   ? "No Reset Required" 
-                  : userProfile?.resetTimer ? `${userProfile.resetTimer} Left` : "Resets soon"}
+                  : ["core", "prime", "elite"].includes(userProfile?.plan || "")
+                    ? "Paid Plan (No Reset)"
+                    : userProfile?.resetTimer ? `${userProfile.resetTimer} Left` : "Resets soon"}
               </span>
             </div>
 
@@ -467,26 +474,22 @@ export default function ProfileTab() {
             </div>
           </div>
 
-          {/* Upgrade Access Call to Action Button */}
-          {userProfile?.plan !== "owner" && (
-            <div className="pt-2">
-              <button
-                id="trigger-upgrade-modal-btn"
-                onClick={() => setIsUpgradeModalOpen(true)}
-                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyber-purple to-pink-500 hover:opacity-95 active:scale-[0.98] transition-all text-xs font-black uppercase tracking-wider text-white shadow-lg cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                {userProfile?.plan === "free" ? (
-                  <>
-                    <span>⭐ Upgrade to AeroX Premium</span>
-                  </>
-                ) : (
-                  <>
-                    <span>⚡ Manage Subscription Plans</span>
-                  </>
-                )}
-              </button>
-            </div>
-          )}
+          {/* Navigation Control Buttons */}
+          <div className="pt-2 flex flex-col gap-2">
+            <button
+              id="trigger-upgrade-modal-btn"
+              onClick={() => setIsUpgradeModalOpen(true)}
+              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyber-purple to-pink-500 hover:opacity-95 active:scale-[0.98] transition-all text-xs font-semibold uppercase tracking-wider text-white shadow-lg cursor-pointer flex items-center justify-center gap-1.5 font-display"
+            >
+              {userProfile?.plan === "owner" ? (
+                <span>👑 AeroX Premium Subscriptions</span>
+              ) : userProfile?.plan === "free" ? (
+                <span>⭐ Upgrade to AeroX Premium</span>
+              ) : (
+                <span>⚡ Manage Subscription Plans</span>
+              )}
+            </button>
+          </div>
 
           {/* Redeem Code Section - only visible for non-owners */}
           {userProfile?.plan !== "owner" && (
@@ -553,68 +556,68 @@ export default function ProfileTab() {
       {/* ═════════════════════════════════════════════════════════════
           INTEGRATED ENGINE SYSTEM TELEMETRY (Dual metrics grid)
           ═════════════════════════════════════════════════════════════ */}
-      <div id="telemetry-console-section" className="flex flex-col gap-2 text-left">
-        <div className="flex items-center gap-1.5 px-1 justify-between">
+      <div id="telemetry-console-section" className="flex flex-col gap-2.5 text-left animate-fade-in mt-2">
+        <div className="flex items-center gap-1.5 px-1 justify-between select-none">
           <div className="flex items-center gap-1.5">
             <TrendingUp className="w-4 h-4 text-cyber-purple" />
-            <h2 className="text-[10px] font-extrabold tracking-widest uppercase text-neutral-400">
+            <h2 className="text-[10px] font-extrabold tracking-widest uppercase text-neutral-400 font-display">
               AEROX ENGINE SYSTEM TELEMETRY
             </h2>
           </div>
           <span className="text-[8px] bg-cyber-purple/20 text-cyber-purple border border-cyber-purple/30 px-1.5 py-0.5 rounded font-black tracking-wide uppercase">LIVE FEED</span>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          {/* USER stats - Active Mailboxes */}
-          <div className="p-3 rounded-xl bg-dark-surface border border-white/[0.03] flex flex-col gap-1.5">
-            <span className="text-[8px] text-neutral-400 font-extrabold uppercase tracking-widest block">Your Mailboxes</span>
+        <div className="grid grid-cols-2 gap-3 text-left">
+          {/* YOUR MAILBOXES */}
+          <div className="p-3.5 rounded-xl bg-dark-surface border border-white/[0.05] flex flex-col gap-1.5">
+            <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-wider block">YOUR MAILBOXES</span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[18px] font-black font-mono text-white leading-none">
+              <span className="text-2xl font-bold font-display text-white leading-none">
                 {userProfile?.activeMailboxes ?? 0}
               </span>
-              <span className="text-[8px] text-green-400 font-black uppercase">Active</span>
+              <span className="text-[8px] text-green-400 font-black uppercase tracking-wider">ACTIVE</span>
             </div>
           </div>
 
-          {/* USER stats - Total Recoveries */}
-          <div className="p-3 rounded-xl bg-dark-surface border border-white/[0.03] flex flex-col gap-1.5">
-            <span className="text-[8px] text-neutral-400 font-extrabold uppercase tracking-widest block">Your Recoveries</span>
+          {/* YOUR RECOVERIES */}
+          <div className="p-3.5 rounded-xl bg-dark-surface border border-white/[0.05] flex flex-col gap-1.5">
+            <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-wider block">YOUR RECOVERIES</span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[18px] font-black font-mono text-pink-400 leading-none">
+              <span className="text-2xl font-bold font-display text-pink-500 leading-none">
                 {userProfile?.totalRecoveries ?? 0}
               </span>
-              <span className="text-[8px] text-neutral-500 font-semibold uppercase">Logs</span>
+              <span className="text-[8px] text-neutral-500 font-semibold uppercase tracking-wider">LOGS</span>
             </div>
           </div>
 
-          {/* Global Cards Generated */}
-          <div className="p-3 rounded-xl bg-dark-surface border border-white/[0.03] flex flex-col gap-1.5">
-            <span className="text-[8px] text-neutral-400 font-extrabold uppercase tracking-widest block">Global Cards Gen</span>
-            <span className="text-[18px] font-black font-mono text-white leading-none">
+          {/* GLOBAL CARDS GEN */}
+          <div className="p-3.5 rounded-xl bg-dark-surface border border-white/[0.05] flex flex-col gap-1.5">
+            <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-wider block">GLOBAL CARDS GEN</span>
+            <span className="text-2xl font-bold font-display text-white leading-none">
               {analytics.cardsGenerated}
             </span>
           </div>
 
-          {/* Global Mail Refreshes */}
-          <div className="p-3 rounded-xl bg-dark-surface border border-white/[0.03] flex flex-col gap-1.5">
-            <span className="text-[8px] text-neutral-400 font-extrabold uppercase tracking-widest block">Global Mail Refreshes</span>
-            <span className="text-[18px] font-black font-mono text-white leading-none">
+          {/* GLOBAL MAIL REFRESHES */}
+          <div className="p-3.5 rounded-xl bg-dark-surface border border-white/[0.05] flex flex-col gap-1.5">
+            <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-wider block">GLOBAL MAIL REFRESHES</span>
+            <span className="text-2xl font-bold font-display text-white leading-none">
               {analytics.emailsChecked}
             </span>
           </div>
 
-          {/* Global Fake Profiles */}
-          <div className="p-3 rounded-xl bg-dark-surface border border-white/[0.03] flex flex-col gap-1.5 col-span-1">
-            <span className="text-[8px] text-neutral-400 font-extrabold uppercase tracking-widest block">Global Profile Gens</span>
-            <span className="text-[18px] font-black font-mono text-white leading-none">
+          {/* GLOBAL PROFILE GENS */}
+          <div className="p-3.5 rounded-xl bg-dark-surface border border-white/[0.05] flex flex-col gap-1.5 col-span-1">
+            <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-wider block">GLOBAL PROFILE GENS</span>
+            <span className="text-2xl font-bold font-display text-white leading-none">
               {analytics.identitiesGenerated}
             </span>
           </div>
 
-          {/* Global Proxies Checked */}
-          <div className="p-3 rounded-xl bg-dark-surface border border-white/[0.03] flex flex-col gap-1.5 col-span-1">
-            <span className="text-[8px] text-neutral-400 font-extrabold uppercase tracking-widest block">Global Proxies verified</span>
-            <span className="text-[18px] font-black font-mono text-white leading-none">
+          {/* GLOBAL PROXIES VERIFIED */}
+          <div className="p-3.5 rounded-xl bg-dark-surface border border-white/[0.05] flex flex-col gap-1.5 col-span-1">
+            <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-wider block">GLOBAL PROXIES VERIFIED</span>
+            <span className="text-2xl font-bold font-display text-white leading-none">
               {analytics.proxiesChecked}
             </span>
           </div>
@@ -623,11 +626,10 @@ export default function ProfileTab() {
 
       {/* Compact Elegant Footer Guidelines (Eliminated the large bulky banner) */}
       <div className="py-2 px-1 select-none text-center">
-        <p className="text-[8.5px] text-neutral-500 tracking-wide leading-relaxed">
+        <p className="text-[8.5px] text-neutral-500 tracking-wide leading-relaxed font-medium">
           ⚡ AeroX Toolset resides securely offline-first. Telemetry & member session logs are held under memory. Zero fee cloud infrastructure.
         </p>
       </div>
-
       {/* ═════════════════════════════════════════════════════════════
           ULTRA-PREMIUM MEMBERSHIP PLANS BUY MODAL (Owner @Adityahuvai)
           ═════════════════════════════════════════════════════════════ */}

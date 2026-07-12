@@ -88,7 +88,7 @@ export default function App() {
       case "addressgen":
         return <AddressGenTab />;
       case "profile":
-        return <ProfileTab />;
+        return <ProfileTab onTabChange={setActiveTab} />;
       case "admin":
         if (userProfile?.role === "owner") {
           return <AdminTab adminTelegramId={userProfile.telegramId} />;

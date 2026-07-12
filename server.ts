@@ -1100,21 +1100,12 @@ async function startServer() {
           }
         }
 
-        // Handle daily credit reset for all plans
-        const planLimits: Record<string, number> = {
-          free: 20,
-          core: 250,
-          prime: 500,
-          elite: 750,
-          owner: 999999
-        };
-        const maxCredits = planLimits[currentPlan] || 20;
-
-        if (currentPlan !== "owner" && userRecord.creditResetTime !== todayStr) {
-          currentCredits = maxCredits;
+        // Handle daily credit reset for "free" plan only
+        if (currentPlan === "free" && userRecord.creditResetTime !== todayStr) {
+          currentCredits = 20;
           userRecord.creditResetTime = todayStr;
           await db.update(users).set({
-            credits: maxCredits,
+            credits: 20,
             creditResetTime: todayStr
           }).where(eq(users.telegramId, telegramId));
         }
@@ -1295,12 +1286,12 @@ async function startServer() {
         planExpiryVal = expiryDate.toISOString().split("T")[0];
       }
 
-      // Reset credits according to plan
+      // Reset credits according to plan (total credit pool)
       const planLimits: Record<string, number> = {
         free: 20,
-        core: 250,
-        prime: 500,
-        elite: 750,
+        core: 300,
+        prime: 600,
+        elite: 1200,
         owner: 999999
       };
       const initialCredits = planLimits[plan] || 20;

@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, CreditCard, Mail, UserCheck, User, Shield } from "lucide-react";
+import { Home, CreditCard, Mail, UserCheck, User, Shield, Sparkles } from "lucide-react";
 import { TabId } from "../types";
 
 interface NavbarProps {
