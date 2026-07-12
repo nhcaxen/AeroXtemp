@@ -29,6 +29,10 @@ interface ServerUserProfile {
   totalMailboxesCreated?: number;
   activeMailboxes?: number;
   deletedMailboxes?: number;
+  referralsCount?: number;
+  resetTimer?: string;
+  planExpiry?: string | null;
+  trialDaysRemaining?: number;
 }
 
 export default function ProfileTab() {
@@ -182,78 +186,6 @@ export default function ProfileTab() {
     }
   };
 
-  // Estimate Account Age & Registration Year from sequential Telegram ID
-  const calculateAccountAge = (idStr: string) => {
-    const id = parseInt(idStr) || 5800000000;
-    
-    // Sequence metrics mapping IDs to historical registration dates
-    let year = 2024;
-    let month = "October";
-    let estimatedAge = "New Account";
-
-    if (id < 1000000) {
-      year = 2013;
-      month = "August (Very Early OG)";
-      estimatedAge = "12.9 Years (Telegram Founding Member)";
-    } else if (id < 10000000) {
-      year = 2014;
-      month = "March";
-      estimatedAge = "12.3 Years (Elite Legend)";
-    } else if (id < 50000000) {
-      year = 2015;
-      month = "January";
-      estimatedAge = "11.5 Years (OG OG)";
-    } else if (id < 150000000) {
-      year = 2016;
-      month = "July";
-      estimatedAge = "10.0 Years (Elder Telegram Vet)";
-    } else if (id < 350000000) {
-      year = 2017;
-      month = "February";
-      estimatedAge = "9.4 Years (Vintage Pioneer)";
-    } else if (id < 600000000) {
-      year = 2018;
-      month = "May";
-      estimatedAge = "8.2 Years (Seasoned Pro)";
-    } else if (id < 950000000) {
-      year = 2019;
-      month = "November";
-      estimatedAge = "6.7 Years (Pre-Pandemic Resident)";
-    } else if (id < 1400000000) {
-      year = 2020;
-      month = "September";
-      estimatedAge = "5.8 Years (Pandemic Era Join)";
-    } else if (id < 2100000000) {
-      year = 2021;
-      month = "July";
-      estimatedAge = "5.0 Years (Global Vet)";
-    } else if (id < 4000000000) {
-      year = 2022;
-      month = "December";
-      estimatedAge = "3.6 Years (Active Member)";
-    } else if (id < 6000000000) {
-      year = 2023;
-      month = "August";
-      estimatedAge = "2.9 Years (Regular User)";
-    } else if (id < 8000000000) {
-      year = 2024;
-      month = "May";
-      estimatedAge = "2.1 Years (Recent Joined)";
-    } else if (id < 9500000000) {
-      year = 2025;
-      month = "January";
-      estimatedAge = "1.5 Years (Modern Recruit)";
-    } else {
-      year = 2026;
-      month = "March";
-      estimatedAge = "0.3 Years (Fresh Account)";
-    }
-
-    return { year, month, estimatedAge };
-  };
-
-  const ageDetails = calculateAccountAge(telegramId);
-
   const getRoleDetails = () => {
     const role = userProfile?.role || userProfile?.plan || "free";
     if (role === "owner") {
@@ -361,39 +293,70 @@ export default function ProfileTab() {
           </div>
 
           {/* Profile Info block */}
-          <div className="mt-4 pt-4 border-t border-white/[0.05] flex flex-col gap-4">
+          <div className="mt-4 pt-4 border-t border-white/[0.05] grid grid-cols-2 gap-x-4 gap-y-4">
             <div>
               <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1">Role</span>
-              <span className="text-sm font-black text-white flex items-center gap-1.5">
+              <span className={`px-2 py-0.5 rounded text-[10px] font-black tracking-widest uppercase border inline-flex items-center gap-1 ${roleDetails.colorClass}`}>
                 {roleDetails.badge}
               </span>
             </div>
             
             <div>
-              <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1">Credits</span>
-              <span className="text-sm font-mono font-black text-pink-400">
-                {userProfile?.credits ?? 1250}
+              <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1">Plan type</span>
+              <span className="text-xs font-extrabold text-white uppercase tracking-wide block">
+                {userProfile?.plan === "owner" 
+                  ? "👑 Lifetime Owner" 
+                  : userProfile?.plan === "premium" 
+                    ? "⭐ Premium Access" 
+                    : "🟢 7-Day Free Trial"}
+              </span>
+            </div>
+
+            <div>
+              <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1">Credits Balance</span>
+              <span className="text-xs font-mono font-black text-pink-400 block">
+                {userProfile?.plan === "owner" || userProfile?.plan === "premium" ? "∞ (UNLIMITED)" : `${userProfile?.credits ?? 0} CRD`}
               </span>
             </div>
             
             <div>
-              <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1">Joined</span>
-              <span className="text-sm font-extrabold text-white">
+              <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1">Reset Timer</span>
+              <span className="text-xs font-mono font-bold text-white block">
+                {userProfile?.plan === "owner" || userProfile?.plan === "premium" 
+                  ? "∞ No Reset" 
+                  : userProfile?.resetTimer || "Resets soon"}
+              </span>
+            </div>
+
+            <div>
+              <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1">Plan Expiry</span>
+              <span className="text-xs font-mono font-bold text-white block">
+                {userProfile?.plan === "owner" 
+                  ? "Never" 
+                  : userProfile?.plan === "premium" 
+                    ? (userProfile?.planExpiry || "Never") 
+                    : `${userProfile?.trialDaysRemaining ?? 7} Days Left`}
+              </span>
+            </div>
+
+            <div>
+              <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1">Joined Date</span>
+              <span className="text-xs font-extrabold text-white block">
                 {userProfile?.joined ?? "11 Jul 2026"}
               </span>
             </div>
             
             <div>
               <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1">Recovered Mailboxes</span>
-              <span className="text-sm font-mono font-black text-white">
-                {userProfile?.activeMailboxes ?? 0}
+              <span className="text-xs font-mono font-black text-white block">
+                {userProfile?.activeMailboxes ?? 0} active
               </span>
             </div>
 
             <div>
               <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1">Referrals</span>
-              <span className="text-sm font-mono font-black text-white">
-                {userProfile?.referralsCount ?? 0}
+              <span className="text-xs font-mono font-black text-white block">
+                {userProfile?.referralsCount ?? 0} members
               </span>
             </div>
           </div>
@@ -451,32 +414,6 @@ export default function ProfileTab() {
             <p className="text-[8px] text-neutral-500 leading-normal">
               Earn +1 point instantly for every friend you refer. Point payouts are synchronized between bot and web!
             </p>
-          </div>
-
-          {/* Simulated Account Age details block */}
-          <div className="mt-2.5 p-3.5 rounded-xl bg-void-black border border-white/[0.03] flex flex-col gap-2.5">
-            <div className="flex items-center gap-1.5 border-b border-white/[0.04] pb-1.5">
-              <Cpu className="w-3.5 h-3.5 text-cyber-purple" />
-              <span className="text-[9px] text-neutral-400 font-extrabold uppercase tracking-widest">
-                Telegram Account Age Analyzer
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <span className="text-[8px] text-neutral-500 font-bold uppercase block">Estimated Join Date</span>
-                <span className="text-xs font-extrabold text-frost-white flex items-center gap-1 mt-0.5">
-                  <Calendar className="w-3 h-3 text-pink-500" />
-                  <span>{ageDetails.month}, {ageDetails.year}</span>
-                </span>
-              </div>
-              <div>
-                <span className="text-[8px] text-neutral-500 font-bold uppercase block">Calculated Age</span>
-                <span className="text-xs font-black text-emerald-400 mt-0.5 block truncate">
-                  ~ {ageDetails.estimatedAge}
-                </span>
-              </div>
-            </div>
           </div>
         </div>
       </div>

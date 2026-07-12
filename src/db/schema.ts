@@ -13,6 +13,8 @@ export const users = pgTable("users", {
   photoUrl: text("photo_url"),
   totalRecoveries: integer("total_recoveries").default(0),
   referrerId: text("referrer_id"),
+  creditResetTime: text("credit_reset_time"), // Format: YYYY-MM-DD or timestamp
+  planExpiry: text("plan_expiry"), // Format: YYYY-MM-DD or timestamp
   createdAt: timestamp("created_at").defaultNow(),
 });
 

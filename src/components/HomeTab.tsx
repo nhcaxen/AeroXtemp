@@ -90,7 +90,7 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
     {
       title: "Real Temporary Mail Client",
       subtitle: "100% Free OTP Receiver",
-      desc: "Receive real validation emails and OTPs using high-speed 1SecMail API.",
+      desc: "Receive real validation emails and OTPs using high-speed AEROX Mail Engine.",
       actionText: "Open Mailbox",
       actionTab: "tempmail" as TabId,
       color: "from-pink-600 to-purple-800",

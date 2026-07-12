@@ -281,6 +281,52 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
     }
   };
 
+  const handleDisableCode = async (codeId: number) => {
+    try {
+      const res = await fetch("/api/admin/redeem/disable", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-id": adminTelegramId
+        },
+        body: JSON.stringify({ codeId })
+      });
+      if (res.ok) {
+        triggerSuccess("Redeem code disabled successfully.");
+        fetchRedeemCodes();
+      } else {
+        const errData = await res.json();
+        triggerError(errData.error || "Failed to disable code");
+      }
+    } catch (err) {
+      console.error(err);
+      triggerError("Network error disabling code");
+    }
+  };
+
+  const handleDeleteCode = async (codeId: number) => {
+    try {
+      const res = await fetch("/api/admin/redeem/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-id": adminTelegramId
+        },
+        body: JSON.stringify({ codeId })
+      });
+      if (res.ok) {
+        triggerSuccess("Redeem code deleted successfully.");
+        fetchRedeemCodes();
+      } else {
+        const errData = await res.json();
+        triggerError(errData.error || "Failed to delete code");
+      }
+    } catch (err) {
+      console.error(err);
+      triggerError("Network error deleting code");
+    }
+  };
+
   const getRoleBadgeClass = (role: string) => {
     if (role === "owner") {
       return "bg-red-500/15 border-red-500/30 text-red-400 font-extrabold";
@@ -586,11 +632,24 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
                       {code.expiresAt && ` • Exp: ${code.expiresAt}`}
                     </span>
                   </div>
-                  {code.usedCount >= code.maxUses ? (
-                    <span className="px-1.5 py-0.5 rounded text-[7px] font-bold bg-neutral-800 text-neutral-500 uppercase">Used Up</span>
-                  ) : (
-                    <span className="px-1.5 py-0.5 rounded text-[7px] font-black bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 uppercase">Active</span>
-                  )}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {code.usedCount >= code.maxUses ? (
+                      <span className="px-1.5 py-0.5 rounded text-[7px] font-bold bg-neutral-800 text-neutral-500 uppercase">Disabled</span>
+                    ) : (
+                      <button
+                        onClick={() => handleDisableCode(code.id)}
+                        className="px-1.5 py-0.5 rounded text-[7px] font-black bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400 uppercase cursor-pointer transition-all"
+                      >
+                        Disable
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteCode(code.id)}
+                      className="px-1.5 py-0.5 rounded text-[7px] font-black bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 uppercase cursor-pointer transition-all"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

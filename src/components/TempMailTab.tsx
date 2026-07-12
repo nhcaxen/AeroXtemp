@@ -592,7 +592,7 @@ export default function TempMailTab() {
           </h2>
         </div>
         <p className="text-[10px] text-neutral-400 font-medium leading-relaxed">
-          Powered by Mail.tm secure temporary email engine. Automatically updates every 5 seconds to show incoming OTPs, verification links, and messages instantly.
+          Powered by AEROX Secure Mail Engine. Automatically updates every 5 seconds to show incoming OTPs, verification links, and messages instantly.
         </p>
       </div>
 
@@ -666,7 +666,7 @@ export default function TempMailTab() {
               {loadingAddress ? (
                 <div className="h-6 flex items-center gap-1.5">
                   <div className="w-3.5 h-3.5 border-2 border-pink-500/20 border-t-pink-500 rounded-full animate-spin" />
-                  <span className="text-xs font-semibold text-neutral-500 italic">Provisioning Mail.tm mailbox...</span>
+                  <span className="text-xs font-semibold text-neutral-500 italic">Provisioning AEROX Secure Mailbox...</span>
                 </div>
               ) : (
                 <span className="text-xs font-bold font-mono text-white select-all break-all pr-2">
@@ -1123,7 +1123,7 @@ export default function TempMailTab() {
                         <div className="min-w-0 flex-1 pr-2">
                           <span className="text-xs font-mono font-bold text-white block break-all select-all">{box.email}</span>
                           <span className="text-[9px] text-neutral-400 font-bold block mt-0.5 uppercase tracking-wide">
-                            Provider: {box.provider}
+                            Provider: {box.provider === "Mail.tm" || box.provider === "1SecMail" ? "AEROX Secure Mail Engine" : box.provider}
                           </span>
                         </div>
                         <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase border ${
@@ -1191,7 +1191,7 @@ export default function TempMailTab() {
       {/* Footer support prompt */}
       <div className="flex items-center gap-1.5 bg-void-black/40 p-3 rounded-xl border border-white/[0.02] mt-1 text-[9px] text-neutral-500 justify-center">
         <AlertCircle className="w-3.5 h-3.5 text-neutral-600" />
-        <span>Mail.tm temporary inbox holds contents for secure, premium disposable testing.</span>
+        <span>AEROX temporary inbox holds contents for secure, premium disposable testing.</span>
       </div>
     </div>
   );

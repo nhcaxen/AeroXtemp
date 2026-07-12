@@ -27,6 +27,9 @@ export default function TelegramFrame({ children, activeTab, onTabChange }: Tele
   const [volume, setVolume] = useState(0.4);
   const [isLooping, setIsLooping] = useState(false);
   const [playerOpen, setPlayerOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [loadingAudio, setLoadingAudio] = useState(false);
   const [audio] = useState(() => {
     const aud = new Audio();
     aud.loop = false;
@@ -80,6 +83,38 @@ export default function TelegramFrame({ children, activeTab, onTabChange }: Tele
     };
   }, []);
 
+  // Hook up audio player event listeners for progress tracking & loading state
+  useEffect(() => {
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+    };
+
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration || 0);
+      setLoadingAudio(false);
+    };
+
+    const handleLoadStart = () => {
+      setLoadingAudio(true);
+    };
+
+    const handleCanPlay = () => {
+      setLoadingAudio(false);
+    };
+
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audio.addEventListener("loadstart", handleLoadStart);
+    audio.addEventListener("canplay", handleCanPlay);
+
+    return () => {
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("loadstart", handleLoadStart);
+      audio.removeEventListener("canplay", handleCanPlay);
+    };
+  }, [audio]);
+
   // Centralized robust music track and playback state synchronization
   useEffect(() => {
     if (trackList.length === 0) return;
@@ -91,23 +126,29 @@ export default function TelegramFrame({ children, activeTab, onTabChange }: Tele
     if (currentSrc !== targetUrl) {
       audio.src = targetUrl;
       audio.load();
+      setCurrentTime(0);
+      setDuration(0);
     }
     
     audio.volume = volume;
     audio.loop = isLooping;
 
     if (playing) {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          console.warn("Audio playback was blocked or interrupted:", err);
-          if (err.name === "NotAllowedError") {
-            setPlaying(false);
-          }
-        });
+      if (audio.paused) {
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.warn("Audio playback was blocked or interrupted:", err);
+            if (err.name === "NotAllowedError") {
+              setPlaying(false);
+            }
+          });
+        }
       }
     } else {
-      audio.pause();
+      if (!audio.paused) {
+        audio.pause();
+      }
     }
   }, [currentTrackIdx, playing, volume, isLooping, audio, trackList]);
 
@@ -225,6 +266,36 @@ export default function TelegramFrame({ children, activeTab, onTabChange }: Tele
                     />
                   );
                 })}
+              </div>
+
+              {/* Seek / Progress Bar */}
+              <div className="flex flex-col gap-1 px-1 mt-1">
+                <input 
+                  type="range"
+                  min="0"
+                  max={duration || 100}
+                  value={currentTime}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    audio.currentTime = val;
+                    setCurrentTime(val);
+                  }}
+                  className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-cyber-purple"
+                />
+                <div className="flex justify-between text-[8px] text-neutral-400 font-mono">
+                  <span>{(() => {
+                    if (isNaN(currentTime)) return "0:00";
+                    const m = Math.floor(currentTime / 60);
+                    const s = Math.floor(currentTime % 60);
+                    return `${m}:${s.toString().padStart(2, "0")}`;
+                  })()}</span>
+                  <span>{loadingAudio ? "Loading..." : (() => {
+                    if (isNaN(duration)) return "0:00";
+                    const m = Math.floor(duration / 60);
+                    const s = Math.floor(duration % 60);
+                    return `${m}:${s.toString().padStart(2, "0")}`;
+                  })()}</span>
+                </div>
               </div>
 
               {/* Audio Controller Knobs */}
