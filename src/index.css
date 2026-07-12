@@ -346,6 +346,43 @@ span.absolute.inset-x-4.top-0 {
   animation: float 5s ease-in-out infinite;
 }
 
+/* ═════════════════════════════════════════════════════════════
+   PREMIUM PROFESSIONAL LOGO ANIMATIONS
+   ═════════════════════════════════════════════════════════════ */
+@keyframes logo-spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.animate-logo-spin-slow {
+  animation: logo-spin-slow 16s linear infinite;
+}
+
+@keyframes logo-pulse-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.4)) drop-shadow(0 0 10px rgba(59, 130, 246, 0.2));
+    opacity: 0.9;
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.8)) drop-shadow(0 0 20px rgba(59, 130, 246, 0.5));
+    opacity: 1;
+  }
+}
+.animate-logo-pulse-glow {
+  animation: logo-pulse-glow 3s ease-in-out infinite;
+}
+
+@keyframes logo-wings {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+.animate-logo-wings {
+  animation: logo-wings 4s ease-in-out infinite alternate;
+}
+
 @keyframes bounceVisualizer {
   0% {
     height: 3px;

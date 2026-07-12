@@ -323,29 +323,68 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
     <div className="flex flex-col gap-5 px-4 pt-4 pb-8 select-none">
       {/* AeroX Brand Logo Card */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5 select-none animate-fade-in">
-          <div className="relative w-11 h-11 flex items-center justify-center rounded-xl bg-gradient-to-tr from-[#3B82F6] via-[#4338CA] to-[#7C3AED] border border-[#38BDF8]/35 shadow-[0_0_15px_rgba(56,189,248,0.45)] shrink-0 transition-all duration-300 hover:scale-105 active:scale-95">
-            {/* Ambient neon radial backlighting */}
-            <div className="absolute inset-0 bg-[#38BDF8]/25 rounded-xl blur-[6px] opacity-70 pointer-events-none" />
+        <div className="flex items-center gap-3.5 select-none animate-fade-in">
+          <div className="relative w-12 h-12 flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-105 active:scale-95">
+            {/* Ambient cyber neon glow background */}
+            <div className="absolute inset-0 bg-[#38BDF8]/10 rounded-xl blur-[14px] opacity-80 pointer-events-none animate-logo-pulse-glow" />
             
-            {/* Elegant premium cyan/purple organic leaf with glow matching the luxury cyber neon style */}
-            <div className="absolute -top-2.5 -right-1 w-6 h-5 pointer-events-none drop-shadow-[0_2px_8px_rgba(56,189,248,0.7)]">
-              <svg viewBox="0 0 24 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#38BDF8] fill-current">
-                <path d="M2 18C10 18 16 14 22 2C17 8 10 10 2 10C2 10 6 13 2 18Z" stroke="#38bdf8" strokeWidth="1" />
-                <path d="M2 18C8 14 14 10 22 2" stroke="#e0f2fe" strokeWidth="0.8" strokeDasharray="1 1" />
-              </svg>
-            </div>
-            
-            {/* Italic dynamic lettering styled like reference with premium cyan glow */}
-            <span className="text-white font-black text-base font-display italic tracking-tight leading-none z-10 select-none">
-              Aero<span className="text-[#38BDF8] drop-shadow-[0_0_8px_rgba(56,189,248,0.85)] font-black">X</span>
-            </span>
+            {/* High-end glass bezel base */}
+            <div className="absolute inset-0 rounded-xl bg-slate-950/80 border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)]" />
+
+            {/* Professional animated custom SVG logo */}
+            <svg viewBox="0 0 100 100" className="w-10 h-10 z-10 drop-shadow-[0_0_10px_rgba(56,189,248,0.45)]" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="logoRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#38BDF8" />
+                  <stop offset="100%" stopColor="#4338CA" />
+                </linearGradient>
+                <linearGradient id="logoEmblemGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FFFFFF" />
+                  <stop offset="50%" stopColor="#38BDF8" />
+                  <stop offset="100%" stopColor="#3B82F6" />
+                </linearGradient>
+              </defs>
+
+              {/* Slow-rotating high-tech outer index ring */}
+              <circle 
+                cx="50" 
+                cy="50" 
+                r="42" 
+                stroke="url(#logoRingGrad)" 
+                strokeWidth="1.8" 
+                strokeLinecap="round"
+                strokeDasharray="60 25 15 25" 
+                className="animate-logo-spin-slow origin-center"
+              />
+
+              {/* Ultra-premium, sharp geometric "AeroX" Monogram core */}
+              <g className="animate-logo-pulse-glow origin-center">
+                {/* Left Aerodynamic wing of the 'A/X' */}
+                <path 
+                  d="M32 68 L48 32 L56 32 L40 68 Z" 
+                  fill="url(#logoEmblemGrad)" 
+                  className="transition-transform duration-300"
+                />
+                {/* Right Intersecting wing forming the 'X' with absolute geometric precision */}
+                <path 
+                  d="M68 68 L52 32 L44 32 L60 68 Z" 
+                  fill="url(#logoEmblemGrad)" 
+                  opacity="0.85"
+                />
+                {/* Micro-scale horizontal high-contrast connector creating a razor-sharp 'A' apex split */}
+                <path 
+                  d="M40 54 L60 54 L57 58 L43 58 Z" 
+                  fill="#38BDF8" 
+                  className="animate-pulse"
+                />
+              </g>
+            </svg>
           </div>
           <div>
-            <span className="text-sm font-extrabold tracking-wide text-white block uppercase">
-              Aero<span className="text-[#38BDF8]">X</span> CHANNELS
+            <span className="text-lg font-extrabold tracking-wide text-white block font-display leading-none">
+              Aero<span className="text-[#38BDF8] drop-shadow-[0_0_8px_rgba(56,189,248,0.7)] font-black">X</span>
             </span>
-            <span className="text-[9px] text-neutral-400 font-medium tracking-widest uppercase block mt-0.5">
+            <span className="text-[8px] text-[#94a3b8] font-bold tracking-widest uppercase block mt-1.5 opacity-90">
               MINI PLATFORM
             </span>
           </div>
