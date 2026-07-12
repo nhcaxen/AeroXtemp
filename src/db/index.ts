@@ -30,18 +30,23 @@ export const createPool = () => {
     ? { rejectUnauthorized: false } 
     : (process.env.DB_SSL_ENABLED === "false" 
       ? false 
-      : (isLocal ? false : { rejectUnauthorized: false }));
+      : null); // Return null to omit ssl option entirely
   
-  console.log(`[DB] Connecting to host ${process.env.SQL_HOST} with SSL:`, sslConfig);
+  console.log(`[DB] Connecting to host ${process.env.SQL_HOST} with SSL configuration:`, sslConfig);
 
-  return new Pool({
+  const poolConfig: any = {
     host: process.env.SQL_HOST,
     user: process.env.SQL_USER,
     password: process.env.SQL_PASSWORD,
     database: process.env.SQL_DB_NAME,
     connectionTimeoutMillis: 15000,
-    ssl: sslConfig
-  });
+  };
+  
+  if (sslConfig !== null) {
+    poolConfig.ssl = sslConfig;
+  }
+
+  return new Pool(poolConfig);
 };
 
 const pool = createPool();
