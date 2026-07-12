@@ -2316,6 +2316,27 @@ async function startServer() {
         )
       `);
 
+      // Ensure all columns exist for "users" table (useful if table already exists from older schema versions)
+      try {
+        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "telegram_id" TEXT`);
+        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "username" TEXT`);
+        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "first_name" TEXT`);
+        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "role" TEXT DEFAULT 'free'`);
+        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "plan" TEXT DEFAULT 'free'`);
+        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "credits" INTEGER DEFAULT 20`);
+        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "joined_at" TEXT`);
+        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_active" TEXT`);
+        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "photo_url" TEXT`);
+        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "total_recoveries" INTEGER DEFAULT 0`);
+        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "referrer_id" TEXT`);
+        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "credit_reset_time" TEXT`);
+        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "plan_expiry" TEXT`);
+        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "created_at" TIMESTAMP DEFAULT NOW()`);
+        console.log("[DB INIT] Verified all users columns exist.");
+      } catch (e: any) {
+        console.log("[DB INIT] Skip adding columns on users:", e.message);
+      }
+
       // Ensure users has telegram_id as UNIQUE if it wasn't added
       try {
         await db.execute(sql`
@@ -2346,6 +2367,23 @@ async function startServer() {
         )
       `);
 
+      // Ensure all columns exist for "redeem_codes"
+      try {
+        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "code" TEXT`);
+        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "credits" INTEGER DEFAULT 0`);
+        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "expires_at" TEXT`);
+        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "max_uses" INTEGER DEFAULT 1`);
+        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "used_count" INTEGER DEFAULT 0`);
+        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "created_at" TIMESTAMP DEFAULT NOW()`);
+        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "created_by" TEXT`);
+        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "plan" TEXT`);
+        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "role" TEXT`);
+        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "duration_days" INTEGER`);
+        console.log("[DB INIT] Verified all redeem_codes columns exist.");
+      } catch (e: any) {
+        console.log("[DB INIT] Skip adding columns on redeem_codes:", e.message);
+      }
+
       // Ensure redeem_codes has code as UNIQUE
       try {
         await db.execute(sql`
@@ -2369,6 +2407,17 @@ async function startServer() {
         )
       `);
 
+      // Ensure all columns exist for "redemptions"
+      try {
+        await db.execute(sql`ALTER TABLE "redemptions" ADD COLUMN IF NOT EXISTS "code" TEXT`);
+        await db.execute(sql`ALTER TABLE "redemptions" ADD COLUMN IF NOT EXISTS "telegram_id" TEXT`);
+        await db.execute(sql`ALTER TABLE "redemptions" ADD COLUMN IF NOT EXISTS "username" TEXT`);
+        await db.execute(sql`ALTER TABLE "redemptions" ADD COLUMN IF NOT EXISTS "redeemed_at" TIMESTAMP DEFAULT NOW()`);
+        console.log("[DB INIT] Verified all redemptions columns exist.");
+      } catch (e: any) {
+        console.log("[DB INIT] Skip adding columns on redemptions:", e.message);
+      }
+
       // 4. Create mailboxes table
       await db.execute(sql`
         CREATE TABLE IF NOT EXISTS "mailboxes" (
@@ -2386,6 +2435,23 @@ async function startServer() {
         )
       `);
 
+      // Ensure all columns exist for "mailboxes"
+      try {
+        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "user_id" TEXT`);
+        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "provider" TEXT DEFAULT 'Mail.tm'`);
+        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "email" TEXT`);
+        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "password" TEXT`);
+        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "access_token" TEXT`);
+        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "refresh_token" TEXT`);
+        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "created_at" TIMESTAMP DEFAULT NOW()`);
+        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "last_access" TIMESTAMP DEFAULT NOW()`);
+        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "last_refresh" TIMESTAMP DEFAULT NOW()`);
+        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "status" TEXT DEFAULT 'active'`);
+        console.log("[DB INIT] Verified all mailboxes columns exist.");
+      } catch (e: any) {
+        console.log("[DB INIT] Skip adding columns on mailboxes:", e.message);
+      }
+
       // Ensure mailboxes has email as UNIQUE
       try {
         await db.execute(sql`
@@ -2395,6 +2461,18 @@ async function startServer() {
       } catch (e: any) {
         if (!e.message?.includes("already exists")) {
           console.log("[DB INIT] Skip adding unique constraint on mailboxes.email:", e.message);
+        }
+      }
+
+      // Ensure mailboxes foreign key exists
+      try {
+        await db.execute(sql`
+          ALTER TABLE "mailboxes" ADD CONSTRAINT "mailboxes_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("telegram_id")
+        `);
+        console.log("[DB INIT] Added foreign key constraint on mailboxes.user_id");
+      } catch (e: any) {
+        if (!e.message?.includes("already exists")) {
+          console.log("[DB INIT] Skip adding foreign key on mailboxes.user_id:", e.message);
         }
       }
 

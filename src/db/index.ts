@@ -21,12 +21,15 @@ export const createPool = () => {
   }
 
   // Fallback to individual env vars (Supabase or manual config)
+  const host = process.env.SQL_HOST || "";
+  const isLocal = host.includes("localhost") || host.includes("127.0.0.1") || !host;
   return new Pool({
     host: process.env.SQL_HOST,
     user: process.env.SQL_USER,
     password: process.env.SQL_PASSWORD,
     database: process.env.SQL_DB_NAME,
     connectionTimeoutMillis: 15000,
+    ssl: isLocal ? false : { rejectUnauthorized: false }
   });
 };
 
