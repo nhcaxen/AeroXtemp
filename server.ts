@@ -34,29 +34,12 @@ async function startServer() {
 
   app.use(express.json());
 
-  // Auto-migration to ensure schema integrity
+  // Database connection check on startup
   try {
-    await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_url TEXT;`);
-    await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_recoveries INTEGER DEFAULT 0;`);
-    await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS referrer_id TEXT;`);
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS mailboxes (
-        id SERIAL PRIMARY KEY,
-        user_id TEXT,
-        provider TEXT DEFAULT 'Mail.tm',
-        email TEXT UNIQUE,
-        password TEXT,
-        access_token TEXT,
-        refresh_token TEXT,
-        created_at TIMESTAMP DEFAULT NOW(),
-        last_access TIMESTAMP DEFAULT NOW(),
-        last_refresh TIMESTAMP DEFAULT NOW(),
-        status TEXT DEFAULT 'active'
-      );
-    `);
-    console.log("[DB] Auto-migration: tables and columns verified.");
+    await db.execute(sql`SELECT 1;`);
+    console.log("[DB] Database connection verified successfully.");
   } catch (err) {
-    console.warn("[DB WARNING] Auto-migration skipped/failed:", err);
+    console.warn("[DB WARNING] Database connection verification failed:", err);
   }
 
   // --- Helper to compute IP Trust & Fraud Risk Score ---
