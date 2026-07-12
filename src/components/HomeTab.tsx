@@ -109,7 +109,7 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
           {/* Card details */}
           <div className="flex flex-col gap-0.5 mt-2">
             <span className="text-[7.5px] font-mono tracking-wider text-[#38bdf8] font-bold">AeroX Pro</span>
-            <span className="text-[6.5px] font-mono text-slate-300">•••• •••• •••• 8295</span>
+            <span className="text-[6.5px] font-mono text-slate-300 tracking-tighter whitespace-nowrap">•••• •••• 8295</span>
           </div>
         </div>
       )
@@ -120,29 +120,33 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
       desc: "Receive real validation emails and OTPs using high-speed AEROX Mail Engine.",
       actionText: "Open Mailbox",
       actionTab: "tempmail" as TabId,
-      color: "from-[#db2777]/80 via-[#4c1d95]/95 to-[#07070b]/98",
-      accent: "#f472b6",
+      color: "from-[#1d4ed8]/85 via-[#1e1b4b]/95 to-[#07070b]/98",
+      accent: "#38bdf8",
       icon: (
-        <div className="relative w-24 h-16 bg-[#07070b]/95 rounded-xl border border-pink-500/25 p-2.5 shadow-2xl flex flex-col gap-1.5 overflow-hidden select-none animate-float">
-          {/* Ambient neon pink/violet aura */}
-          <div className="absolute top-0 right-0 w-8 h-8 bg-pink-500/20 rounded-full blur-md animate-pulse" />
+        <div className="relative w-24 h-16 bg-[#07070b]/95 rounded-xl border border-[#38bdf8]/35 p-2.5 shadow-2xl flex flex-col justify-between overflow-hidden select-none animate-float">
+          {/* Subtle moving neon glow line */}
+          <div className="absolute inset-x-0 bottom-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#38bdf8] to-transparent animate-pulse" />
           
-          {/* Inbox line items representing mail */}
-          <div className="flex items-center gap-1.5 border-b border-white/5 pb-1">
+          {/* Top Row: Icon & Status Dot */}
+          <div className="flex justify-between items-center">
             <span className="text-xs">✉️</span>
-            <div className="flex-1 flex flex-col gap-0.5">
-              <div className="w-12 h-[3px] bg-[#38bdf8] rounded-full animate-pulse" />
-              <div className="w-8 h-[2px] bg-slate-500 rounded-full" />
+            <div className="flex items-center gap-1 bg-[#38bdf8]/10 px-1 py-0.5 rounded border border-[#38bdf8]/20">
+              <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_4px_#34d399]" />
+              <span className="text-[5.5px] font-mono font-bold text-[#38bdf8] uppercase tracking-wider">LIVE</span>
             </div>
           </div>
-          
-          <div className="flex-1 flex flex-col gap-1">
-            <div className="flex items-center justify-between">
-              <span className="text-[6.5px] font-mono text-pink-400 font-bold uppercase tracking-wider">AEROX OTP</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-pink-400 animate-ping" />
-            </div>
-            <span className="text-[8px] font-bold text-white font-mono bg-white/5 px-1 py-0.5 rounded text-center">
-              Code: <span className="text-[#38bdf8]">482-915</span>
+
+          {/* Subject Line placeholders */}
+          <div className="flex flex-col gap-1 my-1">
+            <div className="w-14 h-1 bg-white/80 rounded-full" />
+            <div className="w-8 h-0.5 bg-slate-500 rounded-full" />
+          </div>
+
+          {/* Bottom Row */}
+          <div className="flex items-center justify-between">
+            <span className="text-[6px] font-mono text-slate-400 font-bold uppercase tracking-wider">AEROX Mail</span>
+            <span className="text-[6.5px] font-bold text-white font-mono bg-white/10 px-1 py-0.2 rounded">
+              Code: <span className="text-[#38bdf8] font-black">7402</span>
             </span>
           </div>
         </div>
@@ -154,26 +158,28 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
       desc: "Generate realistic registration information and addresses for various countries.",
       actionText: "Open Identity",
       actionTab: "addressgen" as TabId,
-      color: "from-[#4f46e5]/80 via-[#1e1b4b]/95 to-[#07070b]/98",
-      accent: "#818cf8",
+      color: "from-[#1d4ed8]/85 via-[#1e1b4b]/95 to-[#07070b]/98",
+      accent: "#38bdf8",
       icon: (
-        <div className="relative w-24 h-16 bg-[#07070b]/95 rounded-xl border border-indigo-500/25 p-2.5 shadow-2xl flex items-center gap-2.5 overflow-hidden select-none animate-float">
-          {/* Ambient violet aura */}
-          <div className="absolute bottom-0 right-0 w-10 h-10 bg-indigo-500/20 rounded-full blur-md" />
+        <div className="relative w-24 h-16 bg-[#07070b]/95 rounded-xl border border-[#38bdf8]/35 p-2.5 shadow-2xl flex items-center gap-2 overflow-hidden select-none animate-float">
+          {/* Subtle moving neon glow line */}
+          <div className="absolute inset-x-0 bottom-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#38bdf8] to-transparent animate-pulse" />
 
           {/* Left side: Avatar picture card */}
-          <div className="w-8 h-8 rounded-full border border-white/10 bg-gradient-to-tr from-slate-800 to-slate-950 flex items-center justify-center overflow-hidden shrink-0">
-            <svg viewBox="0 0 24 24" className="w-5 h-5 text-indigo-400 fill-current opacity-85" xmlns="http://www.w3.org/2000/svg">
+          <div className="w-7 h-7 rounded-full border border-[#38bdf8]/30 bg-[#0c0c14] flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_8px_rgba(56,189,248,0.2)]">
+            <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#38bdf8] fill-current opacity-85" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
             </svg>
           </div>
 
           {/* Right side: details lines */}
           <div className="flex flex-col gap-1 flex-1 min-w-0">
-            <div className="w-12 h-[3px] bg-white rounded-full opacity-80" />
-            <div className="w-8 h-[2px] bg-slate-500 rounded-full" />
-            <div className="w-10 h-[2px] bg-slate-500 rounded-full" />
-            <span className="text-[6px] font-mono text-[#38bdf8] font-bold uppercase tracking-wide mt-1 leading-none block truncate">VERIFIED</span>
+            <div className="w-10 h-1 bg-white/80 rounded-full" />
+            <div className="w-7 h-[2px] bg-slate-500 rounded-full" />
+            <div className="w-8 h-[2px] bg-slate-600 rounded-full" />
+            <div className="mt-0.5">
+              <span className="text-[5px] font-mono text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-1 py-0.2 rounded tracking-wide uppercase leading-none inline-block">VERIFIED</span>
+            </div>
           </div>
         </div>
       )
@@ -478,7 +484,7 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
           boxShadow: `0 0 35px ${promoSlides[activePromo].accent}15`
         }}
       >
-        <div className="h-44 flex transition-all duration-500 relative">
+        <div className="h-[200px] flex transition-all duration-500 relative">
           {promoSlides.map((slide, idx) => (
             <div
               key={idx}

@@ -27,6 +27,9 @@ export const redeemCodes = pgTable("redeem_codes", {
   usedCount: integer("used_count").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   createdBy: text("created_by"),
+  plan: text("plan"), // "core" | "prime" | "elite" | "owner" | null
+  role: text("role"), // "premium" | "owner" | "free" | null
+  durationDays: integer("duration_days"), // null or duration in days, e.g. 30, 90, 365, or -1 (lifetime)
 });
 
 export const redemptions = pgTable("redemptions", {

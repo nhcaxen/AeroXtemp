@@ -1554,10 +1554,11 @@ async function startServer() {
       return res.status(403).json({ error: "Unauthorized. Owner only." });
     }
 
-    let { credits, expiresAt, maxUses } = req.body;
+    let { credits, expiresAt, maxUses, plan, role, durationDays } = req.body;
     
-    const numCredits = typeof credits === "number" ? credits : parseInt(credits, 10);
-    const numMaxUses = typeof maxUses === "number" ? maxUses : parseInt(maxUses, 10);
+    const numCredits = typeof credits !== "undefined" && credits !== null ? (typeof credits === "number" ? credits : parseInt(credits, 10)) : 0;
+    const numMaxUses = typeof maxUses !== "undefined" && maxUses !== null ? (typeof maxUses === "number" ? maxUses : parseInt(maxUses, 10)) : 1;
+    const numDurationDays = typeof durationDays !== "undefined" && durationDays !== null ? (typeof durationDays === "number" ? durationDays : parseInt(durationDays, 10)) : null;
 
     if (isNaN(numCredits) || isNaN(numMaxUses)) {
       return res.status(400).json({ error: "Credits and maxUses must be valid numbers" });
@@ -1574,7 +1575,10 @@ async function startServer() {
         expiresAt: expiresAt || null,
         maxUses: numMaxUses,
         usedCount: 0,
-        createdBy: "owner"
+        createdBy: "owner",
+        plan: plan || null,
+        role: role || null,
+        durationDays: numDurationDays
       });
 
       res.json({
@@ -1584,7 +1588,10 @@ async function startServer() {
           credits: numCredits,
           expiresAt,
           maxUses: numMaxUses,
-          usedCount: 0
+          usedCount: 0,
+          plan: plan || null,
+          role: role || null,
+          durationDays: numDurationDays
         }
       });
     } catch (err: any) {
@@ -1699,11 +1706,58 @@ async function startServer() {
         return res.status(400).json({ error: "User profile not found. Access the profile tab first." });
       }
 
-      const newCredits = (userRecord.credits || 0) + (redeemCode.credits || 0);
-      await db.update(users).set({ credits: newCredits }).where(eq(users.telegramId, telegramId));
+      let updatedFields: any = {};
+      let isPlanRedeem = false;
+      let redeemedPlanName = "";
+      let redeemedCredits = redeemCode.credits || 0;
 
+      if (redeemCode.plan) {
+        isPlanRedeem = true;
+        redeemedPlanName = redeemCode.plan;
+
+        // Calculate plan expiry date
+        let planExpiryVal: string | null = null;
+        if (redeemCode.durationDays && redeemCode.durationDays !== -1) {
+          const expiryDate = new Date();
+          expiryDate.setDate(expiryDate.getDate() + redeemCode.durationDays);
+          planExpiryVal = expiryDate.toISOString().split("T")[0];
+        } else {
+          planExpiryVal = "Never Expires";
+        }
+
+        // Standard credits for plans if not explicitly set
+        if (redeemedCredits === 0) {
+          const planLimits: Record<string, number> = {
+            free: 20,
+            core: 300,
+            prime: 600,
+            elite: 1200,
+            owner: 999999
+          };
+          redeemedCredits = planLimits[redeemCode.plan] || 20;
+        }
+
+        updatedFields = {
+          plan: redeemCode.plan,
+          role: redeemCode.role || (redeemCode.plan === "owner" ? "owner" : "premium"),
+          credits: redeemedCredits,
+          planExpiry: planExpiryVal,
+          creditResetTime: new Date().toISOString().split("T")[0]
+        };
+      } else {
+        // Just standard credits code
+        updatedFields = {
+          credits: (userRecord.credits || 0) + redeemedCredits
+        };
+      }
+
+      // Perform update on the user record
+      await db.update(users).set(updatedFields).where(eq(users.telegramId, telegramId));
+
+      // Update used count on redeem code
       await db.update(redeemCodes).set({ usedCount: redeemCode.usedCount + 1 }).where(eq(redeemCodes.id, redeemCode.id));
 
+      // Insert redemptions log
       await db.insert(redemptions).values({
         code: cleanCode,
         telegramId,
@@ -1712,8 +1766,12 @@ async function startServer() {
 
       res.json({
         success: true,
-        creditsAdded: redeemCode.credits,
-        newCredits
+        creditsAdded: redeemedCredits,
+        newCredits: updatedFields.credits,
+        isPlanRedeem,
+        plan: redeemCode.plan,
+        role: redeemCode.role,
+        durationDays: redeemCode.durationDays
       });
     } catch (err: any) {
       console.error("[REDEEM ERROR] Redeem code:", err);

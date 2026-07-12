@@ -14,7 +14,9 @@ import {
   Check, 
   Ticket,
   Clock,
-  Shield
+  Shield,
+  Sparkles,
+  X
 } from "lucide-react";
 import { getAnalytics, AppAnalytics } from "../utils/analytics";
 
@@ -175,16 +177,16 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
 
       if (res.ok) {
         const data = await res.json();
-        const updatedProfile: ServerUserProfile = {
-          ...userProfile!,
-          credits: data.newCredits
-        };
-        setUserProfile(updatedProfile);
         
-        // Sync with root App immediately
-        window.dispatchEvent(new CustomEvent("aerox_profile_updated", { detail: updatedProfile }));
+        // Re-fetch the complete user profile to refresh plan, role, limits, and reset times instantly!
+        await fetchUserProfile(telegramId, username, displayName);
         
-        setRedeemFeedback({ text: `Success! Added +${data.creditsAdded} credits to your balance.`, type: "success" });
+        let successMsg = `Success! Added +${data.creditsAdded} credits to your balance.`;
+        if (data.isPlanRedeem) {
+          successMsg = `Success! Upgraded to ${data.plan.toUpperCase()} Access with +${data.creditsAdded} credits!`;
+        }
+        
+        setRedeemFeedback({ text: successMsg, type: "success" });
         setRedeemCodeInput("");
       } else {
         const errData = await res.json();
@@ -397,41 +399,65 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
           </div>
 
           {/* Account and Subscription Details Grid */}
-          <div className="pt-4 border-t border-white/[0.05] grid grid-cols-2 gap-x-4 gap-y-3.5">
-            <div>
-              <span className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Role Type</span>
-              <span className={`px-2 py-0.5 rounded text-[9px] font-black tracking-widest uppercase border inline-flex items-center gap-1 ${roleDetails.colorClass}`}>
-                {roleDetails.badge}
-              </span>
+          <div className="pt-4 border-t border-white/[0.05] grid grid-cols-2 gap-3">
+            {/* Role Type */}
+            <div className="bg-[#0c0c14]/50 border border-white/[0.04] p-3 rounded-xl flex flex-col gap-1.5 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-8 h-8 bg-[#38bdf8]/5 rounded-full blur-md pointer-events-none" />
+              <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-widest block">Role Type</span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={`px-2 py-0.5 rounded text-[8px] font-black tracking-widest uppercase border inline-flex items-center gap-1 shadow-sm ${
+                  userProfile?.role === "owner"
+                    ? "bg-gradient-to-r from-red-500/15 to-rose-600/10 border-red-500/30 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.15)]"
+                    : userProfile?.role === "premium"
+                      ? "bg-gradient-to-r from-amber-500/15 to-orange-600/10 border-amber-500/30 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.15)]"
+                      : "bg-gradient-to-r from-emerald-500/15 to-teal-600/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.15)]"
+                }`}>
+                  <span className={`w-1 h-1 rounded-full ${userProfile?.role === "owner" ? "bg-red-400" : userProfile?.role === "premium" ? "bg-amber-400" : "bg-emerald-400"} animate-pulse`} />
+                  {roleDetails.badge}
+                </span>
+              </div>
             </div>
-            
-            <div>
-              <span className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Membership Plan</span>
-              <span className="text-xs font-black text-white uppercase tracking-wide block">
+
+            {/* Membership Plan */}
+            <div className="bg-[#0c0c14]/50 border border-white/[0.04] p-3 rounded-xl flex flex-col gap-1.5 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-8 h-8 bg-pink-500/5 rounded-full blur-md pointer-events-none" />
+              <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-widest block">Membership Plan</span>
+              <span className={`text-[10px] font-black uppercase tracking-wide block mt-0.5 bg-gradient-to-r ${
+                userProfile?.plan === "owner"
+                  ? "from-amber-400 via-yellow-300 to-orange-400 bg-clip-text text-transparent drop-shadow-[0_0_6px_rgba(250,204,21,0.3)]"
+                  : ["core", "prime", "elite"].includes(userProfile?.plan || "")
+                    ? "from-cyan-400 via-sky-300 to-indigo-400 bg-clip-text text-transparent"
+                    : "from-neutral-300 to-neutral-400 bg-clip-text text-transparent"
+              }`}>
                 {userProfile?.plan === "owner" 
                   ? "👑 Lifetime Owner" 
                   : ["core", "prime", "elite"].includes(userProfile?.plan || "")
-                    ? `⭐ ${userProfile!.plan!.toUpperCase()} Access` 
-                    : "🟢 Free Trial"}
+                    ? `⭐ ${userProfile!.plan!.toUpperCase()} ACCESS` 
+                    : "🟢 FREE TRIAL"}
               </span>
             </div>
 
-            <div>
-              <span className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Status</span>
-              <span className={`px-1.5 py-0.5 rounded text-[8px] font-black tracking-wider uppercase border inline-flex items-center ${
-                membershipStatus === "Active" 
-                  ? "bg-green-500/10 border-green-500/20 text-green-400" 
-                  : membershipStatus === "Trial" 
-                    ? "bg-blue-500/10 border-blue-500/20 text-blue-400" 
-                    : "bg-red-500/10 border-red-500/20 text-red-400"
-              }`}>
-                {membershipStatus}
-              </span>
+            {/* Status */}
+            <div className="bg-[#0c0c14]/50 border border-white/[0.04] p-3 rounded-xl flex flex-col gap-1.5 relative overflow-hidden">
+              <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-widest block">Status</span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={`px-2 py-0.5 rounded text-[8px] font-black tracking-widest uppercase border inline-flex items-center gap-1 ${
+                  membershipStatus === "Active" 
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.15)]" 
+                    : membershipStatus === "Trial" 
+                      ? "bg-blue-500/10 border-blue-500/20 text-blue-400 shadow-[0_0_6px_rgba(59,130,246,0.15)]" 
+                      : "bg-red-500/10 border-red-500/20 text-red-400"
+                }`}>
+                  <span className={`w-1 h-1 rounded-full ${membershipStatus === "Active" ? "bg-emerald-400" : membershipStatus === "Trial" ? "bg-blue-400" : "bg-red-400"} animate-pulse`} />
+                  {membershipStatus}
+                </span>
+              </div>
             </div>
 
-            <div>
-              <span className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Credits Balance</span>
-              <span className="text-xs font-mono font-bold text-pink-400 block">
+            {/* Credits Balance */}
+            <div className="bg-[#0c0c14]/50 border border-white/[0.04] p-3 rounded-xl flex flex-col gap-1.5 relative overflow-hidden">
+              <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-widest block">Credits Balance</span>
+              <span className={`text-[11px] font-mono font-black mt-0.5 ${userProfile?.plan === "owner" ? "text-[#38bdf8] drop-shadow-[0_0_6px_rgba(56,189,248,0.3)]" : "text-pink-400"}`}>
                 {userProfile?.plan === "owner" 
                   ? "∞ UNLIMITED" 
                   : userProfile?.plan === "free"
@@ -444,9 +470,10 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
               </span>
             </div>
             
-            <div>
-              <span className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Daily Reset Countdown</span>
-              <span className="text-xs font-mono font-semibold text-white block">
+            {/* Daily Reset Countdown */}
+            <div className="bg-[#0c0c14]/50 border border-white/[0.04] p-3 rounded-xl flex flex-col gap-1.5 relative overflow-hidden">
+              <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-widest block">Daily Reset Countdown</span>
+              <span className="text-[10px] font-mono font-semibold text-slate-300 mt-0.5 truncate">
                 {userProfile?.plan === "owner" 
                   ? "No Reset Required" 
                   : ["core", "prime", "elite"].includes(userProfile?.plan || "")
@@ -455,9 +482,10 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
               </span>
             </div>
 
-            <div>
-              <span className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Plan Expiry Date</span>
-              <span className="text-xs font-mono font-bold text-white block">
+            {/* Plan Expiry Date */}
+            <div className="bg-[#0c0c14]/50 border border-white/[0.04] p-3 rounded-xl flex flex-col gap-1.5 relative overflow-hidden">
+              <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-widest block">Plan Expiry Date</span>
+              <span className="text-[10px] font-mono font-semibold text-slate-300 mt-0.5 truncate">
                 {userProfile?.plan === "owner" 
                   ? "Never Expires" 
                   : userProfile?.planExpiry 
@@ -466,61 +494,102 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
               </span>
             </div>
 
-            <div>
-              <span className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Member Since</span>
-              <span className="text-xs font-semibold text-white block">
+            {/* Member Since */}
+            <div className="bg-[#0c0c14]/50 border border-white/[0.04] p-3 rounded-xl flex flex-col gap-1.5 relative overflow-hidden col-span-2">
+              <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-widest block">Member Since</span>
+              <span className="text-[10px] font-semibold text-white mt-0.5">
                 {userProfile?.joined ?? "11 Jul 2026"}
               </span>
             </div>
           </div>
 
           {/* Navigation Control Buttons */}
-          <div className="pt-2 flex flex-col gap-2">
-            <button
-              id="trigger-upgrade-modal-btn"
-              onClick={() => setIsUpgradeModalOpen(true)}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyber-purple to-pink-500 hover:opacity-95 active:scale-[0.98] transition-all text-xs font-semibold uppercase tracking-wider text-white shadow-lg cursor-pointer flex items-center justify-center gap-1.5 font-display"
-            >
-              {userProfile?.plan === "owner" ? (
-                <span>👑 AeroX Premium Subscriptions</span>
-              ) : userProfile?.plan === "free" ? (
-                <span>⭐ Upgrade to AeroX Premium</span>
-              ) : (
-                <span>⚡ Manage Subscription Plans</span>
-              )}
-            </button>
+          <div className="pt-2">
+            {userProfile?.role === "owner" ? (
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  id="trigger-upgrade-modal-btn"
+                  onClick={() => setIsUpgradeModalOpen(true)}
+                  className="py-2.5 rounded-xl bg-slate-950/65 border border-[#c084fc]/35 text-white text-xs font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(192,132,252,0.15)] hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 font-display"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#c084fc]" />
+                  <span>Subscriptions</span>
+                </button>
+                <button
+                  id="go-to-admin-btn"
+                  onClick={() => onTabChange && onTabChange("admin")}
+                  className="py-2.5 rounded-xl bg-slate-950/65 border border-[#38bdf8]/35 text-white text-xs font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(56,189,248,0.15)] hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 font-display"
+                >
+                  <Shield className="w-3.5 h-3.5 text-[#38bdf8]" />
+                  <span>Admin Panel</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                id="trigger-upgrade-modal-btn"
+                onClick={() => setIsUpgradeModalOpen(true)}
+                className="w-full py-2.5 rounded-xl bg-slate-950/65 border border-[#c084fc]/35 text-white text-xs font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(192,132,252,0.15)] hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 font-display"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#c084fc]" />
+                {userProfile?.plan === "free" ? (
+                  <span>Upgrade to AeroX Premium</span>
+                ) : (
+                  <span>Manage Subscription Plans</span>
+                )}
+              </button>
+            )}
           </div>
 
           {/* Redeem Code Section - only visible for non-owners */}
           {userProfile?.plan !== "owner" && (
-            <div className="pt-3 border-t border-white/[0.05] flex flex-col gap-2 animate-fade-in">
-              <span className="text-[10px] text-neutral-400 font-black uppercase tracking-wider flex items-center gap-1">
-                <Ticket className="w-3.5 h-3.5 text-cyber-purple" />
-                <span>Redeem System Promo Code</span>
-              </span>
-              <form onSubmit={handleRedeemCode} className="flex gap-2">
-                <input 
-                  id="redeem-code-input-field"
-                  type="text" 
-                  value={redeemCodeInput} 
-                  onChange={(e) => setRedeemCodeInput(e.target.value.toUpperCase())}
-                  placeholder="AEROX-XXXX-XXXX"
-                  className="flex-1 bg-void-black border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono tracking-wider placeholder-neutral-600 focus:outline-none focus:border-cyber-purple/60"
-                />
-                <button 
-                  id="submit-redeem-code-btn"
-                  type="submit"
-                  disabled={isRedeeming}
-                  className="px-4 py-2 rounded-lg bg-cyber-purple hover:bg-opacity-90 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider cursor-pointer active:scale-95 transition-all"
-                >
-                  {isRedeeming ? "Redeeming..." : "Redeem"}
-                </button>
-              </form>
-              {redeemFeedback.text && (
-                <p className={`text-[9px] font-bold ${redeemFeedback.type === "success" ? "text-emerald-400" : "text-red-400"}`}>
-                  {redeemFeedback.text}
+            <div className="pt-3 border-t border-white/[0.05] flex flex-col gap-2.5 animate-fade-in">
+              <div className="bg-gradient-to-r from-[#120d24] to-[#0c0818] border border-cyber-purple/20 p-4 rounded-xl shadow-[0_0_20px_rgba(124,58,237,0.08)] flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white font-black uppercase tracking-widest flex items-center gap-1.5">
+                    <Ticket className="w-3.5 h-3.5 text-cyber-purple animate-pulse" />
+                    <span className="bg-gradient-to-r from-cyan-400 to-cyber-purple bg-clip-text text-transparent">Redeem System Promo Code</span>
+                  </span>
+                  <span className="text-[7.5px] bg-cyber-purple/20 text-cyber-purple px-1.5 py-0.5 rounded font-black tracking-wide uppercase">VOUCHER SECURE</span>
+                </div>
+
+                <p className="text-[8.5px] text-neutral-400 leading-normal -mt-1">
+                  Have a credits package code or membership plan voucher? Type or paste it below to upgrade instantly.
                 </p>
-              )}
+
+                <form onSubmit={handleRedeemCode} className="flex gap-2">
+                  <input 
+                    id="redeem-code-input-field"
+                    type="text" 
+                    value={redeemCodeInput} 
+                    onChange={(e) => setRedeemCodeInput(e.target.value.toUpperCase())}
+                    placeholder="AEROX-XXXX-XXXX"
+                    className="flex-1 bg-void-black border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono tracking-wider placeholder-neutral-600 focus:outline-none focus:border-cyber-purple focus:ring-1 focus:ring-cyber-purple/50 shadow-inner"
+                  />
+                  <button 
+                    id="submit-redeem-code-btn"
+                    type="submit"
+                    disabled={isRedeeming}
+                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-red-600 via-purple-600 to-indigo-600 hover:brightness-110 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider cursor-pointer active:scale-95 transition-all shadow-[0_0_15px_rgba(124,58,237,0.3)] shrink-0"
+                  >
+                    {isRedeeming ? "Processing..." : "Redeem Now"}
+                  </button>
+                </form>
+
+                {redeemFeedback.text && (
+                  <div className={`p-2 rounded-lg border text-[9px] font-bold flex items-center gap-1.5 ${
+                    redeemFeedback.type === "success" 
+                      ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.08)]" 
+                      : "bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.08)]"
+                  }`}>
+                    {redeemFeedback.type === "success" ? (
+                      <Check className="w-3 h-3 text-emerald-400 shrink-0" />
+                    ) : (
+                      <ShieldAlert className="w-3 h-3 text-red-400 shrink-0" />
+                    )}
+                    <span>{redeemFeedback.text}</span>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -638,9 +707,11 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
           <div className="bg-dark-surface border border-white/10 rounded-2xl p-5 w-full max-w-sm flex flex-col gap-4 shadow-[0_0_50px_rgba(124,58,237,0.2)] my-auto max-h-[90vh] overflow-y-auto scrollbar-none relative">
             
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-white/[0.05] pb-2 select-none">
-              <div className="flex items-center gap-1.5">
-                <Shield className="w-4 h-4 text-cyber-purple" />
+            <div className="flex items-center justify-between border-b border-white/[0.05] pb-3 select-none">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-cyber-purple/20 border border-cyber-purple/30 flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-cyber-purple" />
+                </div>
                 <h3 className="text-xs font-black text-white uppercase tracking-wider font-display">
                   AEROX MEMBERSHIP PLANS
                 </h3>
@@ -651,9 +722,10 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
                   setIsUpgradeModalOpen(false);
                   setUpgradeError(null);
                 }}
-                className="text-neutral-500 hover:text-white text-sm font-black p-1 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-md"
+                title="Close modal"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -770,6 +842,19 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
                 Purchasing redirects you to securely contact owner <strong className="text-white">@{OWNER_TELEGRAM_USERNAME}</strong> on Telegram. Your unique ID will be automatically sent.
               </p>
             </div>
+
+            {/* Bottom Easy-Close Action */}
+            <button
+              id="bottom-close-upgrade-modal-btn"
+              onClick={() => {
+                setIsUpgradeModalOpen(false);
+                setUpgradeError(null);
+              }}
+              className="w-full mt-2 py-3 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer active:scale-95 text-center flex items-center justify-center gap-2 shadow-lg"
+            >
+              <X className="w-4 h-4 text-neutral-400" />
+              <span>Dismiss / Close Plans</span>
+            </button>
           </div>
         </div>
       )}

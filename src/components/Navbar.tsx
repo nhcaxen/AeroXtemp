@@ -17,9 +17,7 @@ export default function Navbar({ activeTab, onTabChange, isOwner }: NavbarProps)
     { id: "profile" as TabId, label: "Profile", icon: User },
   ];
 
-  if (isOwner) {
-    navItems.push({ id: "admin" as TabId, label: "Admin", icon: Shield });
-  }
+
 
   return (
     <div className="absolute bottom-0 left-0 right-0 h-16 bg-dark-surface/95 border-t border-white/[0.04] backdrop-blur-md flex items-center justify-around px-2 z-40 select-none">

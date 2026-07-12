@@ -49,6 +49,9 @@ interface RedeemCode {
   maxUses: number;
   usedCount: number;
   createdBy: string;
+  plan?: string | null;
+  role?: string | null;
+  durationDays?: number | null;
 }
 
 export default function AdminTab({ adminTelegramId }: AdminTabProps) {
@@ -77,6 +80,9 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
   const [generatedCodes, setGeneratedCodes] = useState<RedeemCode[]>([]);
   const [isLoadingCodes, setIsLoadingCodes] = useState(false);
   const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
+  const [redeemType, setRedeemType] = useState<"credits" | "plan">("credits");
+  const [redeemPlan, setRedeemPlan] = useState<string>("core");
+  const [redeemDurationDays, setRedeemDurationDays] = useState<number>(30);
 
   // Status banners
   const [successMessage, setSuccessMessage] = useState("");
@@ -242,7 +248,7 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
 
   const handleGenerateRedeemCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (redeemCredits <= 0) {
+    if (redeemType === "credits" && redeemCredits <= 0) {
       triggerError("Redeem credits must be greater than zero.");
       return;
     }
@@ -253,17 +259,22 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
 
     setIsGeneratingCode(true);
     try {
+      const payload: any = {
+        expiresAt: redeemExpiry || null,
+        maxUses: redeemMaxUses,
+        plan: redeemType === "plan" ? redeemPlan : null,
+        role: redeemType === "plan" ? (redeemPlan === "owner" ? "owner" : "premium") : null,
+        durationDays: redeemType === "plan" ? redeemDurationDays : null,
+        credits: redeemType === "credits" ? redeemCredits : 0
+      };
+
       const res = await fetch("/api/admin/redeem/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "x-admin-id": adminTelegramId
         },
-        body: JSON.stringify({
-          credits: redeemCredits,
-          expiresAt: redeemExpiry || null,
-          maxUses: redeemMaxUses
-        })
+        body: JSON.stringify(payload)
       });
 
       if (res.ok) {
@@ -575,28 +586,103 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
         </h3>
 
         <form onSubmit={handleGenerateRedeemCode} className="flex flex-col gap-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-[9px] text-neutral-400 font-bold uppercase">Grant Credits</label>
-              <input 
-                type="number"
-                value={redeemCredits}
-                onChange={(e) => setRedeemCredits(parseInt(e.target.value, 10) || 0)}
-                placeholder="Credits e.g. 1000"
-                className="bg-void-black border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-red-500"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-[9px] text-neutral-400 font-bold uppercase">Max Redemptions</label>
-              <input 
-                type="number"
-                value={redeemMaxUses}
-                onChange={(e) => setRedeemMaxUses(parseInt(e.target.value, 10) || 0)}
-                placeholder="Uses e.g. 5"
-                className="bg-void-black border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-red-500"
-              />
+          {/* Voucher Type Tabs */}
+          <div className="flex flex-col gap-1.5 mb-1">
+            <label className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider">Voucher Type</label>
+            <div className="grid grid-cols-2 gap-2 bg-void-black p-1 rounded-xl border border-white/[0.04]">
+              <button
+                type="button"
+                onClick={() => setRedeemType("credits")}
+                className={`py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  redeemType === "credits" 
+                    ? "bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md font-bold" 
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                Credits Package
+              </button>
+              <button
+                type="button"
+                onClick={() => setRedeemType("plan")}
+                className={`py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  redeemType === "plan" 
+                    ? "bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md font-bold" 
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                Membership Plan
+              </button>
             </div>
           </div>
+
+          {redeemType === "credits" ? (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-[9px] text-neutral-400 font-bold uppercase">Grant Credits</label>
+                <input 
+                  type="number"
+                  value={redeemCredits}
+                  onChange={(e) => setRedeemCredits(parseInt(e.target.value, 10) || 0)}
+                  placeholder="Credits e.g. 1000"
+                  className="bg-void-black border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-red-500"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[9px] text-neutral-400 font-bold uppercase">Max Redemptions</label>
+                <input 
+                  type="number"
+                  value={redeemMaxUses}
+                  onChange={(e) => setRedeemMaxUses(parseInt(e.target.value, 10) || 0)}
+                  placeholder="Uses e.g. 5"
+                  className="bg-void-black border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-red-500"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] text-neutral-400 font-bold uppercase">Select Plan</label>
+                  <select
+                    value={redeemPlan}
+                    onChange={(e) => setRedeemPlan(e.target.value)}
+                    className="bg-void-black border border-white/10 rounded-lg px-2.5 py-2 text-xs text-white focus:outline-none focus:border-red-500 font-semibold"
+                  >
+                    <option value="core">⭐ Core Access (300 CRD)</option>
+                    <option value="prime">⭐ Prime Access (600 CRD)</option>
+                    <option value="elite">⭐ Elite Access (1200 CRD)</option>
+                    <option value="owner">👑 Lifetime Owner (Unlimited)</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] text-neutral-400 font-bold uppercase">Plan Duration</label>
+                  <select
+                    value={redeemDurationDays}
+                    onChange={(e) => setRedeemDurationDays(parseInt(e.target.value, 10))}
+                    className="bg-void-black border border-white/10 rounded-lg px-2.5 py-2 text-xs text-white focus:outline-none focus:border-red-500 font-semibold"
+                    disabled={redeemPlan === "owner"}
+                  >
+                    <option value={7}>7 Days (Trial)</option>
+                    <option value={14}>14 Days</option>
+                    <option value={30}>30 Days (Monthly)</option>
+                    <option value={90}>90 Days (Quarterly)</option>
+                    <option value={365}>365 Days (Yearly)</option>
+                    <option value={-1}>Lifetime/Permanent</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[9px] text-neutral-400 font-bold uppercase">Max Redemptions</label>
+                <input 
+                  type="number"
+                  value={redeemMaxUses}
+                  onChange={(e) => setRedeemMaxUses(parseInt(e.target.value, 10) || 0)}
+                  placeholder="Uses e.g. 5"
+                  className="bg-void-black border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-red-500"
+                />
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col gap-1">
             <label className="text-[9px] text-neutral-400 font-bold uppercase">Expiry Date (YYYY-MM-DD)</label>
@@ -649,7 +735,14 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
                       </button>
                     </div>
                     <span className="text-[8px] text-neutral-500 font-semibold uppercase block mt-0.5">
-                      {code.credits} CRD • Uses: {code.usedCount}/{code.maxUses}
+                      {code.plan ? (
+                        <span className="text-amber-400 font-bold">
+                          👑 {code.plan.toUpperCase()} Access ({code.durationDays === -1 || !code.durationDays ? "Lifetime" : `${code.durationDays} Days`})
+                        </span>
+                      ) : (
+                        <span>💎 {code.credits} CRD</span>
+                      )}
+                      {" • "}Uses: {code.usedCount}/{code.maxUses}
                       {code.expiresAt && ` • Exp: ${code.expiresAt}`}
                     </span>
                   </div>
