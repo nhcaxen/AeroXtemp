@@ -13,6 +13,7 @@ import {
   Calendar, 
   RefreshCw, 
   Check, 
+  Copy, 
   AlertCircle, 
   ChevronRight,
   UserCheck
@@ -75,6 +76,7 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [generatedCodes, setGeneratedCodes] = useState<RedeemCode[]>([]);
   const [isLoadingCodes, setIsLoadingCodes] = useState(false);
+  const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
 
   // Status banners
   const [successMessage, setSuccessMessage] = useState("");
@@ -325,6 +327,12 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
       console.error(err);
       triggerError("Network error deleting code");
     }
+  };
+
+  const handleCopyCode = (code: string, id: number) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCodeId(id);
+    setTimeout(() => setCopiedCodeId(null), 2000);
   };
 
   const getRoleBadgeClass = (role: string) => {
@@ -625,8 +633,21 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
             <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
               {generatedCodes.map((code) => (
                 <div key={code.id} className="p-2.5 rounded-lg bg-void-black border border-white/[0.02] flex items-center justify-between text-xs">
-                  <div>
-                    <span className="font-mono font-black text-indigo-400 block tracking-wider">{code.code}</span>
+                  <div className="flex-1 min-w-0 pr-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-mono font-black text-indigo-400 block tracking-wider truncate select-all">{code.code}</span>
+                      <button
+                        onClick={() => handleCopyCode(code.code, code.id)}
+                        className="p-1 rounded bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white transition-colors cursor-pointer shrink-0"
+                        title="Copy code"
+                      >
+                        {copiedCodeId === code.id ? (
+                          <Check className="w-3 h-3 text-green-400" />
+                        ) : (
+                          <Copy className="w-3 h-3" />
+                        )}
+                      </button>
+                    </div>
                     <span className="text-[8px] text-neutral-500 font-semibold uppercase block mt-0.5">
                       {code.credits} CRD • Uses: {code.usedCount}/{code.maxUses}
                       {code.expiresAt && ` • Exp: ${code.expiresAt}`}

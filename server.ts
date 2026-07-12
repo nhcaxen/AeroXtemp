@@ -1012,9 +1012,11 @@ async function startServer() {
     ) {
       return { role: "owner", plan: "owner" };
     }
+    const plan = dbPlan || "free";
+    const role = ["core", "prime", "elite", "premium"].includes(plan) ? "premium" : (dbRole || "free");
     return {
-      role: dbRole || "free",
-      plan: dbPlan || "free"
+      role,
+      plan
     };
   };
 
@@ -1080,14 +1082,15 @@ async function startServer() {
           }
         }
       } else {
-        // Handle premium expiry downgrade check
+        // Handle premium/paid plan expiry downgrade check
         let currentPlan = userRecord.plan || "free";
         let currentRole = userRecord.role || "free";
         let currentCredits = userRecord.credits ?? 20;
         let planExpiryVal = userRecord.planExpiry;
         let planExpired = false;
 
-        if (currentPlan === "premium" && planExpiryVal) {
+        const paidPlans = ["core", "prime", "elite", "premium"];
+        if (paidPlans.includes(currentPlan) && planExpiryVal) {
           if (todayStr > planExpiryVal) {
             currentPlan = "free";
             currentRole = "free";
@@ -1097,16 +1100,23 @@ async function startServer() {
           }
         }
 
-        // Handle daily credit reset for Free Trial (free plan) users
-        if (currentPlan === "free") {
-          if (userRecord.creditResetTime !== todayStr) {
-            currentCredits = 20;
-            userRecord.creditResetTime = todayStr;
-            await db.update(users).set({
-              credits: 20,
-              creditResetTime: todayStr
-            }).where(eq(users.telegramId, telegramId));
-          }
+        // Handle daily credit reset for all plans
+        const planLimits: Record<string, number> = {
+          free: 20,
+          core: 250,
+          prime: 500,
+          elite: 750,
+          owner: 999999
+        };
+        const maxCredits = planLimits[currentPlan] || 20;
+
+        if (currentPlan !== "owner" && userRecord.creditResetTime !== todayStr) {
+          currentCredits = maxCredits;
+          userRecord.creditResetTime = todayStr;
+          await db.update(users).set({
+            credits: maxCredits,
+            creditResetTime: todayStr
+          }).where(eq(users.telegramId, telegramId));
         }
 
         // Update last active, username, photo, and validated membership status
@@ -1249,6 +1259,104 @@ async function startServer() {
     } catch (err: any) {
       console.error("[DATABASE ERROR] update profile:", err);
       return res.status(500).json({ error: "Failed to update user profile in database" });
+    }
+  });
+
+  app.post("/api/user-profile/upgrade", async (req, res) => {
+    const { telegramId, plan } = req.body;
+    if (!telegramId || !plan) {
+      return res.status(400).json({ error: "telegramId and plan are required" });
+    }
+
+    const validPlans = ["free", "core", "prime", "elite"];
+    if (!validPlans.includes(plan)) {
+      return res.status(400).json({ error: "Invalid plan selected" });
+    }
+
+    try {
+      const [userRecord] = await db.select().from(users).where(eq(users.telegramId, telegramId)).limit(1);
+      if (!userRecord) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Compute plan expiry
+      let planExpiryVal: string | null = null;
+      const today = new Date();
+      const todayStr = today.toISOString().split("T")[0];
+
+      if (plan !== "free") {
+        let days = 7;
+        if (plan === "core") days = 7;
+        else if (plan === "prime") days = 14;
+        else if (plan === "elite") days = 30;
+
+        const expiryDate = new Date();
+        expiryDate.setDate(today.getDate() + days);
+        planExpiryVal = expiryDate.toISOString().split("T")[0];
+      }
+
+      // Reset credits according to plan
+      const planLimits: Record<string, number> = {
+        free: 20,
+        core: 250,
+        prime: 500,
+        elite: 750,
+        owner: 999999
+      };
+      const initialCredits = planLimits[plan] || 20;
+
+      const [updatedUser] = await db.update(users)
+        .set({
+          plan,
+          role: plan === "free" ? "free" : "premium",
+          credits: initialCredits,
+          planExpiry: planExpiryVal,
+          creditResetTime: todayStr
+        })
+        .where(eq(users.telegramId, telegramId))
+        .returning();
+
+      // Recount mailboxes and referrals for complete return payload
+      const [allMailboxesCount] = await db.select({ count: sql<number>`count(*)::int` }).from(mailboxes).where(eq(mailboxes.userId, telegramId));
+      const [activeMailboxesCount] = await db.select({ count: sql<number>`count(*)::int` }).from(mailboxes).where(and(eq(mailboxes.userId, telegramId), eq(mailboxes.status, "active")));
+      const [deletedMailboxesCount] = await db.select({ count: sql<number>`count(*)::int` }).from(mailboxes).where(and(eq(mailboxes.userId, telegramId), eq(mailboxes.status, "deleted")));
+      const [referralsCount] = await db.select({ count: sql<number>`count(*)::int` }).from(users).where(eq(users.referrerId, telegramId));
+
+      // Calculate reset timer countdown until UTC midnight
+      const tomorrow = new Date();
+      tomorrow.setUTCHours(24, 0, 0, 0);
+      const msUntilMidnight = tomorrow.getTime() - Date.now();
+      const hoursLeft = Math.floor(msUntilMidnight / (1000 * 60 * 60));
+      const minutesLeft = Math.floor((msUntilMidnight % (1000 * 60 * 60)) / (1000 * 60));
+      const resetTimer = `${hoursLeft}h ${minutesLeft}m`;
+
+      const userCreated = updatedUser.createdAt ? new Date(updatedUser.createdAt) : today;
+      const diffTime = Math.max(0, today.getTime() - userCreated.getTime());
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const trialDaysRemaining = Math.max(0, 7 - diffDays);
+
+      return res.json({
+        telegramId: updatedUser.telegramId,
+        username: updatedUser.username,
+        displayName: updatedUser.firstName || updatedUser.username || "AeroX Guest",
+        role: updatedUser.role,
+        plan: updatedUser.plan,
+        credits: updatedUser.credits,
+        joined: updatedUser.joinedAt,
+        lastActive: updatedUser.lastActive,
+        photoUrl: updatedUser.photoUrl,
+        totalRecoveries: updatedUser.totalRecoveries || 0,
+        totalMailboxesCreated: allMailboxesCount?.count || 0,
+        activeMailboxes: activeMailboxesCount?.count || 0,
+        deletedMailboxes: deletedMailboxesCount?.count || 0,
+        referralsCount: referralsCount?.count || 0,
+        resetTimer,
+        planExpiry: updatedUser.planExpiry,
+        trialDaysRemaining
+      });
+    } catch (err: any) {
+      console.error("[DATABASE ERROR] upgrade plan:", err);
+      return res.status(500).json({ error: "Failed to upgrade subscription plan" });
     }
   });
 
@@ -1677,13 +1785,15 @@ async function startServer() {
       }
 
       let updatedCredits = user.credits || 0;
-      if (user.plan === "free") {
+      const userPlan = user.plan || "free";
+      
+      if (userPlan !== "owner") {
         if (updatedCredits < 1) {
           return res.status(402).json({ 
-            error: "Insufficient credits. Generating a new temporary mailbox costs 1 credit. Upgrade to Premium or redeem a code to get more credits!" 
+            error: "Insufficient credits. Generating a new temporary mailbox costs 1 credit. Please upgrade your plan or redeem a code to get more credits!" 
           });
         }
-        updatedCredits -= 1;
+        updatedCredits = Math.max(0, updatedCredits - 1);
         await db.update(users).set({ credits: updatedCredits }).where(eq(users.telegramId, telegramId));
       }
 
@@ -1724,17 +1834,18 @@ async function startServer() {
 
       let creditsDeducted = false;
       let updatedCredits = user.credits || 0;
+      const userPlan = user.plan || "free";
 
       const [existing] = await db.select().from(mailboxes).where(eq(mailboxes.email, email)).limit(1);
       
-      if (user.plan === "free") {
+      if (userPlan !== "owner") {
         if (!existing || existing.status !== "active") {
           if (updatedCredits < 5) {
             return res.status(402).json({ 
-              error: "Insufficient credits. Mailbox recovery costs 5 credits. Upgrade to Premium or redeem a code!" 
+              error: "Insufficient credits. Mailbox recovery costs 5 credits. Upgrade your plan or redeem a code!" 
             });
           }
-          updatedCredits -= 5;
+          updatedCredits = Math.max(0, updatedCredits - 5);
           creditsDeducted = true;
         }
       }

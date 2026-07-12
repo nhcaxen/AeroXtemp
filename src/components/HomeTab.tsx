@@ -79,7 +79,7 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
   // Promo slides for top carousel
   const promoSlides = [
     {
-      title: "Namso Pro Card Generator",
+      title: "AeroX Pro Card Generator",
       subtitle: "Luhn-validated CC Gen",
       desc: "Generate bulk test credit card numbers for software development.",
       actionText: "Open Generator",
@@ -394,7 +394,7 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
         </div>
 
         {/* Carousel Indicators */}
-        <div className="absolute bottom-3 left-5 flex gap-1.5 z-20">
+        <div className="absolute bottom-3 right-6 flex gap-1.5 z-20">
           {promoSlides.map((_, idx) => (
             <button
               key={idx}
@@ -429,7 +429,7 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
               💳
             </div>
             <div>
-              <span className="text-xs font-bold text-white block">Namso Pro</span>
+              <span className="text-xs font-bold text-white block">AeroX Pro</span>
               <span className="text-[9px] text-neutral-400 block line-clamp-1">Bulk CC Gen</span>
             </div>
           </button>
@@ -445,7 +445,7 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
             </div>
             <div>
               <span className="text-xs font-bold text-white block">Temp Mail</span>
-              <span className="text-[9px] text-neutral-400 block line-clamp-1">1SecMail API</span>
+              <span className="text-[9px] text-neutral-400 block line-clamp-1">AEROX Mail Engine</span>
             </div>
           </button>
 

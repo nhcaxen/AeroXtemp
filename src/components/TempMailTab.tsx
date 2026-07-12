@@ -79,6 +79,7 @@ export default function TempMailTab() {
   const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest");
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const [copiedBoxId, setCopiedBoxId] = useState<number | null>(null);
+  const [deletingMailboxId, setDeletingMailboxId] = useState<number | null>(null);
 
   // 3. RECOVERED MAILBOX INBOX VIEWER STATES
   const [openedRecoveredMailbox, setOpenedRecoveredMailbox] = useState<DatabaseMailbox | null>(null);
@@ -169,7 +170,6 @@ export default function TempMailTab() {
       // Update global analytics and sync profile immediately
       incrementAnalytic("totalMailboxesCreated" as any);
       fetchUserProfileSync();
-      alert("✓ Mailbox saved to recovery successfully!");
 
     } catch (err: any) {
       console.error(err);
@@ -395,10 +395,7 @@ export default function TempMailTab() {
     }
   };
 
-  const handleDeleteMailboxFromDb = async (mailboxId: number, emailAddressVal: string) => {
-    if (!window.confirm(`Are you sure you want to delete mailbox ${emailAddressVal}? This will remove it from your recovery list.`)) {
-      return;
-    }
+  const handleDeleteMailboxFromDb = async (mailboxId: number) => {
     const tgId = getTelegramId();
     try {
       const res = await fetch("/api/mailboxes/delete", {
@@ -412,11 +409,11 @@ export default function TempMailTab() {
         fetchUserProfileSync();
       } else {
         const data = await res.json();
-        alert(data.error || "Failed to delete mailbox.");
+        setRecoveryError(data.error || "Failed to delete mailbox.");
       }
     } catch (err) {
       console.error(err);
-      alert("Failed to delete mailbox due to a network issue.");
+      setRecoveryError("Failed to delete mailbox due to a network issue.");
     }
   };
 
@@ -722,7 +719,7 @@ export default function TempMailTab() {
                     disabled={savingMailbox}
                     className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-90 active:scale-95 text-xs font-black uppercase text-white shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
                   >
-                    <span>💾 Save to Recovery {userProfile?.plan === "free" ? "(Costs 5 Points)" : "(Free)"}</span>
+                    <span>💾 Save to Recovery {userProfile?.plan === "owner" ? "(Free)" : "(Costs 5 Credits)"}</span>
                   </button>
                 )}
               </div>
@@ -1150,34 +1147,59 @@ export default function TempMailTab() {
 
                       {/* Card Button Panel */}
                       <div className="grid grid-cols-3 gap-2 mt-1">
-                        <button
-                          onClick={() => handleOpenRecoveredInbox(box)}
-                          className="py-2 rounded-lg bg-cyber-purple hover:bg-opacity-90 active:scale-95 text-[10px] font-extrabold uppercase text-white transition-all cursor-pointer"
-                        >
-                          Open Inbox
-                        </button>
-                        <button
-                          onClick={() => handleCopyEmailAddress(box.email, box.id)}
-                          className="py-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] active:scale-95 text-[10px] font-bold text-white border border-white/[0.05] transition-all cursor-pointer flex items-center justify-center gap-1"
-                        >
-                          {copiedBoxId === box.id ? (
-                            <>
-                              <Check className="w-3.5 h-3.5 text-green-400" />
-                              <span>Copied</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3.5 h-3.5" />
-                              <span>Copy</span>
-                            </>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteMailboxFromDb(box.id, box.email)}
-                          className="py-2 rounded-lg bg-red-500/10 hover:bg-red-500/25 active:scale-95 text-[10px] font-bold text-red-400 transition-all cursor-pointer"
-                        >
-                          Delete
-                        </button>
+                        {deletingMailboxId === box.id ? (
+                          <>
+                            <div className="col-span-3 text-[10px] font-black text-red-400 text-center mb-0.5 bg-red-500/5 py-1 rounded border border-red-500/10">
+                              ARE YOU SURE? REMOVES FROM RECOVERY!
+                            </div>
+                            <button
+                              onClick={() => {
+                                handleDeleteMailboxFromDb(box.id);
+                                setDeletingMailboxId(null);
+                              }}
+                              className="col-span-2 py-2 rounded-lg bg-red-600 hover:bg-red-700 active:scale-95 text-[10px] font-black uppercase text-white transition-all cursor-pointer text-center"
+                            >
+                              Yes, Delete
+                            </button>
+                            <button
+                              onClick={() => setDeletingMailboxId(null)}
+                              className="col-span-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 active:scale-95 text-[10px] font-bold text-white border border-white/[0.05] transition-all cursor-pointer text-center"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleOpenRecoveredInbox(box)}
+                              className="py-2 rounded-lg bg-cyber-purple hover:bg-opacity-90 active:scale-95 text-[10px] font-extrabold uppercase text-white transition-all cursor-pointer"
+                            >
+                              Open Inbox
+                            </button>
+                            <button
+                              onClick={() => handleCopyEmailAddress(box.email, box.id)}
+                              className="py-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] active:scale-95 text-[10px] font-bold text-white border border-white/[0.05] transition-all cursor-pointer flex items-center justify-center gap-1"
+                            >
+                              {copiedBoxId === box.id ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5 text-green-400" />
+                                  <span>Copied</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3.5 h-3.5" />
+                                  <span>Copy</span>
+                                </>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => setDeletingMailboxId(box.id)}
+                              className="py-2 rounded-lg bg-red-500/10 hover:bg-red-500/25 active:scale-95 text-[10px] font-bold text-red-400 transition-all cursor-pointer"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}
