@@ -1,0 +1,6 @@
+{
+  "name": "AeroX Telegram Mini Toolset",
+  "description": "A high-fidelity Telegram Mini App featuring a Namso Credit Card Generator, Temporary Mailbox, Fake Address/Identity Generator, and absolute free IP & Proxy Fraud/Risk Scorer in a premium Cyber Purple gaming UI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
