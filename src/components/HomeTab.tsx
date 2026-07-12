@@ -76,7 +76,7 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
   // History state
   const [history, setHistory] = useState<ProxyHistoryItem[]>([]);
 
-  // Promo slides for top carousel
+  // Promo slides for top carousel with premium high-fidelity interactive elements and brand gradients
   const promoSlides = [
     {
       title: "AeroX Pro Card Generator",
@@ -84,8 +84,35 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
       desc: "Generate bulk test credit card numbers for software development.",
       actionText: "Open Generator",
       actionTab: "cardgen" as TabId,
-      color: "from-cyber-purple to-indigo-800",
-      icon: "💳"
+      color: "from-[#1d4ed8]/85 via-[#1e1b4b]/95 to-[#07070b]/98",
+      accent: "#38bdf8",
+      icon: (
+        <div className="relative w-24 h-16 bg-[#07070b]/95 rounded-xl border border-[#38bdf8]/35 p-2.5 shadow-2xl flex flex-col justify-between overflow-hidden select-none animate-float">
+          {/* Subtle moving neon glow line */}
+          <div className="absolute inset-x-0 bottom-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#38bdf8] to-transparent animate-pulse" />
+          
+          {/* Gold Microchip */}
+          <div className="flex justify-between items-start">
+            <div className="w-5 h-4 bg-gradient-to-tr from-amber-500 to-yellow-300 rounded-sm border border-amber-600/30 flex flex-col gap-[1px] p-[2.5px] shadow-sm">
+              <div className="w-full h-[1.5px] bg-amber-800/30" />
+              <div className="w-full h-[1.5px] bg-amber-800/30" />
+              <div className="w-full h-[1.5px] bg-amber-800/30" />
+            </div>
+            {/* Wireless Signal Icon */}
+            <div className="flex gap-[1.5px] items-end opacity-85">
+              <div className="w-[1.5px] h-1.5 bg-white/90 rounded-full animate-pulse" />
+              <div className="w-[1.5px] h-2.5 bg-white/90 rounded-full" />
+              <div className="w-[1.5px] h-3.5 bg-white/90 rounded-full" />
+            </div>
+          </div>
+
+          {/* Card details */}
+          <div className="flex flex-col gap-0.5 mt-2">
+            <span className="text-[7.5px] font-mono tracking-wider text-[#38bdf8] font-bold">AeroX Pro</span>
+            <span className="text-[6.5px] font-mono text-slate-300">•••• •••• •••• 8295</span>
+          </div>
+        </div>
+      )
     },
     {
       title: "Real Temporary Mail Client",
@@ -93,8 +120,33 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
       desc: "Receive real validation emails and OTPs using high-speed AEROX Mail Engine.",
       actionText: "Open Mailbox",
       actionTab: "tempmail" as TabId,
-      color: "from-pink-600 to-purple-800",
-      icon: "✉️"
+      color: "from-[#db2777]/80 via-[#4c1d95]/95 to-[#07070b]/98",
+      accent: "#f472b6",
+      icon: (
+        <div className="relative w-24 h-16 bg-[#07070b]/95 rounded-xl border border-pink-500/25 p-2.5 shadow-2xl flex flex-col gap-1.5 overflow-hidden select-none animate-float">
+          {/* Ambient neon pink/violet aura */}
+          <div className="absolute top-0 right-0 w-8 h-8 bg-pink-500/20 rounded-full blur-md animate-pulse" />
+          
+          {/* Inbox line items representing mail */}
+          <div className="flex items-center gap-1.5 border-b border-white/5 pb-1">
+            <span className="text-xs">✉️</span>
+            <div className="flex-1 flex flex-col gap-0.5">
+              <div className="w-12 h-[3px] bg-[#38bdf8] rounded-full animate-pulse" />
+              <div className="w-8 h-[2px] bg-slate-500 rounded-full" />
+            </div>
+          </div>
+          
+          <div className="flex-1 flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[6.5px] font-mono text-pink-400 font-bold uppercase tracking-wider">AEROX OTP</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-pink-400 animate-ping" />
+            </div>
+            <span className="text-[8px] font-bold text-white font-mono bg-white/5 px-1 py-0.5 rounded text-center">
+              Code: <span className="text-[#38bdf8]">482-915</span>
+            </span>
+          </div>
+        </div>
+      )
     },
     {
       title: "Procedural Identity Generator",
@@ -102,8 +154,29 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
       desc: "Generate realistic registration information and addresses for various countries.",
       actionText: "Open Identity",
       actionTab: "addressgen" as TabId,
-      color: "from-indigo-600 to-cyber-purple",
-      icon: "🗺️"
+      color: "from-[#4f46e5]/80 via-[#1e1b4b]/95 to-[#07070b]/98",
+      accent: "#818cf8",
+      icon: (
+        <div className="relative w-24 h-16 bg-[#07070b]/95 rounded-xl border border-indigo-500/25 p-2.5 shadow-2xl flex items-center gap-2.5 overflow-hidden select-none animate-float">
+          {/* Ambient violet aura */}
+          <div className="absolute bottom-0 right-0 w-10 h-10 bg-indigo-500/20 rounded-full blur-md" />
+
+          {/* Left side: Avatar picture card */}
+          <div className="w-8 h-8 rounded-full border border-white/10 bg-gradient-to-tr from-slate-800 to-slate-950 flex items-center justify-center overflow-hidden shrink-0">
+            <svg viewBox="0 0 24 24" className="w-5 h-5 text-indigo-400 fill-current opacity-85" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            </svg>
+          </div>
+
+          {/* Right side: details lines */}
+          <div className="flex flex-col gap-1 flex-1 min-w-0">
+            <div className="w-12 h-[3px] bg-white rounded-full opacity-80" />
+            <div className="w-8 h-[2px] bg-slate-500 rounded-full" />
+            <div className="w-10 h-[2px] bg-slate-500 rounded-full" />
+            <span className="text-[6px] font-mono text-[#38bdf8] font-bold uppercase tracking-wide mt-1 leading-none block truncate">VERIFIED</span>
+          </div>
+        </div>
+      )
     }
   ];
 
@@ -398,7 +471,13 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
       </div>
 
       {/* Slide / Promo Carousel */}
-      <div className="relative rounded-2xl overflow-hidden shadow-xl border border-white/[0.05] bg-dark-card select-none">
+      <div 
+        className="relative rounded-2xl overflow-hidden shadow-2xl border bg-[#0b0b13]/80 backdrop-blur-md select-none transition-all duration-500 hover:scale-[1.01] active:scale-[0.99] group animate-fade-in"
+        style={{ 
+          borderColor: `${promoSlides[activePromo].accent}40`,
+          boxShadow: `0 0 35px ${promoSlides[activePromo].accent}15`
+        }}
+      >
         <div className="h-44 flex transition-all duration-500 relative">
           {promoSlides.map((slide, idx) => (
             <div
@@ -408,31 +487,50 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
               }`}
             >
               <div className="flex-1 pr-4">
-                <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-white/20 uppercase tracking-widest mb-2 inline-block">
+                <span 
+                  className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest mb-2 inline-block border bg-white/5"
+                  style={{ 
+                    color: slide.accent,
+                    borderColor: `${slide.accent}30`,
+                    textShadow: `0 0 6px ${slide.accent}40`
+                  }}
+                >
                   Featured Service
                 </span>
-                <h3 className="text-base font-extrabold text-white leading-tight font-display mb-1">
+                <h3 className="text-lg font-black text-white leading-tight font-display mb-1.5 drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]">
                   {slide.title}
                 </h3>
-                <p className="text-xs font-semibold text-cosmic-lilac mb-1">
+                <p 
+                  className="text-xs font-bold mb-1.5"
+                  style={{ 
+                    color: slide.accent,
+                    textShadow: `0 0 8px ${slide.accent}50`
+                  }}
+                >
                   {slide.subtitle}
                 </p>
-                <p className="text-[10px] text-white/70 line-clamp-2 leading-relaxed mb-3">
+                <p className="text-[10px] text-slate-300 font-medium line-clamp-2 leading-relaxed mb-4">
                   {slide.desc}
                 </p>
                 <button
                   onClick={() => onTabChange(slide.actionTab)}
-                  className="px-3 py-1.5 rounded-lg bg-white text-void-black text-[11px] font-bold hover:bg-neutral-100 active:scale-95 transition-all flex items-center gap-1 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-white text-slate-950 text-[11px] font-black tracking-wide shadow-[0_4px_12px_rgba(255,255,255,0.25)] hover:bg-slate-50 hover:scale-[1.03] active:scale-[0.97] transition-all flex items-center gap-1.5 cursor-pointer"
+                  style={{
+                    boxShadow: `0 4px 14px rgba(255, 255, 255, 0.15), 0 0 20px ${slide.accent}30`
+                  }}
                 >
                   <span>{slide.actionText}</span>
-                  <ArrowRight className="w-3 h-3" />
+                  <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
                 </button>
               </div>
 
               {/* Icon Container */}
-              <div className="w-20 h-20 relative flex items-center justify-center">
-                <div className="absolute inset-0 bg-white/10 rounded-full blur-xl animate-pulse" />
-                <div className="relative w-16 h-16 bg-void-black border border-white/25 rounded-2xl flex items-center justify-center text-3xl shadow-inner">
+              <div className="w-24 h-24 relative flex items-center justify-center shrink-0">
+                <div 
+                  className="absolute inset-0 rounded-full blur-2xl opacity-35 animate-pulse" 
+                  style={{ backgroundColor: slide.accent }}
+                />
+                <div className="relative z-10">
                   {slide.icon}
                 </div>
               </div>
@@ -441,75 +539,19 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
         </div>
 
         {/* Carousel Indicators */}
-        <div className="absolute bottom-3 right-6 flex gap-1.5 z-20">
+        <div className="absolute bottom-3.5 right-6 flex gap-1.5 z-20">
           {promoSlides.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setActivePromo(idx)}
-              className={`w-5 h-1 rounded-full transition-all ${
-                idx === activePromo ? "bg-white" : "bg-white/30 hover:bg-white/50"
-              }`}
+              className="h-1.5 rounded-full transition-all duration-300 cursor-pointer"
+              style={{
+                width: idx === activePromo ? "1.5rem" : "0.5rem",
+                backgroundColor: idx === activePromo ? promoSlides[idx].accent : "rgba(255, 255, 255, 0.2)",
+                boxShadow: idx === activePromo ? `0 0 10px ${promoSlides[idx].accent}` : "none"
+              }}
             />
           ))}
-        </div>
-      </div>
-
-      {/* Bento Grid Tools Navigation Section */}
-      <div>
-        <div className="flex items-center justify-between mb-3 px-1">
-          <h2 className="text-xs font-extrabold tracking-wider uppercase text-neutral-400">
-            Available Utilities
-          </h2>
-          <span className="text-[10px] bg-green-500/10 text-green-400 px-2 py-0.5 rounded font-bold uppercase">
-            Real & Free
-          </span>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2.5">
-          {/* Namso Gen Card */}
-          <button
-            onClick={() => onTabChange("cardgen")}
-            className="p-3 rounded-xl bg-dark-surface border border-white/[0.04] hover:border-cyber-purple/50 active:scale-95 transition-all flex flex-col items-start gap-2 text-left relative overflow-hidden group cursor-pointer"
-          >
-            <div className="absolute top-0 right-0 w-16 h-16 bg-cyber-purple/10 rounded-full blur-lg group-hover:bg-cyber-purple/20 transition-all" />
-            <div className="w-8 h-8 rounded-lg bg-cyber-purple/20 flex items-center justify-center text-cyber-purple font-bold">
-              💳
-            </div>
-            <div>
-              <span className="text-xs font-bold text-white block">AeroX Pro</span>
-              <span className="text-[9px] text-neutral-400 block line-clamp-1">Bulk CC Gen</span>
-            </div>
-          </button>
-
-          {/* Temp Mail Card */}
-          <button
-            onClick={() => onTabChange("tempmail")}
-            className="p-3 rounded-xl bg-dark-surface border border-white/[0.04] hover:border-cyber-purple/50 active:scale-95 transition-all flex flex-col items-start gap-2 text-left relative overflow-hidden group cursor-pointer"
-          >
-            <div className="absolute top-0 right-0 w-16 h-16 bg-hot-pink/10 rounded-full blur-lg group-hover:bg-hot-pink/20 transition-all" />
-            <div className="w-8 h-8 rounded-lg bg-pink-500/20 flex items-center justify-center text-pink-400 font-bold">
-              ✉️
-            </div>
-            <div>
-              <span className="text-xs font-bold text-white block">Temp Mail</span>
-              <span className="text-[9px] text-neutral-400 block line-clamp-1">AEROX Mail Engine</span>
-            </div>
-          </button>
-
-          {/* Fake Identity Address Card */}
-          <button
-            onClick={() => onTabChange("addressgen")}
-            className="p-3 rounded-xl bg-dark-surface border border-white/[0.04] hover:border-cyber-purple/50 active:scale-95 transition-all flex flex-col items-start gap-2 text-left relative overflow-hidden group cursor-pointer"
-          >
-            <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/10 rounded-full blur-lg group-hover:bg-indigo-500/20 transition-all" />
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
-              🗺️
-            </div>
-            <div>
-              <span className="text-xs font-bold text-white block">Identity</span>
-              <span className="text-[9px] text-neutral-400 block line-clamp-1">Fake Address</span>
-            </div>
-          </button>
         </div>
       </div>
 
