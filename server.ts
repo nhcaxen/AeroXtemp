@@ -12,6 +12,16 @@ import { users, redeemCodes, redemptions, mailboxes } from "./src/db/schema.js";
 import { eq, and, or, like, desc, sql } from "drizzle-orm";
 import { createClient } from "@supabase/supabase-js";
 
+function getDbErrorMessage(err: any): string {
+  if (!err) return "Unknown database error";
+  let msg = err.message || String(err);
+  if (err.cause) {
+    const causeMsg = err.cause.message || String(err.cause);
+    msg = `${causeMsg} (${msg})`;
+  }
+  return msg;
+}
+
 // Lazy Supabase Initializer with fallback to user's credentials
 let supabaseClient: any = null;
 function getSupabase() {
@@ -1261,7 +1271,7 @@ async function startServer() {
       console.error("[DATABASE ERROR] get profile:", err);
       return res.status(500).json({ 
         error: "Failed to retrieve user profile from database",
-        details: err.message
+        details: getDbErrorMessage(err)
       });
     }
   });
@@ -1952,7 +1962,7 @@ async function startServer() {
       
       return res.status(500).json({ 
         error: "Failed to authorize mailbox generation.",
-        details: err.message
+        details: getDbErrorMessage(err)
       });
     }
   });
