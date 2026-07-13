@@ -38,9 +38,14 @@ async function startServer() {
   try {
     await db.execute(sql`SELECT 1;`);
     console.log("[DB] Database connection verified successfully.");
-    
-    console.log("[DB] Running automatic database schema check & table creation...");
-    // 1. Create users table
+  } catch (err: any) {
+    console.warn("[DB WARNING] Database connection verification failed:", err.message);
+  }
+
+  console.log("[DB] Running automatic database schema check & table creation...");
+  
+  // 1. Create users table
+  try {
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -60,8 +65,13 @@ async function startServer() {
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
+    console.log("[DB] Verified users table exists.");
+  } catch (err: any) {
+    console.warn("[DB WARNING] Skip users table creation/verification:", err.message);
+  }
 
-    // 2. Create redeem_codes table
+  // 2. Create redeem_codes table
+  try {
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS redeem_codes (
         id SERIAL PRIMARY KEY,
@@ -77,8 +87,13 @@ async function startServer() {
         duration_days INTEGER
       );
     `);
+    console.log("[DB] Verified redeem_codes table exists.");
+  } catch (err: any) {
+    console.warn("[DB WARNING] Skip redeem_codes table creation/verification:", err.message);
+  }
 
-    // 3. Create redemptions table
+  // 3. Create redemptions table
+  try {
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS redemptions (
         id SERIAL PRIMARY KEY,
@@ -88,8 +103,13 @@ async function startServer() {
         redeemed_at TIMESTAMP DEFAULT NOW()
       );
     `);
+    console.log("[DB] Verified redemptions table exists.");
+  } catch (err: any) {
+    console.warn("[DB WARNING] Skip redemptions table creation/verification:", err.message);
+  }
 
-    // 4. Create mailboxes table
+  // 4. Create mailboxes table
+  try {
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS mailboxes (
         id SERIAL PRIMARY KEY,
@@ -105,9 +125,9 @@ async function startServer() {
         status TEXT DEFAULT 'active'
       );
     `);
-    console.log("[DB] Automatic database schema check & table creation completed successfully.");
-  } catch (err) {
-    console.warn("[DB WARNING] Database connection or table creation failed:", err);
+    console.log("[DB] Verified mailboxes table exists.");
+  } catch (err: any) {
+    console.warn("[DB WARNING] Skip mailboxes table creation/verification:", err.message);
   }
 
   // --- Helper to compute IP Trust & Fraud Risk Score ---
@@ -2296,25 +2316,30 @@ async function startServer() {
       console.log("[DB INIT] Ensuring tables and unique constraints exist...");
       
       // 1. Create users table
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS "users" (
-          "id" SERIAL PRIMARY KEY,
-          "telegram_id" TEXT,
-          "username" TEXT,
-          "first_name" TEXT,
-          "role" TEXT DEFAULT 'free',
-          "plan" TEXT DEFAULT 'free',
-          "credits" INTEGER DEFAULT 20,
-          "joined_at" TEXT,
-          "last_active" TEXT,
-          "photo_url" TEXT,
-          "total_recoveries" INTEGER DEFAULT 0,
-          "referrer_id" TEXT,
-          "credit_reset_time" TEXT,
-          "plan_expiry" TEXT,
-          "created_at" TIMESTAMP DEFAULT NOW()
-        )
-      `);
+      try {
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS "users" (
+            "id" SERIAL PRIMARY KEY,
+            "telegram_id" TEXT,
+            "username" TEXT,
+            "first_name" TEXT,
+            "role" TEXT DEFAULT 'free',
+            "plan" TEXT DEFAULT 'free',
+            "credits" INTEGER DEFAULT 20,
+            "joined_at" TEXT,
+            "last_active" TEXT,
+            "photo_url" TEXT,
+            "total_recoveries" INTEGER DEFAULT 0,
+            "referrer_id" TEXT,
+            "credit_reset_time" TEXT,
+            "plan_expiry" TEXT,
+            "created_at" TIMESTAMP DEFAULT NOW()
+          )
+        `);
+        console.log("[DB INIT] Verified users table exists.");
+      } catch (e: any) {
+        console.log("[DB INIT] Skip users table creation/verification:", e.message);
+      }
 
       // Ensure all columns exist for "users" table (useful if table already exists from older schema versions)
       try {
@@ -2351,21 +2376,26 @@ async function startServer() {
       }
 
       // 2. Create redeem_codes table
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS "redeem_codes" (
-          "id" SERIAL PRIMARY KEY,
-          "code" TEXT,
-          "credits" INTEGER DEFAULT 0,
-          "expires_at" TEXT,
-          "max_uses" INTEGER DEFAULT 1,
-          "used_count" INTEGER DEFAULT 0,
-          "created_at" TIMESTAMP DEFAULT NOW(),
-          "created_by" TEXT,
-          "plan" TEXT,
-          "role" TEXT,
-          "duration_days" INTEGER
-        )
-      `);
+      try {
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS "redeem_codes" (
+            "id" SERIAL PRIMARY KEY,
+            "code" TEXT,
+            "credits" INTEGER DEFAULT 0,
+            "expires_at" TEXT,
+            "max_uses" INTEGER DEFAULT 1,
+            "used_count" INTEGER DEFAULT 0,
+            "created_at" TIMESTAMP DEFAULT NOW(),
+            "created_by" TEXT,
+            "plan" TEXT,
+            "role" TEXT,
+            "duration_days" INTEGER
+          )
+        `);
+        console.log("[DB INIT] Verified redeem_codes table exists.");
+      } catch (e: any) {
+        console.log("[DB INIT] Skip redeem_codes table creation/verification:", e.message);
+      }
 
       // Ensure all columns exist for "redeem_codes"
       try {
@@ -2397,15 +2427,20 @@ async function startServer() {
       }
 
       // 3. Create redemptions table
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS "redemptions" (
-          "id" SERIAL PRIMARY KEY,
-          "code" TEXT,
-          "telegram_id" TEXT,
-          "username" TEXT,
-          "redeemed_at" TIMESTAMP DEFAULT NOW()
-        )
-      `);
+      try {
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS "redemptions" (
+            "id" SERIAL PRIMARY KEY,
+            "code" TEXT,
+            "telegram_id" TEXT,
+            "username" TEXT,
+            "redeemed_at" TIMESTAMP DEFAULT NOW()
+          )
+        `);
+        console.log("[DB INIT] Verified redemptions table exists.");
+      } catch (e: any) {
+        console.log("[DB INIT] Skip redemptions table creation/verification:", e.message);
+      }
 
       // Ensure all columns exist for "redemptions"
       try {
@@ -2419,21 +2454,26 @@ async function startServer() {
       }
 
       // 4. Create mailboxes table
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS "mailboxes" (
-          "id" SERIAL PRIMARY KEY,
-          "user_id" TEXT REFERENCES "users"("telegram_id"),
-          "provider" TEXT DEFAULT 'Mail.tm',
-          "email" TEXT,
-          "password" TEXT,
-          "access_token" TEXT,
-          "refresh_token" TEXT,
-          "created_at" TIMESTAMP DEFAULT NOW(),
-          "last_access" TIMESTAMP DEFAULT NOW(),
-          "last_refresh" TIMESTAMP DEFAULT NOW(),
-          "status" TEXT DEFAULT 'active'
-        )
-      `);
+      try {
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS "mailboxes" (
+            "id" SERIAL PRIMARY KEY,
+            "user_id" TEXT REFERENCES "users"("telegram_id"),
+            "provider" TEXT DEFAULT 'Mail.tm',
+            "email" TEXT,
+            "password" TEXT,
+            "access_token" TEXT,
+            "refresh_token" TEXT,
+            "created_at" TIMESTAMP DEFAULT NOW(),
+            "last_access" TIMESTAMP DEFAULT NOW(),
+            "last_refresh" TIMESTAMP DEFAULT NOW(),
+            "status" TEXT DEFAULT 'active'
+          )
+        `);
+        console.log("[DB INIT] Verified mailboxes table exists.");
+      } catch (e: any) {
+        console.log("[DB INIT] Skip mailboxes table creation/verification:", e.message);
+      }
 
       // Ensure all columns exist for "mailboxes"
       try {
@@ -2477,8 +2517,8 @@ async function startServer() {
       }
 
       console.log("[DB INIT] Database initialization completed successfully.");
-    } catch (err) {
-      console.error("[DB INIT] Database auto-initialization failed:", err);
+    } catch (err: any) {
+      console.error("[DB INIT] Database auto-initialization failed:", err.message);
     }
   });
 }

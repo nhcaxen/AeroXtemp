@@ -12,9 +12,17 @@ export const createPool = () => {
   const connectionString = process.env.DATABASE_URL;
   if (connectionString) {
     const isLocal = connectionString.includes("localhost") || connectionString.includes("127.0.0.1");
-    let ssl = isLocal ? false : { rejectUnauthorized: false };
+    const isCloudSqlSocket = connectionString.includes("/cloudsql/");
+    let ssl = (isLocal || isCloudSqlSocket) ? false : { rejectUnauthorized: false };
+
     if (process.env.DB_SSL_ENABLED === "true") ssl = { rejectUnauthorized: false };
-    if (process.env.DB_SSL_ENABLED === "false") ssl = false;
+    if (process.env.DB_SSL_ENABLED === "false") {
+      // Print warning for cloud databases requiring SSL
+      if (connectionString.includes("supabase") || connectionString.includes("neon.tech") || connectionString.includes("railway")) {
+        console.warn("[DB WARNING] DB_SSL_ENABLED is set to 'false', but the connection string appears to be a remote cloud database (Supabase/Neon/Railway) that typically requires SSL. If connection fails, please set DB_SSL_ENABLED='true' or remove it to use default SSL settings!");
+      }
+      ssl = false;
+    }
 
     return new Pool({
       connectionString,
@@ -26,13 +34,23 @@ export const createPool = () => {
   // Fallback to individual env vars (Supabase or manual config)
   const host = process.env.SQL_HOST || "";
   const isLocal = host.includes("localhost") || host.includes("127.0.0.1") || !host;
-  const sslConfig = process.env.DB_SSL_ENABLED === "true" 
+  
+  let sslConfig: any = process.env.DB_SSL_ENABLED === "true" 
     ? { rejectUnauthorized: false } 
     : (process.env.DB_SSL_ENABLED === "false" 
       ? false 
-      : null); // Return null to omit ssl option entirely
+      : null); // null means default fallback
+
+  if (sslConfig === null) {
+    // If not specified, default to SSL enabled for remote hosts, false for local
+    sslConfig = isLocal ? false : { rejectUnauthorized: false };
+  } else if (sslConfig === false && !isLocal) {
+    if (host.includes("supabase") || host.includes("neon.tech") || host.includes("railway")) {
+      console.warn("[DB WARNING] DB_SSL_ENABLED is set to 'false', but the SQL_HOST appears to be a remote cloud database (Supabase/Neon/Railway) that typically requires SSL. If connection fails, please set DB_SSL_ENABLED='true'!");
+    }
+  }
   
-  console.log(`[DB] Connecting to host ${process.env.SQL_HOST} with SSL configuration:`, sslConfig);
+  console.log(`[DB] Connecting to host ${process.env.SQL_HOST || "local socket"} with SSL configuration:`, sslConfig);
 
   const poolConfig: any = {
     host: process.env.SQL_HOST,
