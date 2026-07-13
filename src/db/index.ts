@@ -13,15 +13,18 @@ export const createPool = () => {
   if (connectionString) {
     const isLocal = connectionString.includes("localhost") || connectionString.includes("127.0.0.1");
     const isCloudSqlSocket = connectionString.includes("/cloudsql/");
-    let ssl = (isLocal || isCloudSqlSocket) ? false : { rejectUnauthorized: false };
+    const isRemoteCloudDb = connectionString.includes("supabase") || connectionString.includes("neon.tech") || connectionString.includes("railway") || connectionString.includes("render.com") || connectionString.includes("elephantsql");
+    
+    let ssl: any = (isLocal || isCloudSqlSocket) ? false : { rejectUnauthorized: false };
 
     if (process.env.DB_SSL_ENABLED === "true") ssl = { rejectUnauthorized: false };
     if (process.env.DB_SSL_ENABLED === "false") {
-      // Print warning for cloud databases requiring SSL
-      if (connectionString.includes("supabase") || connectionString.includes("neon.tech") || connectionString.includes("railway")) {
-        console.warn("[DB WARNING] DB_SSL_ENABLED is set to 'false', but the connection string appears to be a remote cloud database (Supabase/Neon/Railway) that typically requires SSL. If connection fails, please set DB_SSL_ENABLED='true' or remove it to use default SSL settings!");
+      if (isRemoteCloudDb) {
+        console.warn("[DB WARNING] DB_SSL_ENABLED is set to 'false', but the connection string is a remote cloud database (Supabase/Neon/Railway) that strictly requires SSL. Overriding to enable SSL for connection success!");
+        ssl = { rejectUnauthorized: false };
+      } else {
+        ssl = false;
       }
-      ssl = false;
     }
 
     return new Pool({
@@ -34,19 +37,21 @@ export const createPool = () => {
   // Fallback to individual env vars (Supabase or manual config)
   const host = process.env.SQL_HOST || "";
   const isLocal = host.includes("localhost") || host.includes("127.0.0.1") || !host;
+  const isRemoteCloudDb = host.includes("supabase") || host.includes("neon.tech") || host.includes("railway") || host.includes("render.com") || host.includes("elephantsql");
   
   let sslConfig: any = process.env.DB_SSL_ENABLED === "true" 
     ? { rejectUnauthorized: false } 
     : (process.env.DB_SSL_ENABLED === "false" 
-      ? false 
+      ? (isRemoteCloudDb ? { rejectUnauthorized: false } : false) 
       : null); // null means default fallback
 
   if (sslConfig === null) {
     // If not specified, default to SSL enabled for remote hosts, false for local
     sslConfig = isLocal ? false : { rejectUnauthorized: false };
   } else if (sslConfig === false && !isLocal) {
-    if (host.includes("supabase") || host.includes("neon.tech") || host.includes("railway")) {
-      console.warn("[DB WARNING] DB_SSL_ENABLED is set to 'false', but the SQL_HOST appears to be a remote cloud database (Supabase/Neon/Railway) that typically requires SSL. If connection fails, please set DB_SSL_ENABLED='true'!");
+    if (isRemoteCloudDb) {
+      console.warn("[DB WARNING] DB_SSL_ENABLED is set to 'false', but the SQL_HOST is a remote cloud database (Supabase/Neon/Railway) that typically requires SSL. Overriding to enable SSL!");
+      sslConfig = { rejectUnauthorized: false };
     }
   }
   

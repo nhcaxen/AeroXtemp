@@ -1259,7 +1259,10 @@ async function startServer() {
       });
     } catch (err: any) {
       console.error("[DATABASE ERROR] get profile:", err);
-      return res.status(500).json({ error: "Failed to retrieve user profile from database" });
+      return res.status(500).json({ 
+        error: "Failed to retrieve user profile from database",
+        details: err.message
+      });
     }
   });
 
@@ -1949,7 +1952,7 @@ async function startServer() {
       
       return res.status(500).json({ 
         error: "Failed to authorize mailbox generation.",
-        details: process.env.NODE_ENV !== "production" ? err.message : undefined
+        details: err.message
       });
     }
   });

@@ -192,7 +192,8 @@ export default function TempMailTab() {
       });
       if (!chargeRes.ok) {
         const data = await chargeRes.json();
-        throw new Error(data.error || "Failed to authorize mailbox generation.");
+        const detailsStr = data.details ? ` (${data.details})` : "";
+        throw new Error((data.error || "Failed to authorize mailbox generation.") + detailsStr);
       }
       fetchUserProfileSync();
 
