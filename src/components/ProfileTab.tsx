@@ -345,7 +345,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
           ═════════════════════════════════════════════════════════════ */}
       <div id="profile-master-card" className="relative rounded-2xl p-5 border border-white/[0.05] bg-dark-surface overflow-hidden shadow-2xl flex flex-col gap-4 text-left">
         <div className="absolute top-0 right-0 w-32 h-32 bg-cyber-purple/10 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-pink-500/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-cosmic-lilac/5 rounded-full blur-2xl pointer-events-none" />
 
         <div className="flex flex-col gap-4">
           {/* Upper Info Row */}
@@ -365,7 +365,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
                 />
               ) : (
                 <>
-                  <div className="absolute inset-0 bg-gradient-to-tr from-cyber-purple/30 to-pink-500/20" />
+                  <div className="absolute inset-0 bg-gradient-to-tr from-cyber-purple/30 to-cosmic-lilac/20" />
                   <span className="text-xl font-black text-white font-display">
                     {displayName ? displayName.charAt(0).toUpperCase() : "U"}
                   </span>
@@ -457,7 +457,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
             {/* Credits Balance */}
             <div className="bg-[#0c0c14]/50 border border-white/[0.04] p-3 rounded-xl flex flex-col gap-1.5 relative overflow-hidden">
               <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-widest block">Credits Balance</span>
-              <span className={`text-[11px] font-mono font-black mt-0.5 ${userProfile?.plan === "owner" ? "text-[#38bdf8] drop-shadow-[0_0_6px_rgba(56,189,248,0.3)]" : "text-pink-400"}`}>
+              <span className={`text-[11px] font-mono font-black mt-0.5 ${userProfile?.plan === "owner" ? "text-[#38bdf8] drop-shadow-[0_0_6px_rgba(56,189,248,0.3)]" : "text-cosmic-lilac"}`}>
                 {userProfile?.plan === "owner" 
                   ? "∞ UNLIMITED" 
                   : userProfile?.plan === "free"
@@ -543,7 +543,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
           {/* Redeem Code Section - only visible for non-owners */}
           {userProfile?.plan !== "owner" && (
             <div className="pt-3 border-t border-white/[0.05] flex flex-col gap-2.5 animate-fade-in">
-              <div className="bg-gradient-to-r from-[#120d24] to-[#0c0818] border border-cyber-purple/20 p-4 rounded-xl shadow-[0_0_20px_rgba(124,58,237,0.08)] flex flex-col gap-3">
+              <div className="bg-dark-surface border border-white/[0.04] p-4 rounded-xl shadow-md flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-white font-black uppercase tracking-widest flex items-center gap-1.5">
                     <Ticket className="w-3.5 h-3.5 text-cyber-purple animate-pulse" />
@@ -569,7 +569,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
                     id="submit-redeem-code-btn"
                     type="submit"
                     disabled={isRedeeming}
-                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-red-600 via-purple-600 to-indigo-600 hover:brightness-110 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider cursor-pointer active:scale-95 transition-all shadow-[0_0_15px_rgba(124,58,237,0.3)] shrink-0"
+                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-cyber-purple to-cosmic-lilac hover:brightness-110 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider cursor-pointer active:scale-95 transition-all shadow-[0_0_15px_rgba(79,125,255,0.25)] shrink-0"
                   >
                     {isRedeeming ? "Processing..." : "Redeem Now"}
                   </button>
@@ -596,7 +596,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
           {/* Referral Program Section */}
           <div className="pt-3 border-t border-white/[0.05] flex flex-col gap-2">
             <span className="text-[10px] text-neutral-400 font-black uppercase tracking-wider flex items-center gap-1">
-              <Users className="w-3.5 h-3.5 text-pink-400" />
+              <Users className="w-3.5 h-3.5 text-cosmic-lilac" />
               <span>AEROX Referral Link Program</span>
             </span>
             <div className="flex bg-void-black p-2 rounded-lg border border-white/[0.03] items-center justify-between gap-2">
@@ -652,7 +652,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
           <div className="p-3.5 rounded-xl bg-dark-surface border border-white/[0.05] flex flex-col gap-1.5">
             <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-wider block">YOUR RECOVERIES</span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-bold font-display text-pink-500 leading-none">
+              <span className="text-2xl font-bold font-display text-cyber-purple leading-none">
                 {userProfile?.totalRecoveries ?? 0}
               </span>
               <span className="text-[8px] text-neutral-500 font-semibold uppercase tracking-wider">LOGS</span>
@@ -753,7 +753,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
                     }`}
                   >
                     {p.popular && (
-                      <span className="absolute -top-2 right-4 px-2 py-0.5 text-[7px] font-black uppercase tracking-widest text-white bg-gradient-to-r from-pink-500 to-cyber-purple rounded-full border border-pink-500/30">
+                      <span className="absolute -top-2 right-4 px-2 py-0.5 text-[7px] font-black uppercase tracking-widest text-white bg-gradient-to-r from-cosmic-lilac to-cyber-purple rounded-full border border-cosmic-lilac/30">
                         🔥 Popular
                       </span>
                     )}
@@ -775,7 +775,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
 
                     {/* Features list */}
                     <div className="flex flex-col gap-1 border-t border-white/[0.05] pt-2">
-                      <div className="text-[9px] font-mono font-black text-pink-400 uppercase tracking-wider mb-1">
+                      <div className="text-[9px] font-mono font-black text-cyber-purple uppercase tracking-wider mb-1">
                         🚀 Limit: {p.credits}
                       </div>
                       <div className="grid grid-cols-2 gap-1">

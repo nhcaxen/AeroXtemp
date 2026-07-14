@@ -205,14 +205,14 @@ export default function TelegramFrame({ children, activeTab, onTabChange }: Tele
           {!playerOpen ? (
             <button 
               onClick={() => setPlayerOpen(true)}
-              className="w-12 h-12 rounded-full bg-gradient-to-r from-cyber-purple to-pink-600 hover:from-purple-600 hover:to-pink-500 text-white flex items-center justify-center shadow-[0_4px_16px_rgba(124,58,237,0.5)] border border-white/10 cursor-pointer transition-all active:scale-90"
+              className="w-12 h-12 rounded-full bg-gradient-to-r from-cyber-purple to-hot-pink hover:brightness-110 text-white flex items-center justify-center shadow-[0_4px_16px_rgba(79,125,255,0.4)] border border-white/10 cursor-pointer transition-all active:scale-90"
               title="Open Radio"
             >
-              <Disc className={`w-6 h-6 ${playing ? "animate-spin text-pink-300" : "text-white"}`} style={{ animationDuration: "3s" }} />
+              <Disc className={`w-6 h-6 ${playing ? "animate-spin text-purple-300" : "text-white"}`} style={{ animationDuration: "3s" }} />
               {playing && (
                 <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-pink-500 text-[6px] font-black text-white items-center justify-center">♪</span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-purple opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-hot-pink text-[6px] font-black text-white items-center justify-center">♪</span>
                 </span>
               )}
             </button>
@@ -221,8 +221,8 @@ export default function TelegramFrame({ children, activeTab, onTabChange }: Tele
               {/* Player Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-pink-500 animate-ping shrink-0" />
-                  <span className="text-[10px] text-pink-400 font-extrabold uppercase tracking-widest">AeroX Radio Suite</span>
+                  <div className="w-2 h-2 rounded-full bg-cyber-purple animate-ping shrink-0" />
+                  <span className="text-[10px] text-cyber-purple font-extrabold uppercase tracking-widest">AeroX Radio Suite</span>
                 </div>
                 <button 
                   onClick={() => setPlayerOpen(false)}
@@ -235,7 +235,7 @@ export default function TelegramFrame({ children, activeTab, onTabChange }: Tele
               {/* Disc + Track Details */}
               <div className="flex items-center gap-3 bg-void-black/60 p-2.5 rounded-xl border border-white/[0.03]">
                 <div className="relative w-11 h-11 bg-void-black rounded-lg border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-cyber-purple/20 to-pink-600/20" />
+                  <div className="absolute inset-0 bg-gradient-to-tr from-cyber-purple/20 to-hot-pink/20" />
                   <Disc className={`w-7 h-7 text-cyber-purple relative z-10 ${playing ? "animate-spin" : ""}`} style={{ animationDuration: "5s" }} />
                 </div>
 
@@ -305,7 +305,7 @@ export default function TelegramFrame({ children, activeTab, onTabChange }: Tele
                   onClick={() => setIsLooping(!isLooping)}
                   className={`p-1.5 rounded-lg transition-all cursor-pointer active:scale-90 ${
                     isLooping 
-                      ? "text-pink-400 bg-pink-500/10 border border-pink-500/20" 
+                      ? "text-cyber-purple bg-cyber-purple/10 border border-cyber-purple/20" 
                       : "text-neutral-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08]"
                   }`}
                   title={isLooping ? "Looping Enabled" : "Looping Disabled"}
@@ -325,7 +325,7 @@ export default function TelegramFrame({ children, activeTab, onTabChange }: Tele
                 {/* Play / Pause */}
                 <button 
                   onClick={() => setPlaying(!playing)}
-                  className="p-2.5 rounded-full bg-gradient-to-tr from-cyber-purple to-pink-600 hover:scale-105 active:scale-95 text-white transition-all shadow-md cursor-pointer"
+                  className="p-2.5 rounded-full bg-gradient-to-tr from-cyber-purple to-hot-pink hover:scale-105 active:scale-95 text-white transition-all shadow-md cursor-pointer"
                   title={playing ? "Pause" : "Play"}
                 >
                   {playing ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white translate-x-[1px]" />}

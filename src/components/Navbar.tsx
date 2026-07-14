@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, CreditCard, Mail, UserCheck, User, Shield, Sparkles } from "lucide-react";
+import { Home, ShoppingBag, Mail, UserCheck, User, Shield, Sparkles } from "lucide-react";
 import { TabId } from "../types";
 
 interface NavbarProps {
@@ -11,7 +11,7 @@ interface NavbarProps {
 export default function Navbar({ activeTab, onTabChange, isOwner }: NavbarProps) {
   const navItems = [
     { id: "home" as TabId, label: "Lobby", icon: Home },
-    { id: "cardgen" as TabId, label: "Card Gen", icon: CreditCard },
+    { id: "cardgen" as TabId, label: "Shop", icon: ShoppingBag },
     { id: "tempmail" as TabId, label: "Temp Mail", icon: Mail },
     { id: "addressgen" as TabId, label: "Identity", icon: UserCheck },
     { id: "profile" as TabId, label: "Profile", icon: User },

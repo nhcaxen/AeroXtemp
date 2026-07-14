@@ -280,6 +280,11 @@ async function main() {
       { name: "last_access", type: "TIMESTAMP", default: "NOW()" },
       { name: "last_refresh", type: "TIMESTAMP", default: "NOW()" },
       { name: "status", type: "TEXT", default: "'active'" },
+      { name: "expires_at", type: "TIMESTAMP" },
+      { name: "account_id", type: "TEXT" },
+      { name: "domain", type: "TEXT" },
+      { name: "mail_type", type: "TEXT", default: "'temp'" },
+      { name: "inbox_metadata", type: "TEXT" },
     ];
 
     for (const col of mailboxesColumns) {
@@ -296,18 +301,13 @@ async function main() {
       }
     }
 
-    // Unique Constraint on mailboxes.email
-    if (!(await constraintExists("mailboxes", "mailboxes_email_unique"))) {
-      console.log("Adding unique constraint 'mailboxes_email_unique'...");
-      try {
-        await client.query('ALTER TABLE "mailboxes" ADD CONSTRAINT "mailboxes_email_unique" UNIQUE ("email")');
-        verifiedConstraints.push("mailboxes.email UNIQUE");
-        console.log("Unique constraint 'mailboxes_email_unique' added.");
-      } catch (e: any) {
-        console.warn("Could not add mailboxes_email_unique constraint:", e.message);
-      }
-    } else {
-      console.log("Unique constraint 'mailboxes_email_unique' is already verified.");
+    // Drop Unique Constraint on mailboxes.email if exists to ensure independent records
+    console.log("Ensuring 'mailboxes_email_unique' is dropped for independent records...");
+    try {
+      await client.query('ALTER TABLE "mailboxes" DROP CONSTRAINT IF EXISTS "mailboxes_email_unique"');
+      console.log("Unique constraint 'mailboxes_email_unique' checked/dropped.");
+    } catch (e: any) {
+      console.warn("Could not drop unique constraint:", e.message);
     }
 
     // Foreign Key on mailboxes.user_id -> users.telegram_id
@@ -324,6 +324,53 @@ async function main() {
       }
     } else {
       console.log("Foreign key constraint is already verified.");
+    }
+
+    // --- 5. SHOP_PURCHASES TABLE ---
+    console.log("\nChecking 'shop_purchases' table...");
+    if (!(await tableExists("shop_purchases"))) {
+      console.log("Table 'shop_purchases' does not exist. Creating shop_purchases table...");
+      await client.query(`
+        CREATE TABLE "shop_purchases" (
+          "id" SERIAL PRIMARY KEY NOT NULL,
+          "telegram_id" TEXT,
+          "username" TEXT,
+          "product_title" TEXT,
+          "product_category" TEXT,
+          "product_price" INTEGER,
+          "credentials" TEXT,
+          "purchased_at" TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      createdTables.push("shop_purchases");
+      console.log("Table 'shop_purchases' created successfully.");
+    } else {
+      console.log("Table 'shop_purchases' exists. Verifying columns...");
+    }
+
+    const shopPurchasesColumns = [
+      { name: "id", type: "SERIAL PRIMARY KEY" },
+      { name: "telegram_id", type: "TEXT" },
+      { name: "username", type: "TEXT" },
+      { name: "product_title", type: "TEXT" },
+      { name: "product_category", type: "TEXT" },
+      { name: "product_price", type: "INTEGER" },
+      { name: "credentials", type: "TEXT" },
+      { name: "purchased_at", type: "TIMESTAMP", default: "NOW()" }
+    ];
+
+    for (const col of shopPurchasesColumns) {
+      if (col.name === "id") continue;
+      if (!(await columnExists("shop_purchases", col.name))) {
+        console.log(`Adding column 'shop_purchases.${col.name}'...`);
+        let query = `ALTER TABLE "shop_purchases" ADD COLUMN "${col.name}" ${col.type}`;
+        if (col.default !== undefined) {
+          query += ` DEFAULT ${col.default}`;
+        }
+        await client.query(query);
+        addedColumns.push(`shop_purchases.${col.name}`);
+        console.log(`Column 'shop_purchases.${col.name}' added.`);
+      }
     }
 
     console.log("\n=== MIGRATION COMPLETED SUCCESSFULLY ===");

@@ -44,7 +44,7 @@ export const mailboxes = pgTable("mailboxes", {
   id: serial("id").primaryKey(),
   userId: text("user_id").references(() => users.telegramId),
   provider: text("provider").default("Mail.tm"),
-  email: text("email").unique(),
+  email: text("email"),
   password: text("password"),
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
@@ -52,5 +52,22 @@ export const mailboxes = pgTable("mailboxes", {
   lastAccess: timestamp("last_access").defaultNow(),
   lastRefresh: timestamp("last_refresh").defaultNow(),
   status: text("status").default("active"), // "active" | "deleted" | "expired"
+  expiresAt: timestamp("expires_at"),
+  accountId: text("account_id"),
+  domain: text("domain"),
+  mailType: text("mail_type").default("temp"),
+  inboxMetadata: text("inbox_metadata"),
 });
+
+export const shopPurchases = pgTable("shop_purchases", {
+  id: serial("id").primaryKey(),
+  telegramId: text("telegram_id"),
+  username: text("username"),
+  productTitle: text("product_title"),
+  productCategory: text("product_category"),
+  productPrice: integer("product_price"),
+  credentials: text("credentials"),
+  purchasedAt: timestamp("purchased_at").defaultNow(),
+});
+
 

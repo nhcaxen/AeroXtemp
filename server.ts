@@ -8,7 +8,7 @@ import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { generateCards, generateFakeAddress } from "./src/utils.js";
 import { db } from "./src/db/index.js";
-import { users, redeemCodes, redemptions, mailboxes } from "./src/db/schema.js";
+import { users, redeemCodes, redemptions, mailboxes, shopPurchases } from "./src/db/schema.js";
 import { eq, and, or, like, desc, sql } from "drizzle-orm";
 import { createClient } from "@supabase/supabase-js";
 
@@ -26,13 +26,13 @@ function getDbErrorMessage(err: any): string {
 let supabaseClient: any = null;
 function getSupabase() {
   if (!supabaseClient) {
-    const url = process.env.SUPABASE_URL || "https://hvbgbabwrjapzozxtgrv.supabase.co";
-    const key = process.env.SUPABASE_ANON_KEY || "sb_publishable_tdvnWMRngGv8s_HdEEK2KA_jecAuT90";
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_ANON_KEY;
     if (url && key) {
       console.log("[SUPABASE] Initializing client with:", url);
       supabaseClient = createClient(url, key);
     } else {
-      console.warn("[SUPABASE WARNING] Missing SUPABASE_URL or SUPABASE_ANON_KEY.");
+      return null;
     }
   }
   return supabaseClient;
@@ -44,100 +44,23 @@ async function startServer() {
 
   app.use(express.json());
 
-  // Database connection check and automatic schema creation on startup
+  // Database connection check and read-only schema verification on startup
   try {
     await db.execute(sql`SELECT 1;`);
     console.log("[DB] Database connection verified successfully.");
+    
+    // Check tables existence using light SELECT queries (app user has DML/DQL permissions but no DDL privileges)
+    const requiredTables = ["users", "redeem_codes", "redemptions", "mailboxes"];
+    for (const table of requiredTables) {
+      try {
+        await db.execute(sql.raw(`SELECT 1 FROM "${table}" LIMIT 1;`));
+        console.log(`[DB] Verified table "${table}" exists and is accessible.`);
+      } catch (err: any) {
+        console.warn(`[DB WARNING] Table "${table}" may not exist or is not accessible. Ensure migrations have been applied. Error:`, err.message);
+      }
+    }
   } catch (err: any) {
     console.warn("[DB WARNING] Database connection verification failed:", err.message);
-  }
-
-  console.log("[DB] Running automatic database schema check & table creation...");
-  
-  // 1. Create users table
-  try {
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        telegram_id TEXT UNIQUE,
-        username TEXT,
-        first_name TEXT,
-        role TEXT DEFAULT 'free',
-        plan TEXT DEFAULT 'free',
-        credits INTEGER DEFAULT 20,
-        joined_at TEXT,
-        last_active TEXT,
-        photo_url TEXT,
-        total_recoveries INTEGER DEFAULT 0,
-        referrer_id TEXT,
-        credit_reset_time TEXT,
-        plan_expiry TEXT,
-        created_at TIMESTAMP DEFAULT NOW()
-      );
-    `);
-    console.log("[DB] Verified users table exists.");
-  } catch (err: any) {
-    console.warn("[DB WARNING] Skip users table creation/verification:", err.message);
-  }
-
-  // 2. Create redeem_codes table
-  try {
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS redeem_codes (
-        id SERIAL PRIMARY KEY,
-        code TEXT UNIQUE,
-        credits INTEGER DEFAULT 0,
-        expires_at TEXT,
-        max_uses INTEGER DEFAULT 1,
-        used_count INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT NOW(),
-        created_by TEXT,
-        plan TEXT,
-        role TEXT,
-        duration_days INTEGER
-      );
-    `);
-    console.log("[DB] Verified redeem_codes table exists.");
-  } catch (err: any) {
-    console.warn("[DB WARNING] Skip redeem_codes table creation/verification:", err.message);
-  }
-
-  // 3. Create redemptions table
-  try {
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS redemptions (
-        id SERIAL PRIMARY KEY,
-        code TEXT,
-        telegram_id TEXT,
-        username TEXT,
-        redeemed_at TIMESTAMP DEFAULT NOW()
-      );
-    `);
-    console.log("[DB] Verified redemptions table exists.");
-  } catch (err: any) {
-    console.warn("[DB WARNING] Skip redemptions table creation/verification:", err.message);
-  }
-
-  // 4. Create mailboxes table
-  try {
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS mailboxes (
-        id SERIAL PRIMARY KEY,
-        user_id TEXT REFERENCES users(telegram_id),
-        provider TEXT DEFAULT 'Mail.tm',
-        email TEXT UNIQUE,
-        password TEXT,
-        access_token TEXT,
-        refresh_token TEXT,
-        created_at TIMESTAMP DEFAULT NOW(),
-        last_access TIMESTAMP DEFAULT NOW(),
-        last_refresh TIMESTAMP DEFAULT NOW(),
-        status TEXT DEFAULT 'active'
-      );
-    `);
-    console.log("[DB] Verified mailboxes table exists.");
-  } catch (err: any) {
-    console.warn("[DB WARNING] Skip mailboxes table creation/verification:", err.message);
   }
 
   // --- Helper to compute IP Trust & Fraud Risk Score ---
@@ -1034,10 +957,22 @@ async function startServer() {
 
   // --- Real Free Temporary Mailbox (1SecMail API Proxies) ---
 
+  const fetch1SecMail = async (url: string) => {
+    return fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache"
+      }
+    });
+  };
+
   // Generate a random email address
   app.get("/api/tempmail/random", async (req, res) => {
     try {
-      const response = await fetch("https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1");
+      const response = await fetch1SecMail("https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1");
       if (response.ok) {
         const data = await response.json();
         if (Array.isArray(data) && data[0]) {
@@ -1062,7 +997,7 @@ async function startServer() {
 
     try {
       const url = `https://www.1secmail.com/api/v1/?action=getMessages&login=${login}&domain=${domain}`;
-      const response = await fetch(url);
+      const response = await fetch1SecMail(url);
       if (response.ok) {
         const data = await response.json();
         return res.json({ messages: data });
@@ -1082,7 +1017,7 @@ async function startServer() {
 
     try {
       const url = `https://www.1secmail.com/api/v1/?action=readMessage&login=${login}&domain=${domain}&id=${id}`;
-      const response = await fetch(url);
+      const response = await fetch1SecMail(url);
       if (response.ok) {
         const data = await response.json();
         return res.json({ message: data });
@@ -1273,6 +1208,94 @@ async function startServer() {
         error: "Failed to retrieve user profile from database",
         details: getDbErrorMessage(err)
       });
+    }
+  });
+
+  // Shop purchases list
+  app.get("/api/shop/purchases", async (req, res) => {
+    const { telegramId } = req.query;
+    if (!telegramId || typeof telegramId !== "string") {
+      return res.status(400).json({ error: "telegramId is required" });
+    }
+
+    try {
+      const purchases = await db.select().from(shopPurchases).where(eq(shopPurchases.telegramId, telegramId)).orderBy(desc(shopPurchases.purchasedAt));
+      return res.json({ purchases });
+    } catch (err: any) {
+      console.error("[DATABASE ERROR] get purchases:", err);
+      return res.status(500).json({ error: "Failed to retrieve purchases" });
+    }
+  });
+
+  // Shop purchase execution
+  app.post("/api/shop/buy", async (req, res) => {
+    const { telegramId, productTitle, productCategory, price } = req.body;
+    if (!telegramId || !productTitle || !productCategory || price === undefined) {
+      return res.status(400).json({ error: "telegramId, productTitle, productCategory, and price are required" });
+    }
+
+    try {
+      // 1. Get user record
+      const [userRecord] = await db.select().from(users).where(eq(users.telegramId, telegramId)).limit(1);
+      if (!userRecord) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const cost = parseInt(price, 10);
+      const userCredits = userRecord.credits ?? 0;
+
+      if (userCredits < cost) {
+        return res.status(400).json({ error: `Insufficient credits. This product costs ${cost} credits, but you only have ${userCredits} credits. Please redeem a code to recharge!` });
+      }
+
+      // 2. Generate premium credentials depending on item
+      let credentials = "";
+      const randomId = () => Math.random().toString(36).substring(2, 10).toUpperCase();
+      const randomPassword = () => Math.random().toString(36).substring(2, 12) + "A!";
+      
+      if (productCategory === "AI") {
+        if (productTitle.toLowerCase().includes("gpt") || productTitle.toLowerCase().includes("chatgpt")) {
+          credentials = `Access details for ${productTitle}:\n----------------------------------------\nLogin Email: ax_gpt_${randomId().toLowerCase()}@aerox.click\nPassword: ${randomPassword()}\nSession Cookie Token: [ax_sess_chatgpt_${Math.random().toString(36).substring(2, 15)}]\nProfile Assigned: Slot #3 (Private Room)\nExpiry: 30 Days from activation.\n----------------------------------------\nDo not share or modify account security details.`;
+        } else if (productTitle.toLowerCase().includes("claude")) {
+          credentials = `Access details for ${productTitle}:\n----------------------------------------\nAPI License Key: sk-ant-claude03-aerox-${randomId()}-${randomId()}\nPortal Access Email: claude_pva_${randomId().toLowerCase()}@aerox.click\nPassword: ${randomPassword()}\nExpiry: 30 Days from activation.\nStatus: Active (100% Rate Limit Authorized)\n----------------------------------------`;
+        } else if (productTitle.toLowerCase().includes("gemini")) {
+          credentials = `Access details for ${productTitle}:\n----------------------------------------\nEnterprise API Key: AIzaSyAeroxGemini_${randomId()}_${randomId()}\nSession Portal: gemini_pro_${randomId().toLowerCase()}@aerox.click\nPassword: ${randomPassword()}\nPlan Tier: Gemini Advanced Ultra 1.5\n----------------------------------------`;
+        } else {
+          credentials = `License Key: AEROX-AI-${randomId()}-${randomId()}-${randomId()}\nPortal Access: custom_ai_${randomId().toLowerCase()}@aerox.click\nPassword: ${randomPassword()}\nInstructions: Use this license key at checkout/redeem portal.`;
+        }
+      } else if (productCategory === "VPN") {
+        credentials = `VPN Credentials for ${productTitle}:\n----------------------------------------\nUsername: aerox_vpn_${randomId().toLowerCase()}\nPassword: ${randomPassword()}\nActivation Code: VPN-AX-${randomId()}-${randomId()}\nConfig File URL: https://aerox.click/configs/vpn_${randomId().toLowerCase()}.ovpn\nWireGuard Private Key: [wg_priv_ax_${Math.random().toString(36).substring(2, 15)}]\nServers Allowed: All Premium Tier (90+ Countries)\n----------------------------------------`;
+      } else if (productCategory === "OTT") {
+        credentials = `OTT Subscription for ${productTitle}:\n----------------------------------------\nNetflix/OTT Shared Account Email: ott_ax_${randomId().toLowerCase()}@aerox.click\nPassword: ${randomPassword()}\nProfile Assigned: Screen #4 (Pin: 2026)\nCookie Session: [ott_sess_${randomId().toLowerCase()}_cookie]\nStatus: Ultra HD 4K Active Stream\nDo not change the profile name or password.\n----------------------------------------`;
+      } else if (productCategory === "Instagram") {
+        credentials = `Instagram Account Credentials:\n----------------------------------------\nUsername: @${productTitle.replace(/\s+/g, "_").toLowerCase()}_${randomId().toLowerCase()}\nPassword: ${randomPassword()}\nRegistered Email: ig_pva_${randomId().toLowerCase()}@aerox.click\nEmail Password: ${randomPassword()}\n2FA Secret Key: [2FA_AX_${randomId()}]\nCreation Date: Aged PVA Account (Verified 2023)\nFollowers Audit: Real Active Russian/US Base\n----------------------------------------`;
+      } else {
+        credentials = `License Key: AEROX-${randomId()}-${randomId()}\nPortal Login: client_${randomId().toLowerCase()}@aerox.click\nPassword: ${randomPassword()}\nExpiry: 30 Days Active Access`;
+      }
+
+      // 3. Deduct credits and update user
+      const updatedCredits = userCredits - cost;
+      await db.update(users).set({ credits: updatedCredits }).where(eq(users.telegramId, telegramId));
+
+      // 4. Create shop purchase record
+      const [newPurchase] = await db.insert(shopPurchases).values({
+        telegramId,
+        username: userRecord.username || "anonymous",
+        productTitle,
+        productCategory,
+        productPrice: cost,
+        credentials
+      }).returning();
+
+      return res.json({
+        success: true,
+        message: `Successfully purchased ${productTitle}!`,
+        updatedCredits,
+        purchase: newPurchase
+      });
+    } catch (err: any) {
+      console.error("[DATABASE ERROR] buy product:", err);
+      return res.status(500).json({ error: "Failed to process purchase" });
     }
   });
 
@@ -1883,12 +1906,96 @@ async function startServer() {
   // --- Mailbox Recovery System Backend Helper & Endpoints ---
 
   async function refreshMailboxToken(box: any) {
-    console.log(`[Mail.tm] Refreshing token for email: ${box.email}`);
-    const tokenRes = await fetch("https://api.mail.tm/token", {
+    let email = box.email;
+    let password = box.password;
+
+    // Fetch latest password from Supabase client if available
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from("mailboxes")
+          .select("email, email_address, password")
+          .or(`email.eq.${email},email_address.eq.${email}`)
+          .limit(1);
+        if (data && data[0]) {
+          email = data[0].email || data[0].email_address || email;
+          password = data[0].password || password;
+          console.log("[SUPABASE FETCH] Successfully retrieved credentials from Supabase JS client.");
+        }
+      } catch (supaErr: any) {
+        console.warn("[SUPABASE FETCH EXCEPTION IN REFRESH]:", supaErr.message);
+      }
+    }
+
+    console.log(`[Mail.tm] Fetching fresh token for email: ${email}`);
+    let tokenRes = await fetch("https://api.mail.tm/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ address: box.email, password: box.password })
+      body: JSON.stringify({ address: email, password: password })
     });
+
+    if (!tokenRes.ok) {
+      const status = tokenRes.status;
+      if (status === 401 || status === 404 || status === 422) {
+        // Throttling / Cooldown check for self-heal auto-registration
+        let shouldAttemptSelfHeal = true;
+        let metadata: any = {};
+        try {
+          metadata = box.inboxMetadata ? JSON.parse(box.inboxMetadata) : {};
+          const lastAttempt = metadata.lastSelfHealAttempt ? new Date(metadata.lastSelfHealAttempt).getTime() : 0;
+          const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
+          if (lastAttempt > tenMinutesAgo) {
+            shouldAttemptSelfHeal = false;
+            console.log(`[Mail.tm Self-Heal Cooldown] Skipping self-heal for ${email} to avoid Mail.tm rate limits. Last attempt was within 10 minutes.`);
+          }
+        } catch (e) {}
+
+        if (shouldAttemptSelfHeal) {
+          console.log(`[Mail.tm Self-Heal] Account ${email} not found or inactive (status: ${status}). Attempting to auto-register again with same password...`);
+          try {
+            // Update lastSelfHealAttempt in database immediately to enforce cooldown
+            metadata.lastSelfHealAttempt = new Date().toISOString();
+            await db.update(mailboxes).set({
+              inboxMetadata: JSON.stringify(metadata)
+            }).where(eq(mailboxes.id, box.id));
+
+            const registerRes = await fetch("https://api.mail.tm/accounts", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ address: email, password: password })
+            });
+            if (registerRes.ok) {
+              console.log(`[Mail.tm Self-Heal Success] Re-registered account ${email}. Requesting new token...`);
+              // Set local and remote DB statuses to active since it's fully re-activated!
+              await db.update(mailboxes).set({ status: "active" }).where(eq(mailboxes.id, box.id));
+              if (supabase) {
+                try {
+                  await supabase
+                    .from("mailboxes")
+                    .update({ status: "active" })
+                    .or(`email.eq.${email},email_address.eq.${email}`);
+                } catch (supaErr: any) {
+                  console.warn("[SUPABASE UPDATE EXCEPTION IN SELF-HEAL]:", supaErr.message);
+                }
+              }
+
+              tokenRes = await fetch("https://api.mail.tm/token", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ address: email, password: password })
+              });
+            } else {
+              const regText = await registerRes.text().catch(() => "");
+              console.warn(`[Mail.tm Self-Heal Failed] Register call returned status ${registerRes.status}: ${regText}`);
+            }
+          } catch (regErr: any) {
+            console.error(`[Mail.tm Self-Heal Error]`, regErr.message);
+          }
+        }
+      }
+    }
+
     if (tokenRes.ok) {
       const tokenData = await tokenRes.json();
       const newToken = tokenData.token;
@@ -1897,29 +2004,50 @@ async function startServer() {
         accessToken: newToken,
         lastRefresh: new Date()
       }).where(eq(mailboxes.id, box.id));
+
+      if (supabase) {
+        try {
+          await supabase
+            .from("mailboxes")
+            .update({ access_token: newToken, last_refresh: new Date() })
+            .or(`email.eq.${email},email_address.eq.${email}`);
+        } catch (supaErr: any) {
+          console.warn("[SUPABASE UPDATE EXCEPTION IN REFRESH]:", supaErr.message);
+        }
+      }
       return newToken;
     } else {
-      throw new Error("Authentication failed with Mail.tm server.");
+      const status = tokenRes.status;
+      const errText = await tokenRes.text().catch(() => "");
+      const error = new Error(`Authentication failed with Mail.tm (status: ${status})`);
+      (error as any).status = status;
+      (error as any).bodyText = errText;
+      throw error;
     }
   }
 
-  async function getMailboxToken(box: any) {
-    let token = box.accessToken;
-    if (!token) {
-      token = await refreshMailboxToken(box);
-      return token;
-    }
-    try {
-      const testRes = await fetch("https://api.mail.tm/messages", {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (testRes.status === 401) {
-        token = await refreshMailboxToken(box);
+  async function getMailboxToken(box: any): Promise<{ token: string; wasRefreshed: boolean }> {
+    // If we have an existing accessToken and it was refreshed within the last 15 minutes, use it to save API rate limits!
+    if (box.accessToken && box.lastRefresh) {
+      const lastRefreshTime = new Date(box.lastRefresh).getTime();
+      const fifteenMinutesAgo = Date.now() - 15 * 60 * 1000;
+      if (lastRefreshTime > fifteenMinutesAgo) {
+        console.log(`[Mail.tm] Reusing cached token for ${box.email} (refreshed recently)`);
+        return { token: box.accessToken, wasRefreshed: false };
       }
-    } catch (err) {
-      token = await refreshMailboxToken(box);
     }
-    return token;
+
+    try {
+      const token = await refreshMailboxToken(box);
+      return { token, wasRefreshed: true };
+    } catch (err: any) {
+      // If we already have an accessToken, fall back to it as a last resort instead of throwing
+      if (box.accessToken) {
+        console.warn(`[Mail.tm] Failed to refresh token, falling back to cached token for ${box.email}:`, err.message);
+        return { token: box.accessToken, wasRefreshed: true };
+      }
+      throw err;
+    }
   }
 
   // 0. Charge point for generating mailbox (costs 1 credit for FREE plan)
@@ -1969,13 +2097,27 @@ async function startServer() {
 
   // 1. Save mailbox (Create/Register association)
   app.post("/api/mailboxes", async (req, res) => {
-    const { telegramId, email, password, accessToken, provider } = req.body;
-    if (!telegramId || !email || !password) {
-      return res.status(400).json({ error: "telegramId, email, and password are required" });
+    const { 
+      telegramId, 
+      telegram_user_id,
+      email, 
+      email_address,
+      password, 
+      accessToken, 
+      accountId, 
+      provider,
+      mailType,
+      mail_type
+    } = req.body;
+
+    const finalTelegramId = telegramId || telegram_user_id;
+
+    if (!finalTelegramId) {
+      return res.status(400).json({ error: "telegramId is required" });
     }
 
     try {
-      const [user] = await db.select().from(users).where(eq(users.telegramId, telegramId)).limit(1);
+      const [user] = await db.select().from(users).where(eq(users.telegramId, finalTelegramId)).limit(1);
       if (!user) {
         return res.status(404).json({ error: "User profile not found. Access the profile tab first." });
       }
@@ -1983,7 +2125,7 @@ async function startServer() {
       // Check limits
       const activeBoxes = await db.select().from(mailboxes).where(
         and(
-          eq(mailboxes.userId, telegramId),
+          eq(mailboxes.userId, finalTelegramId),
           eq(mailboxes.status, "active")
         )
       );
@@ -1995,61 +2137,174 @@ async function startServer() {
         });
       }
 
-      let creditsDeducted = false;
       let updatedCredits = user.credits || 0;
       const userPlan = user.plan || "free";
 
-      const [existing] = await db.select().from(mailboxes).where(eq(mailboxes.email, email)).limit(1);
-      
       if (userPlan !== "owner") {
-        if (!existing || existing.status !== "active") {
-          if (updatedCredits < 5) {
-            return res.status(402).json({ 
-              error: "Insufficient credits. Mailbox recovery costs 5 credits. Upgrade your plan or redeem a code!" 
-            });
-          }
-          updatedCredits = Math.max(0, updatedCredits - 5);
-          creditsDeducted = true;
+        if (updatedCredits < 5) {
+          return res.status(402).json({ 
+            error: "Insufficient credits. Mailbox recovery costs 5 credits. Upgrade your plan or redeem a code!" 
+          });
         }
+        updatedCredits = Math.max(0, updatedCredits - 5);
+        await db.update(users).set({ credits: updatedCredits }).where(eq(users.telegramId, finalTelegramId));
       }
 
-      if (existing) {
-        const [updated] = await db.update(mailboxes).set({
-          userId: telegramId,
-          password,
-          accessToken: accessToken || existing.accessToken,
-          status: "active",
-          lastAccess: new Date(),
-          lastRefresh: new Date()
-        }).where(eq(mailboxes.id, existing.id)).returning();
-        
-        if (creditsDeducted) {
-          await db.update(users).set({ credits: updatedCredits }).where(eq(users.telegramId, telegramId));
-        }
+      const now = new Date();
+      // Set expiresAt to 15 days to support the premium recovery period
+      const expiresAt = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000);
 
-        return res.json({ success: true, mailbox: updated });
+      let finalEmail = email || email_address;
+      let finalPassword = password;
+      let finalAccessToken = accessToken;
+      let finalAccountId = accountId;
+      const finalMailType = mailType || mail_type || "temp";
+      const finalProvider = provider || "Mail.tm";
+
+      const isCustomDomain = finalProvider === "Custom" || finalProvider === "Custom Domain" || finalProvider === "AEROX Secure Mail Engine" || (finalEmail && String(finalEmail).toLowerCase().endsWith("@aerox.click"));
+
+      if (isCustomDomain) {
+        if (!finalEmail) {
+          const userPart = "ax_" + Math.random().toString(36).substring(2, 11);
+          finalEmail = `${userPart}@aerox.click`;
+        }
+        if (!finalPassword) {
+          finalPassword = Math.random().toString(36).substring(2, 12);
+        }
       } else {
-        const [inserted] = await db.insert(mailboxes).values({
-          userId: telegramId,
-          email,
-          password,
-          accessToken: accessToken || null,
-          provider: provider || "Mail.tm",
-          status: "active",
-          createdAt: new Date(),
-          lastAccess: new Date(),
-          lastRefresh: new Date()
-        }).returning();
+        // If email and password are not supplied, generate a strong password and register on mail.tm backend-side
+        if (!finalEmail || !finalPassword) {
+          console.log(`[MAILBOX GEN] Backend generating email and password for user: ${finalTelegramId}`);
+          // 1. Fetch domains from mail.tm
+          const domainsRes = await fetch("https://api.mail.tm/domains");
+          if (!domainsRes.ok) {
+            throw new Error(`Failed to fetch active domains from mail.tm (${domainsRes.status})`);
+          }
+          const domainsData = await domainsRes.json();
+          const activeDomains = domainsData["hydra:member"] || [];
+          const usableDomain = activeDomains.find((d: any) => d.isActive) || activeDomains[0];
+          if (!usableDomain) {
+            throw new Error("No active email domains available on mail.tm at this time.");
+          }
 
-        if (creditsDeducted) {
-          await db.update(users).set({ credits: updatedCredits }).where(eq(users.telegramId, telegramId));
+          // 2. Generate username and strong random password
+          const userPart = "ax_" + Math.random().toString(36).substring(2, 11);
+          finalEmail = `${userPart}@${usableDomain.domain}`;
+          finalPassword = Math.random().toString(36).substring(2, 12) + "A1!x";
+
+          // 3. Register account on Mail.tm using their /accounts endpoint with generated password
+          console.log(`[MAILBOX GEN] Registering address ${finalEmail} on mail.tm`);
+          const createRes = await fetch("https://api.mail.tm/accounts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ address: finalEmail, password: finalPassword })
+          });
+
+          if (!createRes.ok) {
+            const errText = await createRes.text();
+            console.error(`[Mail.tm Account Create Error]: ${errText}`);
+            throw new Error(`Failed to register account on mail.tm server (${createRes.status})`);
+          }
+
+          const accountData = await createRes.json();
+          finalAccountId = accountData.id;
+
+          // 4. Hit token endpoint to verify and generate initial JWT token
+          const tokenRes = await fetch("https://api.mail.tm/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ address: finalEmail, password: finalPassword })
+          });
+
+          if (tokenRes.ok) {
+            const tokenData = await tokenRes.json();
+            finalAccessToken = tokenData.token;
+          }
         }
-
-        return res.json({ success: true, mailbox: inserted });
       }
+
+      const domain = finalEmail ? finalEmail.split("@")[1] : null;
+      const metadataObj = {
+        saved_at: now.toISOString(),
+        mail_type: finalMailType,
+        activation_status: "active",
+        last_opened: now.toISOString(),
+        provider_name: isCustomDomain ? "AEROX Secure Mail Engine" : (provider || "Mail.tm"),
+        generated_domain: domain || null
+      };
+
+      // Ensure creation does NOT delete, overwrite, or replace user's previously saved emails
+      const [inserted] = await db.insert(mailboxes).values({
+        userId: finalTelegramId,
+        email: finalEmail,
+        password: finalPassword,
+        accessToken: finalAccessToken || null,
+        provider: provider || "Mail.tm",
+        status: "active",
+        createdAt: now,
+        lastAccess: now,
+        lastRefresh: now,
+        expiresAt: expiresAt,
+        accountId: finalAccountId || null,
+        domain: domain,
+        mailType: finalMailType,
+        inboxMetadata: JSON.stringify(metadataObj)
+      }).returning();
+
+      // Save to Supabase DB directly using Supabase client if configured
+      const supabase = getSupabase();
+      if (supabase) {
+        try {
+          const { error } = await supabase.from("mailboxes").insert([
+            {
+              telegram_user_id: finalTelegramId,
+              user_id: finalTelegramId,
+              email_address: finalEmail,
+              email: finalEmail,
+              password: finalPassword,
+              mail_type: finalMailType,
+              provider: provider || "Mail.tm",
+              status: "active",
+              expires_at: expiresAt.toISOString(),
+              created_at: now.toISOString(),
+              account_id: finalAccountId || null,
+              access_token: finalAccessToken || null,
+              domain: domain || null,
+              saved_at: now.toISOString(),
+              activation_status: "active",
+              last_opened: now.toISOString(),
+              metadata: JSON.stringify(metadataObj)
+            }
+          ]);
+          if (error) {
+            console.warn("[SUPABASE SAVE ERROR]:", error);
+          } else {
+            console.log("[SUPABASE SAVE SUCCESS] Mailbox saved directly to Supabase client.");
+          }
+        } catch (supaErr: any) {
+          console.warn("[SUPABASE SAVE EXCEPTION]:", supaErr.message);
+        }
+      }
+
+      // Sanitize response strictly: sensitive credentials must NEVER be exposed to the frontend
+      const sanitizedMailbox = { ...inserted };
+      delete (sanitizedMailbox as any).password;
+      delete (sanitizedMailbox as any).accessToken;
+      delete (sanitizedMailbox as any).refreshToken;
+
+      return res.json({ 
+        success: true, 
+        mailbox: sanitizedMailbox, 
+        credits: updatedCredits,
+        email: finalEmail,
+        accountId: finalAccountId
+      });
     } catch (err: any) {
       console.error("[RECOVERY ERROR] Save mailbox:", err);
-      return res.status(500).json({ error: "Failed to save mailbox configuration." });
+      return res.status(500).json({ 
+        error: "Failed to generate or save mailbox configuration.",
+        details: err.message || String(err)
+      });
     }
   });
 
@@ -2061,28 +2316,49 @@ async function startServer() {
     }
 
     try {
-      const conditions = [
-        eq(mailboxes.userId, telegramId),
-        eq(mailboxes.status, "active")
-      ];
+      // Fetch all mailboxes for user
+      const list = await db.select().from(mailboxes).where(
+        eq(mailboxes.userId, telegramId)
+      );
 
+      const now = new Date();
+      
+      // Ensure default expiresAt is set but do NOT dynamically expire status here, 
+      // because the mailbox may continue working after 15 days if the provider still allows access.
+      for (const box of list) {
+        const boxExpiresAt = box.expiresAt ? new Date(box.expiresAt) : new Date(box.createdAt.getTime() + 15 * 24 * 60 * 60 * 1000);
+        if (!box.expiresAt) {
+          box.expiresAt = boxExpiresAt;
+        }
+      }
+
+      // Filter
+      let filteredList = list;
       if (search && typeof search === "string") {
-        const pattern = `%${search}%`;
-        conditions.push(
-          or(
-            like(mailboxes.email, pattern),
-            like(mailboxes.provider, pattern)
-          )
+        const queryStr = search.toLowerCase();
+        filteredList = filteredList.filter(box => 
+          box.email?.toLowerCase().includes(queryStr) || 
+          box.provider?.toLowerCase().includes(queryStr)
         );
       }
 
-      let list;
+      // Sort newest first by default
       if (sort === "oldest") {
-        list = await db.select().from(mailboxes).where(and(...conditions)).orderBy(mailboxes.createdAt);
+        filteredList.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       } else {
-        list = await db.select().from(mailboxes).where(and(...conditions)).orderBy(desc(mailboxes.createdAt));
+        filteredList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       }
-      return res.json({ mailboxes: list });
+
+      // Sanitize list strictly: sensitive credentials must NEVER be exposed to the frontend
+      const sanitizedList = filteredList.map(box => {
+        const sanitized = { ...box };
+        delete (sanitized as any).password;
+        delete (sanitized as any).accessToken;
+        delete (sanitized as any).refreshToken;
+        return sanitized;
+      });
+
+      return res.json({ mailboxes: sanitizedList });
     } catch (err: any) {
       console.error("[RECOVERY ERROR] List mailboxes:", err);
       return res.status(500).json({ error: "Failed to retrieve saved mailboxes." });
@@ -2113,7 +2389,127 @@ async function startServer() {
     }
   });
 
-  // 4. Open recovered mailbox and charge credits
+  // 4. Activate recovered mailbox by validating credentials with the provider securely on backend
+  app.post("/api/mailboxes/activate", async (req, res) => {
+    const { id, telegramId } = req.body;
+    if (!id || !telegramId) {
+      return res.status(400).json({ error: "Mailbox id and telegramId are required" });
+    }
+
+    try {
+      const [box] = await db.select().from(mailboxes).where(eq(mailboxes.id, id)).limit(1);
+      if (!box) {
+        return res.status(404).json({ error: "This mailbox is no longer available from the provider." });
+      }
+      if (box.userId !== telegramId) {
+        return res.status(403).json({ error: "Unauthorized access to this mailbox" });
+      }
+
+      // Handle 1SecMail activation
+      if (box.provider === "1SecMail") {
+        const now = new Date();
+        const currentMeta = box.inboxMetadata ? JSON.parse(box.inboxMetadata) : {};
+        currentMeta.activation_status = "active";
+        currentMeta.last_opened = now.toISOString();
+
+        await db.update(mailboxes).set({
+          status: "active",
+          lastAccess: now,
+          inboxMetadata: JSON.stringify(currentMeta)
+        }).where(eq(mailboxes.id, id));
+
+        const supabase = getSupabase();
+        if (supabase) {
+          try {
+            await supabase.from("mailboxes").update({
+              status: "active",
+              last_opened: now.toISOString(),
+              activation_status: "active"
+            }).eq("id", id);
+          } catch (supaErr: any) {
+            console.warn("[SUPABASE UPDATE EXCEPTION IN ACTIVATE 1SECMAIL]:", supaErr.message);
+          }
+        }
+
+        return res.json({ success: true, message: "AeroX Secure Mail Engine mailbox activated successfully." });
+      }
+
+      // Backend-only secure validation using stored credentials
+      try {
+        const tokenObj = await getMailboxToken(box);
+        const token = tokenObj.token;
+
+        // Verify active state with Mail.tm messages API
+        const mailTmRes = await fetch("https://api.mail.tm/messages", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!mailTmRes.ok) {
+          // Attempt a single self-heal refresh
+          if (mailTmRes.status === 401 || mailTmRes.status === 404) {
+            try {
+              const freshToken = await refreshMailboxToken(box);
+              const secondRes = await fetch("https://api.mail.tm/messages", {
+                headers: { "Authorization": `Bearer ${freshToken}` }
+              });
+              if (!secondRes.ok) {
+                throw new Error("Terminal invalid credentials after refresh");
+              }
+            } catch (retryErr) {
+              await db.update(mailboxes).set({ status: "expired" }).where(eq(mailboxes.id, id));
+              const supabase = getSupabase();
+              if (supabase) {
+                await supabase.from("mailboxes").update({ status: "expired", activation_status: "expired" }).eq("id", id).catch(() => {});
+              }
+              return res.status(410).json({ error: "This mailbox is no longer available from the provider." });
+            }
+          } else {
+            throw new Error(`Provider connection failed with status: ${mailTmRes.status}`);
+          }
+        }
+
+        // Credentials are valid and active! Update status & timestamp
+        const now = new Date();
+        const currentMeta = box.inboxMetadata ? JSON.parse(box.inboxMetadata) : {};
+        currentMeta.activation_status = "active";
+        currentMeta.last_opened = now.toISOString();
+
+        await db.update(mailboxes).set({
+          status: "active",
+          lastAccess: now,
+          inboxMetadata: JSON.stringify(currentMeta)
+        }).where(eq(mailboxes.id, id));
+
+        const supabase = getSupabase();
+        if (supabase) {
+          try {
+            await supabase.from("mailboxes").update({
+              status: "active",
+              last_opened: now.toISOString(),
+              activation_status: "active"
+            }).eq("id", id);
+          } catch (supaErr: any) {
+            console.warn("[SUPABASE UPDATE EXCEPTION IN ACTIVATE]:", supaErr.message);
+          }
+        }
+
+        return res.json({ success: true, message: "Mailbox activated successfully." });
+      } catch (authErr: any) {
+        console.warn(`[Mail.tm Activate Auth Exception] Mailbox ${id}:`, authErr.message);
+        await db.update(mailboxes).set({ status: "expired" }).where(eq(mailboxes.id, id));
+        const supabase = getSupabase();
+        if (supabase) {
+          await supabase.from("mailboxes").update({ status: "expired", activation_status: "expired" }).eq("id", id).catch(() => {});
+        }
+        return res.status(410).json({ error: "This mailbox is no longer available from the provider." });
+      }
+    } catch (err: any) {
+      console.error("[ACTIVATE EXCEPTION]:", err.message);
+      return res.status(410).json({ error: "This mailbox is no longer available from the provider." });
+    }
+  });
+
+  // 5. Open recovered mailbox and charge credits
   app.post("/api/mailboxes/open", async (req, res) => {
     const { id, telegramId } = req.body;
     if (!id || !telegramId) {
@@ -2129,6 +2525,11 @@ async function startServer() {
         return res.status(403).json({ error: "Unauthorized access to this mailbox" });
       }
 
+      // Check if mailbox is expired from provider checks
+      if (box.status === "expired") {
+        return res.status(410).json({ error: "This mailbox is no longer available from the provider." });
+      }
+
       const [user] = await db.select().from(users).where(eq(users.telegramId, telegramId)).limit(1);
       if (!user) {
         return res.status(404).json({ error: "User profile not found." });
@@ -2138,7 +2539,20 @@ async function startServer() {
         totalRecoveries: (user.totalRecoveries || 0) + 1
       }).where(eq(users.telegramId, telegramId));
 
-      await db.update(mailboxes).set({ lastAccess: new Date() }).where(eq(mailboxes.id, id));
+      const now = new Date();
+      await db.update(mailboxes).set({ lastAccess: now }).where(eq(mailboxes.id, id));
+
+      const supabase = getSupabase();
+      if (supabase) {
+        try {
+          await supabase.from("mailboxes").update({
+            last_opened: now.toISOString(),
+            activation_status: "active"
+          }).eq("id", id);
+        } catch (supaErr: any) {
+          console.warn("[SUPABASE UPDATE EXCEPTION IN OPEN]:", supaErr.message);
+        }
+      }
 
       return res.json({ 
         success: true, 
@@ -2154,7 +2568,7 @@ async function startServer() {
   // 5. Proxy message list
   app.get("/api/mailboxes/:id/messages", async (req, res) => {
     const id = parseInt(req.params.id, 10);
-    const { telegramId } = req.query;
+    const { telegramId, all } = req.query;
 
     if (isNaN(id) || !telegramId || typeof telegramId !== "string") {
       return res.status(400).json({ error: "Valid mailbox id and telegramId are required" });
@@ -2169,27 +2583,204 @@ async function startServer() {
         return res.status(403).json({ error: "Unauthorized access to this mailbox" });
       }
 
-      let token;
-      try {
-        token = await getMailboxToken(box);
-      } catch (authErr) {
-        await db.update(mailboxes).set({ status: "expired" }).where(eq(mailboxes.id, id));
-        return res.status(400).json({ error: "Authentication failed. Mailbox may have expired on Mail.tm." });
+      if (box.provider === "Custom" || box.provider === "Custom Domain" || box.provider === "AEROX Secure Mail Engine") {
+        try {
+          const currentMetadata = box.inboxMetadata ? JSON.parse(box.inboxMetadata) : {};
+          const rawMessages = currentMetadata.cachedMessages || [];
+          return res.json({ messages: rawMessages, isCached: false });
+        } catch (jsonErr) {
+          return res.json({ messages: [], isCached: false });
+        }
       }
 
-      const mailTmRes = await fetch("https://api.mail.tm/messages", {
+      if (box.provider === "1SecMail") {
+        const [login, domain] = (box.email || "").split("@");
+        if (!login || !domain) {
+          return res.status(400).json({ error: "Invalid mailbox email format" });
+        }
+
+        try {
+          const secRes = await fetch1SecMail(`https://www.1secmail.com/api/v1/?action=getMessages&login=${login}&domain=${domain}`);
+          if (secRes.ok) {
+            const data = await secRes.json();
+            const rawMessages = (data || []).map((m: any) => ({
+              id: String(m.id),
+              from: {
+                address: m.from,
+                name: m.from.split("<")[0].trim() || m.from
+              },
+              subject: m.subject,
+              createdAt: m.date,
+              seen: false
+            }));
+
+            // Caching
+            try {
+              const currentMetadata = box.inboxMetadata ? JSON.parse(box.inboxMetadata) : {};
+              currentMetadata.cachedMessages = rawMessages;
+              currentMetadata.lastFetchTime = new Date().toISOString();
+              await db.update(mailboxes).set({
+                inboxMetadata: JSON.stringify(currentMetadata)
+              }).where(eq(mailboxes.id, id));
+            } catch (cacheErr: any) {
+              console.error("[1SecMail Cache Error]:", cacheErr.message);
+            }
+
+            const showAll = all === "true";
+            let filteredMessages = rawMessages;
+
+            if (!showAll) {
+              const accessTime = box.lastAccess ? new Date(box.lastAccess).getTime() : box.createdAt.getTime();
+              const filterThreshold = accessTime - 15 * 60 * 1000;
+
+              filteredMessages = rawMessages.filter((msg: any) => {
+                const msgTime = new Date(msg.createdAt).getTime();
+                return msgTime >= filterThreshold;
+              });
+            }
+
+            return res.json({ messages: filteredMessages, isCached: false });
+          } else {
+            throw new Error(`1SecMail API returned status ${secRes.status}`);
+          }
+        } catch (apiErr: any) {
+          console.warn("[1SecMail API Error]:", apiErr.message);
+          // Try to serve cache as fallback
+          try {
+            const metadata = box.inboxMetadata ? JSON.parse(box.inboxMetadata) : {};
+            if (metadata && Array.isArray(metadata.cachedMessages)) {
+              return res.json({
+                messages: metadata.cachedMessages,
+                isCached: true,
+                lastFetchTime: metadata.lastFetchTime
+              });
+            }
+          } catch (jsonErr) {}
+          return res.status(502).json({ error: "Unable to reach mail provider server." });
+        }
+      }
+
+      // Check physical expiry (365 days limit)
+      const boxExpiresAt = box.expiresAt ? new Date(box.expiresAt) : new Date(box.createdAt.getTime() + 365 * 24 * 60 * 60 * 1000);
+      if (new Date() > boxExpiresAt) {
+        if (box.status !== "expired") {
+          await db.update(mailboxes).set({ status: "expired" }).where(eq(mailboxes.id, id));
+        }
+        return res.status(410).json({ error: "AeroX is no longer available from the mail provider." });
+      }
+
+      let tokenObj;
+      let isCached = false;
+      let lastFetchTime = null;
+      try {
+        tokenObj = await getMailboxToken(box);
+      } catch (authErr: any) {
+        const status = authErr.status;
+        console.warn(`[Mail.tm] Failed to get token for mailbox ${id} (status: ${status}):`, authErr.message);
+        
+        // Try to fetch from database cache as an elegant fallback!
+        try {
+          const metadata = box.inboxMetadata ? JSON.parse(box.inboxMetadata) : {};
+          if (metadata && Array.isArray(metadata.cachedMessages)) {
+            console.log(`[Mail.tm Proxy Fallback] Serving ${metadata.cachedMessages.length} cached messages for mailbox ${id} due to status ${status}`);
+            return res.json({ 
+              messages: metadata.cachedMessages,
+              isCached: true,
+              lastFetchTime: metadata.lastFetchTime
+            });
+          }
+        } catch (jsonErr) {
+          console.error("[Mail.tm Proxy Fallback Exception]:", jsonErr);
+        }
+
+        if (status === 401 || status === 404 || status === 400) {
+          console.warn(`[Mail.tm] Mailbox ${id} got terminal status ${status} and has no cache.`);
+          return res.status(410).json({ error: "AeroX is no longer available from the mail provider." });
+        } else {
+          return res.status(503).json({ error: "Mail server is temporarily busy. Please try again in a few seconds." });
+        }
+      }
+
+      const token = tokenObj.token;
+      let mailTmRes = await fetch("https://api.mail.tm/messages", {
         headers: { "Authorization": `Bearer ${token}` }
       });
 
+      // Self-heal retry: If cached token is invalid (401/404), force a fresh token refresh with account re-registration
+      if (!mailTmRes.ok && (mailTmRes.status === 401 || mailTmRes.status === 404)) {
+        if (!tokenObj.wasRefreshed) {
+          console.log(`[Mail.tm Proxy] Cached token failed with ${mailTmRes.status}. Forcing fresh token refresh with self-heal...`);
+          try {
+            const freshToken = await refreshMailboxToken(box);
+            mailTmRes = await fetch("https://api.mail.tm/messages", {
+              headers: { "Authorization": `Bearer ${freshToken}` }
+            });
+          } catch (retryErr: any) {
+            console.warn(`[Mail.tm Proxy] Self-heal refresh failed:`, retryErr.message);
+          }
+        } else {
+          console.log(`[Mail.tm Proxy] Token already attempted refresh/self-heal, skipping redundant self-heal for mailbox ${id}`);
+        }
+      }
+
       if (mailTmRes.ok) {
         const data = await mailTmRes.json();
-        return res.json({ messages: data["hydra:member"] || [] });
+        const rawMessages = data["hydra:member"] || [];
+
+        // Dynamic Caching of messages in inbox_metadata:
+        try {
+          const currentMetadata = box.inboxMetadata ? JSON.parse(box.inboxMetadata) : {};
+          currentMetadata.cachedMessages = rawMessages;
+          currentMetadata.lastFetchTime = new Date().toISOString();
+          await db.update(mailboxes).set({
+            inboxMetadata: JSON.stringify(currentMetadata)
+          }).where(eq(mailboxes.id, id));
+        } catch (cacheErr: any) {
+          console.error("[Mail.tm Proxy] Error caching messages:", cacheErr.message);
+        }
+
+        // By default, filter out old messages so that only fresh OTPs/emails are returned.
+        // If the client explicitly passes all=true, we return the entire list.
+        const showAll = all === "true";
+        let filteredMessages = rawMessages;
+
+        if (!showAll) {
+          // Use lastAccess time updated during mailbox opening session.
+          // Allow a 15-minute buffer to handle slight clock drift or registration timing delays.
+          const accessTime = box.lastAccess ? new Date(box.lastAccess).getTime() : box.createdAt.getTime();
+          const filterThreshold = accessTime - 15 * 60 * 1000;
+
+          filteredMessages = rawMessages.filter((msg: any) => {
+            const msgTime = new Date(msg.createdAt).getTime();
+            return msgTime >= filterThreshold;
+          });
+        }
+
+        return res.json({ messages: filteredMessages, isCached: false });
       } else {
+        // Try to fetch from database cache as an elegant fallback!
+        try {
+          const metadata = box.inboxMetadata ? JSON.parse(box.inboxMetadata) : {};
+          if (metadata && Array.isArray(metadata.cachedMessages)) {
+            console.log(`[Mail.tm Proxy Fallback] Serving ${metadata.cachedMessages.length} cached messages for mailbox ${id} after failed fetch`);
+            return res.json({ 
+              messages: metadata.cachedMessages,
+              isCached: true,
+              lastFetchTime: metadata.lastFetchTime
+            });
+          }
+        } catch (jsonErr) {
+          console.error("[Mail.tm Proxy Fallback Post-Fetch List Exception]:", jsonErr);
+        }
+
+        if (mailTmRes.status === 404 || mailTmRes.status === 401) {
+          return res.status(404).json({ error: "AeroX is no longer available from the mail provider." });
+        }
         return res.status(mailTmRes.status).json({ error: "Failed to retrieve messages from Mail.tm server." });
       }
     } catch (err: any) {
       console.error("[RECOVERY ERROR] Fetch messages proxy:", err);
-      return res.status(500).json({ error: "Internal mail proxy error." });
+      return res.status(500).json({ error: "AeroX is no longer available from the mail provider." });
     }
   });
 
@@ -2212,14 +2803,160 @@ async function startServer() {
         return res.status(403).json({ error: "Unauthorized access to this mailbox" });
       }
 
-      const token = await getMailboxToken(box);
+      if (box.provider === "Custom" || box.provider === "Custom Domain" || box.provider === "AEROX Secure Mail Engine") {
+        try {
+          const currentMetadata = box.inboxMetadata ? JSON.parse(box.inboxMetadata) : {};
+          const rawMessages = currentMetadata.cachedMessages || [];
+          const listMsg = rawMessages.find((m: any) => m.id === msgId);
+          if (listMsg) {
+            listMsg.seen = true;
+            await db.update(mailboxes).set({
+              inboxMetadata: JSON.stringify(currentMetadata)
+            }).where(eq(mailboxes.id, box.id));
 
-      const mailTmRes = await fetch(`https://api.mail.tm/messages/${msgId}`, {
+            return res.json({ message: listMsg });
+          } else {
+            return res.status(404).json({ error: "Message not found" });
+          }
+        } catch (jsonErr) {
+          return res.status(500).json({ error: "Failed to load message details" });
+        }
+      }
+
+      if (box.provider === "1SecMail") {
+        const [login, domain] = (box.email || "").split("@");
+        if (!login || !domain) {
+          return res.status(400).json({ error: "Invalid mailbox email format" });
+        }
+
+        try {
+          const secRes = await fetch1SecMail(`https://www.1secmail.com/api/v1/?action=readMessage&login=${login}&domain=${domain}&id=${msgId}`);
+          if (secRes.ok) {
+            const data = await secRes.json();
+            const msgDetails = {
+              id: String(data.id),
+              from: {
+                address: data.from,
+                name: data.from
+              },
+              subject: data.subject,
+              createdAt: data.date,
+              text: data.textBody || data.body || "",
+              html: data.htmlBody || data.body || "",
+              seen: true
+            };
+
+            // Cache this specific full message detail
+            try {
+              const currentMetadata = box.inboxMetadata ? JSON.parse(box.inboxMetadata) : {};
+              if (!currentMetadata.cachedMessageDetails) {
+                currentMetadata.cachedMessageDetails = {};
+              }
+              currentMetadata.cachedMessageDetails[msgId] = msgDetails;
+              await db.update(mailboxes).set({
+                inboxMetadata: JSON.stringify(currentMetadata)
+              }).where(eq(mailboxes.id, id));
+            } catch (cacheErr: any) {
+              console.error("[1SecMail Cache Detail Error]:", cacheErr.message);
+            }
+
+            return res.json({ message: msgDetails });
+          } else {
+            throw new Error(`1SecMail API details returned status ${secRes.status}`);
+          }
+        } catch (apiErr: any) {
+          console.warn("[1SecMail Details API Error]:", apiErr.message);
+          // Try to serve cached details
+          try {
+            const metadata = box.inboxMetadata ? JSON.parse(box.inboxMetadata) : {};
+            if (metadata && metadata.cachedMessageDetails && metadata.cachedMessageDetails[msgId]) {
+              return res.json({ message: metadata.cachedMessageDetails[msgId] });
+            }
+          } catch (jsonErr) {}
+          return res.status(502).json({ error: "Unable to reach mail provider server." });
+        }
+      }
+
+      let tokenObj;
+      try {
+        tokenObj = await getMailboxToken(box);
+      } catch (authErr: any) {
+        const status = authErr.status;
+        console.warn(`[Mail.tm] Failed to get token for single message ${msgId} in mailbox ${id} (status: ${status}):`, authErr.message);
+
+        // Try to fetch from database cache as an elegant fallback!
+        try {
+          const metadata = box.inboxMetadata ? JSON.parse(box.inboxMetadata) : {};
+          if (metadata && metadata.cachedMessageDetails && metadata.cachedMessageDetails[msgId]) {
+            console.log(`[Mail.tm Proxy Fallback] Serving cached single message ${msgId} for mailbox ${id}`);
+            return res.json({ 
+              message: metadata.cachedMessageDetails[msgId],
+              isCached: true
+            });
+          }
+          if (metadata && Array.isArray(metadata.cachedMessages)) {
+            const listMsg = metadata.cachedMessages.find((m: any) => m.id === msgId);
+            if (listMsg) {
+              console.log(`[Mail.tm Proxy Fallback] Constructing mock message detail from list item for ${msgId}`);
+              return res.json({
+                message: {
+                  ...listMsg,
+                  text: listMsg.intro || "Full content not cached.",
+                  html: "<p>" + (listMsg.intro || "Full content not cached.") + "</p>",
+                  isCached: true
+                }
+              });
+            }
+          }
+        } catch (jsonErr) {
+          console.error("[Mail.tm Proxy Fallback Single Exception]:", jsonErr);
+        }
+
+        if (status === 401 || status === 404 || status === 400) {
+          return res.status(410).json({ error: "AeroX is no longer available from the mail provider." });
+        } else {
+          return res.status(503).json({ error: "Mail server is temporarily busy. Please try again." });
+        }
+      }
+
+      const token = tokenObj.token;
+      let mailTmRes = await fetch(`https://api.mail.tm/messages/${msgId}`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
 
+      // Self-heal retry: If cached token is invalid (401/404), force a fresh token refresh with account re-registration
+      if (!mailTmRes.ok && (mailTmRes.status === 401 || mailTmRes.status === 404)) {
+        if (!tokenObj.wasRefreshed) {
+          console.log(`[Mail.tm Proxy] Cached token failed for message fetch with ${mailTmRes.status}. Forcing fresh token refresh with self-heal...`);
+          try {
+            const freshToken = await refreshMailboxToken(box);
+            mailTmRes = await fetch(`https://api.mail.tm/messages/${msgId}`, {
+              headers: { "Authorization": `Bearer ${freshToken}` }
+            });
+          } catch (retryErr: any) {
+            console.warn(`[Mail.tm Proxy] Message self-heal refresh failed:`, retryErr.message);
+          }
+        } else {
+          console.log(`[Mail.tm Proxy] Token already attempted refresh/self-heal, skipping redundant self-heal for mailbox ${id} msg ${msgId}`);
+        }
+      }
+
       if (mailTmRes.ok) {
         const msgDetails = await mailTmRes.json();
+
+        // Cache this specific full message detail
+        try {
+          const currentMetadata = box.inboxMetadata ? JSON.parse(box.inboxMetadata) : {};
+          if (!currentMetadata.cachedMessageDetails) {
+            currentMetadata.cachedMessageDetails = {};
+          }
+          currentMetadata.cachedMessageDetails[msgId] = msgDetails;
+          await db.update(mailboxes).set({
+            inboxMetadata: JSON.stringify(currentMetadata)
+          }).where(eq(mailboxes.id, id));
+        } catch (cacheErr: any) {
+          console.error("[Mail.tm Proxy] Error caching single message:", cacheErr.message);
+        }
 
         if (!msgDetails.seen) {
           fetch(`https://api.mail.tm/messages/${msgId}`, {
@@ -2234,11 +2971,41 @@ async function startServer() {
 
         return res.json({ message: msgDetails });
       } else {
+        // Try to fetch from database cache as an elegant fallback!
+        try {
+          const metadata = box.inboxMetadata ? JSON.parse(box.inboxMetadata) : {};
+          if (metadata && metadata.cachedMessageDetails && metadata.cachedMessageDetails[msgId]) {
+            console.log(`[Mail.tm Proxy Fallback] Serving cached single message ${msgId} for mailbox ${id} after failed fetch`);
+            return res.json({ 
+              message: metadata.cachedMessageDetails[msgId],
+              isCached: true
+            });
+          }
+          if (metadata && Array.isArray(metadata.cachedMessages)) {
+            const listMsg = metadata.cachedMessages.find((m: any) => m.id === msgId);
+            if (listMsg) {
+              return res.json({
+                message: {
+                  ...listMsg,
+                  text: listMsg.intro || "Full content not cached.",
+                  html: "<p>" + (listMsg.intro || "Full content not cached.") + "</p>",
+                  isCached: true
+                }
+              });
+            }
+          }
+        } catch (jsonErr) {
+          console.error("[Mail.tm Proxy Fallback Post-Fetch Single Exception]:", jsonErr);
+        }
+
+        if (mailTmRes.status === 404 || mailTmRes.status === 401) {
+          return res.status(404).json({ error: "AeroX is no longer available from the mail provider." });
+        }
         return res.status(mailTmRes.status).json({ error: "Failed to load message details from Mail.tm." });
       }
     } catch (err: any) {
       console.error("[RECOVERY ERROR] Fetch single message proxy:", err);
-      return res.status(500).json({ error: "Internal mail proxy error." });
+      return res.status(500).json({ error: "AeroX is no longer available from the mail provider." });
     }
   });
 
@@ -2255,6 +3022,78 @@ async function startServer() {
     const countryCode = typeof country === "string" ? country : "US";
     const address = generateFakeAddress(countryCode);
     res.json({ address });
+  });
+
+  // Cloudflare Email Webhook to receive emails under custom domains
+  app.post("/api/webhook/email", async (req, res) => {
+    const { from, to, subject, text, html, date } = req.body;
+
+    if (!to || !from) {
+      return res.status(400).json({ error: "Sender (from) and receiver (to) emails are required" });
+    }
+
+    try {
+      const targetEmail = String(to).trim().toLowerCase();
+      // Find the active custom mailbox that matches this email
+      const [box] = await db.select().from(mailboxes).where(
+        and(
+          eq(sql`lower(${mailboxes.email})`, targetEmail),
+          eq(mailboxes.status, "active")
+        )
+      ).limit(1);
+
+      if (!box) {
+        console.log(`[Cloudflare Email Webhook] Received mail for unregistered/inactive mailbox: ${targetEmail}`);
+        return res.status(404).json({ error: "Active custom mailbox not found in database" });
+      }
+
+      let metadata: any = {};
+      try {
+        metadata = box.inboxMetadata ? JSON.parse(box.inboxMetadata) : {};
+      } catch (e) {
+        metadata = {};
+      }
+
+      if (!metadata.cachedMessages) {
+        metadata.cachedMessages = [];
+      }
+
+      const newMsgId = "cust_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7);
+      
+      const newMsg = {
+        id: newMsgId,
+        from: {
+          address: from.address || from,
+          name: from.name || from.address || from
+        },
+        subject: subject || "No Subject",
+        createdAt: date || new Date().toISOString(),
+        text: text || "",
+        html: html || text || "",
+        seen: false
+      };
+
+      // Put latest message first
+      metadata.cachedMessages.unshift(newMsg);
+
+      // Keep only last 50 emails
+      if (metadata.cachedMessages.length > 50) {
+        metadata.cachedMessages = metadata.cachedMessages.slice(0, 50);
+      }
+
+      metadata.lastFetchTime = new Date().toISOString();
+
+      await db.update(mailboxes).set({
+        inboxMetadata: JSON.stringify(metadata),
+        lastAccess: new Date()
+      }).where(eq(mailboxes.id, box.id));
+
+      console.log(`[Cloudflare Email Webhook] Successfully saved incoming email from ${newMsg.from.address} to custom mailbox ${targetEmail}`);
+      return res.json({ success: true, messageId: newMsgId });
+    } catch (err: any) {
+      console.error("[Cloudflare Webhook Error]:", err.message);
+      return res.status(500).json({ error: "Failed to process incoming email" });
+    }
   });
 
   // Audio streaming proxy to bypass CORS & Referrer hotlink blocks
@@ -2321,218 +3160,8 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", async () => {
+  app.listen(PORT, "0.0.0.0", () => {
     console.log(`[BB Backend] Server running on port ${PORT}`);
-    
-    // Database connection and auto-initialization check
-    try {
-      console.log("[DB INIT] Ensuring tables and unique constraints exist...");
-      
-      // 1. Create users table
-      try {
-        await db.execute(sql`
-          CREATE TABLE IF NOT EXISTS "users" (
-            "id" SERIAL PRIMARY KEY,
-            "telegram_id" TEXT,
-            "username" TEXT,
-            "first_name" TEXT,
-            "role" TEXT DEFAULT 'free',
-            "plan" TEXT DEFAULT 'free',
-            "credits" INTEGER DEFAULT 20,
-            "joined_at" TEXT,
-            "last_active" TEXT,
-            "photo_url" TEXT,
-            "total_recoveries" INTEGER DEFAULT 0,
-            "referrer_id" TEXT,
-            "credit_reset_time" TEXT,
-            "plan_expiry" TEXT,
-            "created_at" TIMESTAMP DEFAULT NOW()
-          )
-        `);
-        console.log("[DB INIT] Verified users table exists.");
-      } catch (e: any) {
-        console.log("[DB INIT] Skip users table creation/verification:", e.message);
-      }
-
-      // Ensure all columns exist for "users" table (useful if table already exists from older schema versions)
-      try {
-        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "telegram_id" TEXT`);
-        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "username" TEXT`);
-        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "first_name" TEXT`);
-        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "role" TEXT DEFAULT 'free'`);
-        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "plan" TEXT DEFAULT 'free'`);
-        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "credits" INTEGER DEFAULT 20`);
-        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "joined_at" TEXT`);
-        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_active" TEXT`);
-        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "photo_url" TEXT`);
-        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "total_recoveries" INTEGER DEFAULT 0`);
-        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "referrer_id" TEXT`);
-        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "credit_reset_time" TEXT`);
-        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "plan_expiry" TEXT`);
-        await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "created_at" TIMESTAMP DEFAULT NOW()`);
-        console.log("[DB INIT] Verified all users columns exist.");
-      } catch (e: any) {
-        console.log("[DB INIT] Skip adding columns on users:", e.message);
-      }
-
-      // Ensure users has telegram_id as UNIQUE if it wasn't added
-      try {
-        await db.execute(sql`
-          ALTER TABLE "users" ADD CONSTRAINT "users_telegram_id_unique" UNIQUE ("telegram_id")
-        `);
-        console.log("[DB INIT] Added unique constraint to users.telegram_id");
-      } catch (e: any) {
-        // Ignored if constraint already exists
-        if (!e.message?.includes("already exists")) {
-          console.log("[DB INIT] Skip adding unique constraint on users.telegram_id:", e.message);
-        }
-      }
-
-      // 2. Create redeem_codes table
-      try {
-        await db.execute(sql`
-          CREATE TABLE IF NOT EXISTS "redeem_codes" (
-            "id" SERIAL PRIMARY KEY,
-            "code" TEXT,
-            "credits" INTEGER DEFAULT 0,
-            "expires_at" TEXT,
-            "max_uses" INTEGER DEFAULT 1,
-            "used_count" INTEGER DEFAULT 0,
-            "created_at" TIMESTAMP DEFAULT NOW(),
-            "created_by" TEXT,
-            "plan" TEXT,
-            "role" TEXT,
-            "duration_days" INTEGER
-          )
-        `);
-        console.log("[DB INIT] Verified redeem_codes table exists.");
-      } catch (e: any) {
-        console.log("[DB INIT] Skip redeem_codes table creation/verification:", e.message);
-      }
-
-      // Ensure all columns exist for "redeem_codes"
-      try {
-        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "code" TEXT`);
-        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "credits" INTEGER DEFAULT 0`);
-        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "expires_at" TEXT`);
-        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "max_uses" INTEGER DEFAULT 1`);
-        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "used_count" INTEGER DEFAULT 0`);
-        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "created_at" TIMESTAMP DEFAULT NOW()`);
-        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "created_by" TEXT`);
-        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "plan" TEXT`);
-        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "role" TEXT`);
-        await db.execute(sql`ALTER TABLE "redeem_codes" ADD COLUMN IF NOT EXISTS "duration_days" INTEGER`);
-        console.log("[DB INIT] Verified all redeem_codes columns exist.");
-      } catch (e: any) {
-        console.log("[DB INIT] Skip adding columns on redeem_codes:", e.message);
-      }
-
-      // Ensure redeem_codes has code as UNIQUE
-      try {
-        await db.execute(sql`
-          ALTER TABLE "redeem_codes" ADD CONSTRAINT "redeem_codes_code_unique" UNIQUE ("code")
-        `);
-        console.log("[DB INIT] Added unique constraint to redeem_codes.code");
-      } catch (e: any) {
-        if (!e.message?.includes("already exists")) {
-          console.log("[DB INIT] Skip adding unique constraint on redeem_codes.code:", e.message);
-        }
-      }
-
-      // 3. Create redemptions table
-      try {
-        await db.execute(sql`
-          CREATE TABLE IF NOT EXISTS "redemptions" (
-            "id" SERIAL PRIMARY KEY,
-            "code" TEXT,
-            "telegram_id" TEXT,
-            "username" TEXT,
-            "redeemed_at" TIMESTAMP DEFAULT NOW()
-          )
-        `);
-        console.log("[DB INIT] Verified redemptions table exists.");
-      } catch (e: any) {
-        console.log("[DB INIT] Skip redemptions table creation/verification:", e.message);
-      }
-
-      // Ensure all columns exist for "redemptions"
-      try {
-        await db.execute(sql`ALTER TABLE "redemptions" ADD COLUMN IF NOT EXISTS "code" TEXT`);
-        await db.execute(sql`ALTER TABLE "redemptions" ADD COLUMN IF NOT EXISTS "telegram_id" TEXT`);
-        await db.execute(sql`ALTER TABLE "redemptions" ADD COLUMN IF NOT EXISTS "username" TEXT`);
-        await db.execute(sql`ALTER TABLE "redemptions" ADD COLUMN IF NOT EXISTS "redeemed_at" TIMESTAMP DEFAULT NOW()`);
-        console.log("[DB INIT] Verified all redemptions columns exist.");
-      } catch (e: any) {
-        console.log("[DB INIT] Skip adding columns on redemptions:", e.message);
-      }
-
-      // 4. Create mailboxes table
-      try {
-        await db.execute(sql`
-          CREATE TABLE IF NOT EXISTS "mailboxes" (
-            "id" SERIAL PRIMARY KEY,
-            "user_id" TEXT REFERENCES "users"("telegram_id"),
-            "provider" TEXT DEFAULT 'Mail.tm',
-            "email" TEXT,
-            "password" TEXT,
-            "access_token" TEXT,
-            "refresh_token" TEXT,
-            "created_at" TIMESTAMP DEFAULT NOW(),
-            "last_access" TIMESTAMP DEFAULT NOW(),
-            "last_refresh" TIMESTAMP DEFAULT NOW(),
-            "status" TEXT DEFAULT 'active'
-          )
-        `);
-        console.log("[DB INIT] Verified mailboxes table exists.");
-      } catch (e: any) {
-        console.log("[DB INIT] Skip mailboxes table creation/verification:", e.message);
-      }
-
-      // Ensure all columns exist for "mailboxes"
-      try {
-        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "user_id" TEXT`);
-        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "provider" TEXT DEFAULT 'Mail.tm'`);
-        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "email" TEXT`);
-        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "password" TEXT`);
-        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "access_token" TEXT`);
-        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "refresh_token" TEXT`);
-        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "created_at" TIMESTAMP DEFAULT NOW()`);
-        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "last_access" TIMESTAMP DEFAULT NOW()`);
-        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "last_refresh" TIMESTAMP DEFAULT NOW()`);
-        await db.execute(sql`ALTER TABLE "mailboxes" ADD COLUMN IF NOT EXISTS "status" TEXT DEFAULT 'active'`);
-        console.log("[DB INIT] Verified all mailboxes columns exist.");
-      } catch (e: any) {
-        console.log("[DB INIT] Skip adding columns on mailboxes:", e.message);
-      }
-
-      // Ensure mailboxes has email as UNIQUE
-      try {
-        await db.execute(sql`
-          ALTER TABLE "mailboxes" ADD CONSTRAINT "mailboxes_email_unique" UNIQUE ("email")
-        `);
-        console.log("[DB INIT] Added unique constraint to mailboxes.email");
-      } catch (e: any) {
-        if (!e.message?.includes("already exists")) {
-          console.log("[DB INIT] Skip adding unique constraint on mailboxes.email:", e.message);
-        }
-      }
-
-      // Ensure mailboxes foreign key exists
-      try {
-        await db.execute(sql`
-          ALTER TABLE "mailboxes" ADD CONSTRAINT "mailboxes_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("telegram_id")
-        `);
-        console.log("[DB INIT] Added foreign key constraint on mailboxes.user_id");
-      } catch (e: any) {
-        if (!e.message?.includes("already exists")) {
-          console.log("[DB INIT] Skip adding foreign key on mailboxes.user_id:", e.message);
-        }
-      }
-
-      console.log("[DB INIT] Database initialization completed successfully.");
-    } catch (err: any) {
-      console.error("[DB INIT] Database auto-initialization failed:", err.message);
-    }
   });
 }
 

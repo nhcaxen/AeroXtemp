@@ -79,38 +79,20 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
   // Promo slides for top carousel with premium high-fidelity interactive elements and brand gradients
   const promoSlides = [
     {
-      title: "AeroX Pro Card Generator",
-      subtitle: "Luhn-validated CC Gen",
-      desc: "Generate bulk test credit card numbers for software development.",
-      actionText: "Open Generator",
+      title: "AeroX Shop Vault",
+      subtitle: "Premium Keys & Accounts",
+      desc: "Instant delivery of AI subscriptions, premium VPNs, OTT platforms, and Instagram accounts.",
+      actionText: "Unlock Shop",
       actionTab: "cardgen" as TabId,
-      color: "from-[#1d4ed8]/85 via-[#1e1b4b]/95 to-[#07070b]/98",
-      accent: "#38bdf8",
+      color: "from-purple-900/80 via-indigo-950/90 to-slate-950/98",
+      accent: "#a855f7",
       icon: (
-        <div className="relative w-24 h-16 bg-[#07070b]/95 rounded-xl border border-[#38bdf8]/35 p-2.5 shadow-2xl flex flex-col justify-between overflow-hidden select-none animate-float">
-          {/* Subtle moving neon glow line */}
-          <div className="absolute inset-x-0 bottom-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#38bdf8] to-transparent animate-pulse" />
-          
-          {/* Gold Microchip */}
-          <div className="flex justify-between items-start">
-            <div className="w-5 h-4 bg-gradient-to-tr from-amber-500 to-yellow-300 rounded-sm border border-amber-600/30 flex flex-col gap-[1px] p-[2.5px] shadow-sm">
-              <div className="w-full h-[1.5px] bg-amber-800/30" />
-              <div className="w-full h-[1.5px] bg-amber-800/30" />
-              <div className="w-full h-[1.5px] bg-amber-800/30" />
-            </div>
-            {/* Wireless Signal Icon */}
-            <div className="flex gap-[1.5px] items-end opacity-85">
-              <div className="w-[1.5px] h-1.5 bg-white/90 rounded-full animate-pulse" />
-              <div className="w-[1.5px] h-2.5 bg-white/90 rounded-full" />
-              <div className="w-[1.5px] h-3.5 bg-white/90 rounded-full" />
-            </div>
+        <div className="relative w-20 h-16 bg-[#07070b]/95 rounded-xl border border-purple-500/35 p-2 flex flex-col items-center justify-center gap-1.5 shadow-2xl overflow-hidden select-none animate-float">
+          <div className="absolute inset-x-0 bottom-0 h-[1.5px] bg-gradient-to-r from-transparent via-purple-500 to-transparent animate-pulse" />
+          <div className="p-1.5 bg-purple-500/10 rounded-lg border border-purple-500/20">
+            <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
           </div>
-
-          {/* Card details */}
-          <div className="flex flex-col gap-0.5 mt-2">
-            <span className="text-[7.5px] font-mono tracking-wider text-[#38bdf8] font-bold">AeroX Pro</span>
-            <span className="text-[6.5px] font-mono text-slate-300 tracking-tighter whitespace-nowrap">•••• •••• 8295</span>
-          </div>
+          <span className="text-[7.5px] font-mono tracking-widest text-purple-300 font-bold uppercase">SECURE</span>
         </div>
       )
     },
@@ -644,7 +626,7 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
       {/* Manual Proxy Checker Module */}
       <div className="p-4 rounded-2xl bg-dark-surface border border-white/[0.04] shadow-lg relative overflow-hidden">
         <div className="flex items-center gap-1.5 mb-2.5">
-          <Server className="w-4 h-4 text-pink-500" />
+          <Server className="w-4 h-4 text-cosmic-lilac" />
           <h3 className="text-xs font-extrabold text-frost-white uppercase tracking-wider font-display">
             Manual Proxy Connection Checker
           </h3>
@@ -652,7 +634,7 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
 
         <form onSubmit={handleCheckProxy} className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <label className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider">
+            <label className="text-[9px] text-ash-gray font-bold uppercase tracking-wider">
               Enter IP:Port, raw, URL formats
             </label>
             <div className="relative">
@@ -674,7 +656,7 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
                 </button>
               )}
             </div>
-            <p className="text-[8px] text-neutral-500 leading-normal">
+            <p className="text-[8px] text-ash-gray/60 leading-normal">
               Supports socks5://, http://, socks4:// or direct raw host:port formats with user auth.
             </p>
           </div>
@@ -682,7 +664,7 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
           <button
             type="submit"
             disabled={checkingProxy || !proxyInput.trim()}
-            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyber-purple to-pink-600 hover:from-purple-600 hover:to-pink-500 text-xs font-black uppercase text-white shadow-lg active:scale-95 disabled:opacity-40 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyber-purple to-cosmic-lilac hover:brightness-110 text-xs font-black uppercase text-white shadow-lg active:scale-95 disabled:opacity-40 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             {checkingProxy ? (
               <>

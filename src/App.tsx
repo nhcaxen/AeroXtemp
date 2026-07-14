@@ -3,7 +3,7 @@ import { TabId } from "./types";
 import TelegramFrame from "./components/TelegramFrame";
 import Navbar from "./components/Navbar";
 import HomeTab from "./components/HomeTab";
-import CardGenTab from "./components/CardGenTab";
+import ShopTab from "./components/ShopTab";
 import TempMailTab from "./components/TempMailTab";
 import AddressGenTab from "./components/AddressGenTab";
 import ProfileTab from "./components/ProfileTab";
@@ -82,7 +82,7 @@ export default function App() {
           />
         );
       case "cardgen":
-        return <CardGenTab />;
+        return <ShopTab />;
       case "tempmail":
         return <TempMailTab />;
       case "addressgen":
