@@ -7,11 +7,11 @@
   --font-mono: "Fira Code", monospace;
 
   /* Premium Apple-inspired Dark UI Theme Palette */
-  --color-cyber-purple: #4f7dff; /* Map to Electric Blue (#4F7DFF) as Accent */
-  --color-cosmic-lilac: #7b5cff; /* Map to Purple (#7B5CFF) as Secondary Accent */
-  --color-void-black: #07090f; /* Background: #07090F */
-  --color-dark-surface: rgba(15, 19, 32, 0.75); /* Surface: #0F1320 (translucent) */
-  --color-dark-card: rgba(20, 26, 40, 0.85); /* Card: #141A28 (translucent) */
+  --color-cyber-purple: #00b4ff; /* Map to Electric Blue (#00b4ff) as Accent */
+  --color-cosmic-lilac: #00e4ff; /* Map to Cyan/Lilac Glow as Secondary Accent */
+  --color-void-black: #02040c; /* Background: #02040c */
+  --color-dark-surface: rgba(7, 10, 24, 0.85); /* Surface: #070a18 (translucent) */
+  --color-dark-card: rgba(11, 16, 36, 0.9); /* Card: #0b1024 (translucent) */
   --color-frost-white: #ffffff; /* Text Primary: White */
   --color-ash-gray: #9ea7c2; /* Text Secondary: #9EA7C2 */
   --color-hot-pink: #7b5cff; /* Secondary Accent: Purple (#7B5CFF) */
@@ -19,16 +19,16 @@
 
 /* Base Body and Background Ambient glow setup */
 html, body, #root {
-  background-color: #07090f !important;
+  background-color: #02040c !important;
   color: #ffffff;
   font-family: var(--font-sans);
   margin: 0;
   padding: 0;
   overflow-x: hidden;
   background-image: 
-    radial-gradient(circle at 50% -10%, rgba(79, 125, 255, 0.18), transparent 60%),
-    radial-gradient(circle at 5% 100%, rgba(123, 92, 255, 0.15), transparent 50%),
-    radial-gradient(circle at 95% 50%, rgba(79, 125, 255, 0.1), transparent 45%);
+    radial-gradient(circle at 50% -10%, rgba(0, 180, 255, 0.06), transparent 60%),
+    radial-gradient(circle at 5% 100%, rgba(0, 228, 255, 0.02), transparent 50%),
+    radial-gradient(circle at 95% 50%, rgba(0, 180, 255, 0.02), transparent 45%);
   background-attachment: fixed;
   transition: background 0.5s ease;
 }
@@ -41,7 +41,7 @@ body::before {
   left: 15%;
   width: 70vw;
   height: 70vw;
-  background: radial-gradient(circle, rgba(79, 125, 255, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(79, 125, 255, 0.03), transparent 70%);
   z-index: -1;
   pointer-events: none;
   animation: float-slow 35s ease-in-out infinite alternate;
@@ -54,7 +54,7 @@ body::after {
   right: 15%;
   width: 60vw;
   height: 60vw;
-  background: radial-gradient(circle, rgba(123, 92, 255, 0.08) 0%, transparent 75%);
+  background: radial-gradient(circle, rgba(123, 92, 255, 0.03), transparent 75%);
   z-index: -1;
   pointer-events: none;
   animation: float-slow-reverse 45s ease-in-out infinite alternate;
@@ -110,9 +110,9 @@ body::after {
 /* Animated gradient background mesh override */
 .purple-mesh {
   background: 
-    radial-gradient(circle at 50% -20%, rgba(79, 125, 255, 0.2), transparent 70%),
-    radial-gradient(circle at 10% 80%, rgba(123, 92, 255, 0.1), transparent 50%),
-    radial-gradient(circle at 90% 40%, rgba(79, 125, 255, 0.08), transparent 40%) !important;
+    radial-gradient(circle at 50% -20%, rgba(79, 125, 255, 0.08), transparent 70%),
+    radial-gradient(circle at 10% 80%, rgba(123, 92, 255, 0.04), transparent 50%),
+    radial-gradient(circle at 90% 40%, rgba(79, 125, 255, 0.03), transparent 40%) !important;
 }
 
 /* Premium Typography Rules */
@@ -169,8 +169,7 @@ p, .text-sm, .text-xs:not(.uppercase) {
   border-radius: 24px !important; /* iOS rounded 22-28px */
   box-shadow: 
     inset 0 1px 1px rgba(255, 255, 255, 0.03),
-    0 10px 30px rgba(0, 0, 0, 0.5),
-    0 0 25px rgba(79, 125, 255, 0.03) !important;
+    0 8px 24px rgba(0, 0, 0, 0.4) !important;
   transition: 
     border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
     box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
@@ -179,11 +178,10 @@ p, .text-sm, .text-xs:not(.uppercase) {
 
 /* Card hover and micro touch interaction */
 .bg-dark-surface:hover, .bg-dark-card:hover {
-  border-color: rgba(79, 125, 255, 0.25) !important;
+  border-color: rgba(79, 125, 255, 0.15) !important;
   box-shadow: 
-    inset 0 1px 1px rgba(255, 255, 255, 0.06),
-    0 16px 36px rgba(0, 0, 0, 0.55),
-    0 0 35px rgba(79, 125, 255, 0.12) !important;
+    inset 0 1px 1px rgba(255, 255, 255, 0.05),
+    0 12px 28px rgba(0, 0, 0, 0.45) !important;
 }
 
 /* Scale dynamically on press/touch state to feel ultra physical and fluid */
@@ -209,10 +207,10 @@ button.bg-gradient-to-r,
 #trigger-upgrade-modal-btn,
 #check-proxy-btn,
 .bg-cyber-purple {
-  background: linear-gradient(135deg, #4f7dff 0%, #7b5cff 100%) !important;
-  box-shadow: 0 4px 14px rgba(79, 125, 255, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+  background: linear-gradient(135deg, #0084ff 0%, #00e4ff 100%) !important;
+  box-shadow: 0 2px 8px rgba(0, 180, 255, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   cursor: pointer !important;
 }
 
@@ -220,29 +218,29 @@ button.bg-gradient-to-r:hover,
 #trigger-upgrade-modal-btn:hover,
 #check-proxy-btn:hover {
   transform: translateY(-1px) !important;
-  box-shadow: 0 6px 18px rgba(123, 92, 255, 0.38), inset 0 1px 1px rgba(255, 255, 255, 0.22) !important;
-  border-color: rgba(123, 92, 255, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(0, 228, 255, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(0, 228, 255, 0.2) !important;
 }
 
 button.bg-gradient-to-r:active,
 #trigger-upgrade-modal-btn:active,
 #check-proxy-btn:active {
-  transform: scale3d(0.95, 0.95, 1) !important;
-  box-shadow: 0 2px 8px rgba(79, 125, 255, 0.2) !important;
+  transform: scale3d(0.96, 0.96, 1) !important;
+  box-shadow: 0 2px 6px rgba(0, 180, 255, 0.15) !important;
 }
 
 /* ═════════════════════════════════════════════════════════════
    INPUTS & FOCUS ANIMATIONS
    ═════════════════════════════════════════════════════════════ */
 input, select, textarea {
-  background: rgba(15, 19, 32, 0.6) !important;
-  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  background: rgba(7, 10, 24, 0.75) !important;
+  border: 1px solid rgba(0, 180, 255, 0.15) !important;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 input:focus, select:focus, textarea:focus {
-  border-color: #4f7dff !important;
-  box-shadow: 0 0 0 1px rgba(79, 125, 255, 0.35), 0 0 16px rgba(79, 125, 255, 0.25) !important;
+  border-color: #00e4ff !important;
+  box-shadow: 0 0 0 1px rgba(0, 228, 255, 0.2), 0 4px 8px rgba(0, 228, 255, 0.1) !important;
   outline: none !important;
   transform: scale3d(1.005, 1.005, 1) !important;
 }
@@ -251,15 +249,15 @@ input:focus, select:focus, textarea:focus {
    ICONS & INTERACTION BREATHING EFFECT
    ═════════════════════════════════════════════════════════════ */
 .text-cyber-purple {
-  color: #4f7dff !important; /* Electric Blue highlight */
-  text-shadow: 0 0 8px rgba(79, 125, 255, 0.5) !important;
+  color: #00e4ff !important; /* Electric Blue highlight */
+  text-shadow: 0 0 1px rgba(0, 228, 255, 0.1) !important;
   transition: all 0.3s ease;
 }
 
 /* Active navigation top bar indicator entry scale */
 span.absolute.inset-x-4.top-0 {
-  background-color: #4f7dff !important;
-  box-shadow: 0 0 12px #4f7dff, 0 0 20px rgba(79, 125, 255, 0.5) !important;
+  background-color: #00e4ff !important;
+  box-shadow: 0 0 2px rgba(0, 228, 255, 0.3) !important;
   animation: nav-indicator-glow 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -277,14 +275,14 @@ span.absolute.inset-x-4.top-0 {
 /* Breathing glow animation for active screen icons */
 @keyframes breathe-glow {
   0%, 100% {
-    filter: drop-shadow(0 0 3px rgba(79, 125, 255, 0.45));
+    filter: none;
     opacity: 0.95;
     transform: scale3d(1, 1, 1);
   }
   50% {
-    filter: drop-shadow(0 0 9px rgba(79, 125, 255, 0.7));
+    filter: drop-shadow(0 0 1px rgba(0, 228, 255, 0.15));
     opacity: 1;
-    transform: scale3d(1.04, 1.04, 1);
+    transform: scale3d(1.01, 1.01, 1);
   }
 }
 
@@ -360,11 +358,11 @@ span.absolute.inset-x-4.top-0 {
 
 @keyframes logo-pulse-glow {
   0%, 100% {
-    filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.4)) drop-shadow(0 0 10px rgba(59, 130, 246, 0.2));
+    filter: drop-shadow(0 0 2px rgba(56, 189, 248, 0.2));
     opacity: 0.9;
   }
   50% {
-    filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.8)) drop-shadow(0 0 20px rgba(59, 130, 246, 0.5));
+    filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.4));
     opacity: 1;
   }
 }

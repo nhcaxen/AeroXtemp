@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { getAbsoluteUrl } from "../utils";
 import { 
   User, 
   Hash, 
@@ -80,7 +81,8 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
   const fetchUserProfile = async (id: string, userNm: string, disp: string, photoUrl: string = "") => {
     setIsLoadingProfile(true);
     try {
-      const res = await fetch(`/api/user-profile?telegramId=${encodeURIComponent(id)}&username=${encodeURIComponent(userNm)}&displayName=${encodeURIComponent(disp)}&photoUrl=${encodeURIComponent(photoUrl)}`);
+      const apiUrl = getAbsoluteUrl(`/api/user-profile?telegramId=${encodeURIComponent(id)}&username=${encodeURIComponent(userNm)}&displayName=${encodeURIComponent(disp)}&photoUrl=${encodeURIComponent(photoUrl)}`);
+      const res = await fetch(apiUrl);
       if (res.ok) {
         const data = await res.json();
         setUserProfile(data);
@@ -165,7 +167,8 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
     setRedeemFeedback({ text: "", type: "" });
 
     try {
-      const res = await fetch("/api/redeem", {
+      const apiUrl = getAbsoluteUrl("/api/redeem");
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -204,7 +207,8 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
     setIsUpgrading(true);
     setUpgradeError(null);
     try {
-      const res = await fetch("/api/user-profile/upgrade", {
+      const apiUrl = getAbsoluteUrl("/api/user-profile/upgrade");
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -510,7 +514,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
                 <button
                   id="trigger-upgrade-modal-btn"
                   onClick={() => setIsUpgradeModalOpen(true)}
-                  className="py-2.5 rounded-xl bg-slate-950/65 border border-[#c084fc]/35 text-white text-xs font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(192,132,252,0.15)] hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 font-display"
+                  className="py-2.5 rounded-xl bg-slate-950/65 border border-[#c084fc]/20 text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 font-display"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-[#c084fc]" />
                   <span>Subscriptions</span>
@@ -518,7 +522,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
                 <button
                   id="go-to-admin-btn"
                   onClick={() => onTabChange && onTabChange("admin")}
-                  className="py-2.5 rounded-xl bg-slate-950/65 border border-[#38bdf8]/35 text-white text-xs font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(56,189,248,0.15)] hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 font-display"
+                  className="py-2.5 rounded-xl bg-slate-950/65 border border-[#38bdf8]/20 text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 font-display"
                 >
                   <Shield className="w-3.5 h-3.5 text-[#38bdf8]" />
                   <span>Admin Panel</span>
@@ -528,7 +532,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
               <button
                 id="trigger-upgrade-modal-btn"
                 onClick={() => setIsUpgradeModalOpen(true)}
-                className="w-full py-2.5 rounded-xl bg-slate-950/65 border border-[#c084fc]/35 text-white text-xs font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(192,132,252,0.15)] hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 font-display"
+                className="w-full py-2.5 rounded-xl bg-slate-950/65 border border-[#c084fc]/20 text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 font-display"
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#c084fc]" />
                 {userProfile?.plan === "free" ? (
@@ -569,7 +573,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
                     id="submit-redeem-code-btn"
                     type="submit"
                     disabled={isRedeeming}
-                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-cyber-purple to-cosmic-lilac hover:brightness-110 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider cursor-pointer active:scale-95 transition-all shadow-[0_0_15px_rgba(79,125,255,0.25)] shrink-0"
+                    className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 border border-white/10 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider cursor-pointer active:scale-95 transition-all shrink-0"
                   >
                     {isRedeeming ? "Processing..." : "Redeem Now"}
                   </button>

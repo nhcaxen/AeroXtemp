@@ -7,6 +7,7 @@ import {
   CheckCircle2, ArrowRight, ArrowUpRight, Lock, X, Info
 } from "lucide-react";
 import { Icon } from "@iconify/react";
+import { getAbsoluteUrl } from "../utils";
 
 interface Product {
   id: string;
@@ -270,6 +271,10 @@ export default function ShopTab() {
   const [activeCategoryModal, setActiveCategoryModal] = useState<"AI" | "VPN" | "OTT" | "Instagram" | null>(null);
   const [modalSearchQuery, setModalSearchQuery] = useState("");
 
+  // New filtered store states
+  const [selectedCategory, setSelectedCategory] = useState<"ALL" | "AI" | "VPN" | "OTT" | "Instagram">("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+
   // Default selected products in each category for the interactive detail viewer
   const [selectedAI, setSelectedAI] = useState<Product>(PRODUCTS[0]);
   const [selectedVPN, setSelectedVPN] = useState<Product>(PRODUCTS[6]);
@@ -277,14 +282,15 @@ export default function ShopTab() {
   const [selectedIG, setSelectedIG] = useState<Product>(PRODUCTS[17]);
 
   // Track currently active visual panel for purchasing details
-  const [activeDetailProduct, setActiveDetailProduct] = useState<Product | null>(PRODUCTS[0]);
+  const [activeDetailProduct, setActiveDetailProduct] = useState<Product | null>(null);
 
   const telegramId = localStorage.getItem("aerox_tg_id") || "5834920194";
 
   // Fetch user credit balance
   const fetchUserCredits = async () => {
     try {
-      const res = await fetch(`/api/user-profile?telegramId=${encodeURIComponent(telegramId)}`);
+      const apiUrl = getAbsoluteUrl(`/api/user-profile?telegramId=${encodeURIComponent(telegramId)}`);
+      const res = await fetch(apiUrl);
       if (res.ok) {
         const data = await res.json();
         setCredits(data.credits ?? 0);
@@ -298,7 +304,8 @@ export default function ShopTab() {
   const fetchPurchases = async () => {
     setLoadingPurchases(true);
     try {
-      const res = await fetch(`/api/shop/purchases?telegramId=${encodeURIComponent(telegramId)}`);
+      const apiUrl = getAbsoluteUrl(`/api/shop/purchases?telegramId=${encodeURIComponent(telegramId)}`);
+      const res = await fetch(apiUrl);
       if (res.ok) {
         const data = await res.json();
         setPurchases(data.purchases || []);
@@ -321,7 +328,8 @@ export default function ShopTab() {
     setShowConfirmModal(null);
 
     try {
-      const res = await fetch("/api/shop/buy", {
+      const apiUrl = getAbsoluteUrl("/api/shop/buy");
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -466,49 +474,56 @@ export default function ShopTab() {
   const ottProducts = PRODUCTS.filter(p => p.category === "OTT");
   const igProducts = PRODUCTS.filter(p => p.category === "Instagram");
 
+  const filteredProducts = PRODUCTS.filter((p) => {
+    const matchCat = selectedCategory === "ALL" || p.category === selectedCategory;
+    const matchSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                        p.desc.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchCat && matchSearch;
+  });
+
   return (
-    <div className="flex flex-col gap-5 p-4 min-h-[85vh] select-none text-left">
+    <div className="flex flex-col gap-4 p-4 min-h-[85vh] select-none text-left">
       {/* Premium Header */}
       <div id="shop-header" className="flex items-center justify-between pb-2 border-b border-white/[0.04]">
         <div>
-          <span className="font-sans font-black tracking-widest text-lg bg-clip-text text-transparent bg-gradient-to-r from-cyber-purple via-[#648aff] to-cosmic-lilac block uppercase">
-            Aerox Shop Vault
+          <span className="font-sans font-black tracking-widest text-base bg-clip-text text-transparent bg-gradient-to-r from-[#00b4ff] via-[#00d0ff] to-[#00e4ff] block uppercase">
+            AeroX Shop Vault
           </span>
-          <span className="text-[10px] text-ash-gray font-bold uppercase tracking-wider block font-mono">
-            Direct Premium Accounts & Key Dispatch
+          <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block font-mono mt-0.5">
+            PREMIUM LICENSES & DIRECT DISPATCH
           </span>
         </div>
         {/* Dynamic Credits Display */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyber-purple/10 border border-cyber-purple/20 shadow-[0_0_15px_rgba(79,125,255,0.15)]">
-          <Coins className="w-4 h-4 text-cyber-purple animate-spin-slow" />
-          <span className="text-xs font-black tracking-widest text-cyber-purple font-mono">
+        <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10">
+          <Coins className="w-3.5 h-3.5 text-[#00e4ff] animate-pulse" />
+          <span className="text-[10px] font-black tracking-wider text-[#00e4ff] font-mono">
             {credits} CR
           </span>
         </div>
       </div>
 
       {/* Sub tabs: Explore Lobby vs Purchases Vault */}
-      <div className="grid grid-cols-2 gap-2 bg-[#0F1320]/60 p-1 rounded-xl border border-white/[0.03]">
+      <div className="grid grid-cols-2 gap-1.5 bg-[#070a18]/70 p-1 rounded-xl border border-white/[0.03]">
         <button
           onClick={() => { setActiveTab("explore"); setErrorMsg(null); }}
-          className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
+          className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-black tracking-wider uppercase transition-all cursor-pointer ${
             activeTab === "explore"
-              ? "bg-gradient-to-r from-cyber-purple/20 to-cosmic-lilac/20 border border-cyber-purple/30 text-white"
+              ? "bg-[#00b4ff]/10 border border-[#00b4ff]/20 text-[#00e4ff]"
               : "text-neutral-500 hover:text-neutral-300 border border-transparent"
           }`}
         >
-          <ShoppingBag className="w-3.5 h-3.5" />
-          Lobby Explore
+          <ShoppingBag className="w-3 h-3" />
+          Catalog Explore
         </button>
         <button
           onClick={() => { setActiveTab("vault"); fetchPurchases(); setErrorMsg(null); }}
-          className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
+          className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-black tracking-wider uppercase transition-all cursor-pointer ${
             activeTab === "vault"
-              ? "bg-gradient-to-r from-cyber-purple/20 to-cosmic-lilac/20 border border-cyber-purple/30 text-white"
+              ? "bg-[#00b4ff]/10 border border-[#00b4ff]/20 text-[#00e4ff]"
               : "text-neutral-500 hover:text-neutral-300 border border-transparent"
           }`}
         >
-          <History className="w-3.5 h-3.5" />
+          <History className="w-3 h-3" />
           My Vault ({purchases.length})
         </button>
       </div>
@@ -517,7 +532,7 @@ export default function ShopTab() {
         <motion.div 
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-3 bg-red-950/30 border border-red-500/30 rounded-xl text-xs text-red-300 flex items-center gap-2.5"
+          className="p-3 bg-red-950/30 border border-red-500/30 rounded-xl text-[10px] text-red-300 flex items-center gap-2.5"
         >
           <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
           <span>{errorMsg}</span>
@@ -525,304 +540,215 @@ export default function ShopTab() {
       )}
 
       {activeTab === "explore" ? (
-        <div className="flex flex-col gap-6 pb-24">
+        <div className="flex flex-col gap-4 pb-24">
           
-          {/* CATEGORY 1: Ai Subscription */}
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-black tracking-widest bg-clip-text text-transparent bg-gradient-to-r from-cyber-purple to-[#8b70ff] pl-1 uppercase font-mono">
-              AI SUBSCRIPTIONS
-            </span>
-            {/* Dark glassmorphic container matching the current cyber theme */}
-            <div className="bg-dark-surface rounded-[1.5rem] p-4 flex items-center justify-start gap-4 shadow-md border border-white/[0.04] relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyber-purple/5 via-cosmic-lilac/5 to-transparent pointer-events-none" />
-              
-              <div className="flex items-center gap-3">
-                {aiProducts.slice(0, 3).map((p) => {
-                  const isSelected = selectedAI.id === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      onClick={() => {
-                        setSelectedAI(p);
-                        setActiveDetailProduct(p);
-                      }}
-                      className={`w-14 h-14 rounded-[1.2rem] flex items-center justify-center relative cursor-pointer group transition-all duration-300 ${
-                        isSelected 
-                          ? "bg-cyber-purple/20 shadow-[0_0_20px_rgba(79,125,255,0.4)]" 
-                          : "bg-void-black hover:bg-slate-900/40 border border-white/[0.02]"
-                      }`}
-                    >
-                      {getIcon(p.id, isSelected, "w-11 h-11")}
-                      {isSelected && (
-                        <span className="absolute -top-1 -right-1 bg-cyber-purple text-[8px] font-black p-0.5 rounded-full">
-                          <Check className="w-2.5 h-2.5 text-white" />
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-
-                {aiProducts.length > 3 && (
-                  <button
-                    onClick={() => {
-                      setActiveCategoryModal("AI");
-                      setModalSearchQuery("");
-                    }}
-                    className="w-14 h-14 rounded-[1.2rem] bg-cyber-purple/10 hover:bg-cyber-purple/20 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:shadow-[0_0_15px_rgba(79,125,255,0.2)] text-cyber-purple"
-                  >
-                    <span className="text-xs font-black font-mono">+{aiProducts.length - 3}</span>
-                    <span className="text-[7px] font-bold uppercase tracking-widest text-cyber-purple/80">See All</span>
-                  </button>
-                )}
-              </div>
-
-              <div className="ml-auto pr-1">
-                <span className="text-[9px] text-cyber-purple font-bold uppercase tracking-wider block font-mono text-right">
-                  {aiProducts.length} Items
-                </span>
-                <span className="text-[8px] text-ash-gray font-black tracking-widest block uppercase text-right">
-                  TAP TO CHOOSE
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* CATEGORY 2: Ott Subscription */}
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-black tracking-widest bg-clip-text text-transparent bg-gradient-to-r from-[#ff4f93] to-cosmic-lilac pl-1 uppercase font-mono">
-              OTT SUBSCRIPTIONS
-            </span>
-            <div className="bg-dark-surface rounded-[1.5rem] p-4 flex items-center justify-start gap-4 shadow-md border border-white/[0.04] relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-cosmic-lilac/5 via-[#ff4f93]/5 to-transparent pointer-events-none" />
-              
-              <div className="flex items-center gap-3">
-                {ottProducts.slice(0, 3).map((p) => {
-                  const isSelected = selectedOTT.id === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      onClick={() => {
-                        setSelectedOTT(p);
-                        setActiveDetailProduct(p);
-                      }}
-                      className={`w-14 h-14 rounded-[1.2rem] flex items-center justify-center relative cursor-pointer group transition-all duration-300 ${
-                        isSelected 
-                          ? "bg-cosmic-lilac/20 shadow-[0_0_20px_rgba(123,92,255,0.4)]" 
-                          : "bg-void-black hover:bg-slate-900/40 border border-white/[0.02]"
-                      }`}
-                    >
-                      {getIcon(p.id, isSelected, "w-11 h-11")}
-                      {isSelected && (
-                        <span className="absolute -top-1 -right-1 bg-cosmic-lilac text-[8px] font-black p-0.5 rounded-full">
-                          <Check className="w-2.5 h-2.5 text-white" />
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-
-                {ottProducts.length > 3 && (
-                  <button
-                    onClick={() => {
-                      setActiveCategoryModal("OTT");
-                      setModalSearchQuery("");
-                    }}
-                    className="w-14 h-14 rounded-[1.2rem] bg-cosmic-lilac/10 hover:bg-cosmic-lilac/20 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:shadow-[0_0_15px_rgba(123,92,255,0.2)] text-cosmic-lilac"
-                  >
-                    <span className="text-xs font-black font-mono">+{ottProducts.length - 3}</span>
-                    <span className="text-[7px] font-bold uppercase tracking-widest text-cosmic-lilac/80">See All</span>
-                  </button>
-                )}
-              </div>
-
-              <div className="ml-auto pr-1">
-                <span className="text-[9px] text-cosmic-lilac font-bold uppercase tracking-wider block font-mono text-right">
-                  {ottProducts.length} Items
-                </span>
-                <span className="text-[8px] text-ash-gray font-black tracking-widest block uppercase text-right">
-                  TAP TO CHOOSE
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* CATEGORY 3: Vpn Protection */}
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-black tracking-widest bg-clip-text text-transparent bg-gradient-to-r from-[#3bd8ff] to-cyber-purple pl-1 uppercase font-mono">
-              VPN PROTOCOLS
-            </span>
-            <div className="bg-dark-surface rounded-[1.5rem] p-4 flex items-center justify-start gap-4 shadow-md border border-white/[0.04] relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-[#3bd8ff]/5 via-cyber-purple/5 to-transparent pointer-events-none" />
-              
-              <div className="flex items-center gap-3">
-                {vpnProducts.slice(0, 3).map((p) => {
-                  const isSelected = selectedVPN.id === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      onClick={() => {
-                        setSelectedVPN(p);
-                        setActiveDetailProduct(p);
-                      }}
-                      className={`w-14 h-14 rounded-[1.2rem] flex items-center justify-center relative cursor-pointer group transition-all duration-300 ${
-                        isSelected 
-                          ? "bg-cyber-purple/20 shadow-[0_0_20px_rgba(79,125,255,0.4)]" 
-                          : "bg-void-black hover:bg-slate-900/40 border border-white/[0.02]"
-                      }`}
-                    >
-                      {getIcon(p.id, isSelected, "w-11 h-11")}
-                      {isSelected && (
-                        <span className="absolute -top-1 -right-1 bg-cyber-purple text-[8px] font-black p-0.5 rounded-full">
-                          <Check className="w-2.5 h-2.5 text-white" />
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-
-                {vpnProducts.length > 3 && (
-                  <button
-                    onClick={() => {
-                      setActiveCategoryModal("VPN");
-                      setModalSearchQuery("");
-                    }}
-                    className="w-14 h-14 rounded-[1.2rem] bg-cyber-purple/10 hover:bg-cyber-purple/20 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:shadow-[0_0_15px_rgba(79,125,255,0.2)] text-cyber-purple"
-                  >
-                    <span className="text-xs font-black font-mono">+{vpnProducts.length - 3}</span>
-                    <span className="text-[7px] font-bold uppercase tracking-widest text-cyber-purple/80">See All</span>
-                  </button>
-                )}
-              </div>
-
-              <div className="ml-auto pr-1">
-                <span className="text-[9px] text-cyber-purple font-bold uppercase tracking-wider block font-mono text-right">
-                  {vpnProducts.length} Items
-                </span>
-                <span className="text-[8px] text-neutral-500 font-black tracking-widest block uppercase text-right">
-                  TAP TO CHOOSE
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* CATEGORY 4: instagram pay now */}
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-black tracking-widest bg-clip-text text-transparent bg-gradient-to-r from-[#ff9f4f] to-[#ff4f93] pl-1 uppercase font-mono">
-              INSTAGRAM PVA & EXPANSE
-            </span>
-            <div className="bg-dark-surface rounded-[1.5rem] p-4 flex items-center justify-start gap-4 shadow-md border border-white/[0.04] relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-[#ff9f4f]/5 via-[#ff4f93]/5 to-transparent pointer-events-none" />
-              
-              <div className="flex items-center gap-3">
-                {igProducts.slice(0, 3).map((p) => {
-                  const isSelected = selectedIG.id === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      onClick={() => {
-                        setSelectedIG(p);
-                        setActiveDetailProduct(p);
-                      }}
-                      className={`w-14 h-14 rounded-[1.2rem] flex items-center justify-center relative cursor-pointer group transition-all duration-300 ${
-                        isSelected 
-                          ? "bg-cosmic-lilac/20 shadow-[0_0_20px_rgba(123,92,255,0.4)]" 
-                          : "bg-void-black hover:bg-slate-900/40 border border-white/[0.02]"
-                      }`}
-                    >
-                      {getIcon(p.id, isSelected, "w-11 h-11")}
-                      {isSelected && (
-                        <span className="absolute -top-1 -right-1 bg-cosmic-lilac text-[8px] font-black p-0.5 rounded-full">
-                          <Check className="w-2.5 h-2.5 text-white" />
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-
-                {igProducts.length > 3 && (
-                  <button
-                    onClick={() => {
-                      setActiveCategoryModal("Instagram");
-                      setModalSearchQuery("");
-                    }}
-                    className="w-14 h-14 rounded-[1.2rem] bg-cosmic-lilac/10 hover:bg-cosmic-lilac/20 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:shadow-[0_0_15px_rgba(123,92,255,0.2)] text-cosmic-lilac"
-                  >
-                    <span className="text-xs font-black font-mono">+{igProducts.length - 3}</span>
-                    <span className="text-[7px] font-bold uppercase tracking-widest text-cosmic-lilac/80">See All</span>
-                  </button>
-                )}
-              </div>
-
-              <div className="ml-auto pr-1">
-                <span className="text-[9px] text-cosmic-lilac font-bold uppercase tracking-wider block font-mono text-right">
-                  {igProducts.length} Items
-                </span>
-                <span className="text-[8px] text-neutral-500 font-black tracking-widest block uppercase text-right">
-                  TAP TO CHOOSE
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* PERSISTENT PRODUCT DETAILS DECK PANEL */}
-          <AnimatePresence mode="wait">
-            {activeDetailProduct && (
-              <motion.div
-                key={activeDetailProduct.id}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.25 }}
-                className="p-5 rounded-3xl bg-dark-card border border-white/[0.06] flex flex-col gap-4 relative overflow-hidden shadow-2xl"
+          {/* Search Box */}
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search premium services..."
+              className="w-full pl-10 pr-12 py-2.5 bg-[#070a18]/50 border border-white/[0.04] rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-[#00e4ff]/35 transition-all font-sans"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white text-[9px] font-black uppercase font-mono tracking-wider"
               >
-                {/* Visual accent background overlay */}
-                <div className="absolute top-0 right-0 w-36 h-36 bg-cyber-purple/5 rounded-full blur-3xl pointer-events-none" />
-                
-                {/* Card Title Header with active icon */}
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-1 bg-slate-950/60 rounded-2xl border border-white/[0.04]">
-                      {getIcon(activeDetailProduct.id, true, "w-10 h-10")}
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* Category Scroller */}
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none select-none">
+            {[
+              { id: "ALL" as const, label: "All Items", icon: ShoppingBag },
+              { id: "AI" as const, label: "AI & Dev", icon: Brain },
+              { id: "OTT" as const, label: "OTT Media", icon: Tv },
+              { id: "VPN" as const, label: "Secure VPN", icon: Shield },
+              { id: "Instagram" as const, label: "Social PVA", icon: Instagram },
+            ].map((cat) => {
+              const IconComp = cat.icon;
+              const isSelected = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider whitespace-nowrap transition-all duration-300 border cursor-pointer ${
+                    isSelected
+                      ? "bg-[#00b4ff]/10 border-[#00b4ff]/20 text-[#00e4ff]"
+                      : "bg-[#070a18]/45 border-white/[0.03] text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <IconComp className="w-3 h-3" />
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Product Cards Grid */}
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
+            {filteredProducts.map((p) => {
+              const isSelected = activeDetailProduct?.id === p.id;
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => setActiveDetailProduct(p)}
+                  className={`p-3.5 rounded-2xl bg-dark-card/40 border transition-all duration-300 flex flex-col justify-between cursor-pointer group relative overflow-hidden ${
+                    isSelected
+                      ? "border-[#00e4ff]/30 bg-[#0c1229]/60"
+                      : "border-white/[0.03] hover:border-white/[0.08] hover:bg-[#080c18]/50"
+                  }`}
+                >
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-[#00b4ff]/2 rounded-full blur-2xl pointer-events-none group-hover:bg-[#00b4ff]/4 transition-colors" />
+
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-start justify-between gap-1.5">
+                      <div className="p-1 bg-[#02040c]/80 rounded-xl border border-white/[0.03]">
+                        {getIcon(p.id, isSelected, "w-10 h-10")}
+                      </div>
+                      
+                      {p.badge && (
+                        <span className="text-[7px] font-black tracking-wider text-[#00e4ff] bg-[#00e4ff]/5 px-2 py-0.5 rounded-full uppercase border border-[#00e4ff]/10 max-w-[90px] truncate">
+                          {p.badge}
+                        </span>
+                      )}
                     </div>
+
                     <div>
-                      <span className="text-[9px] font-black tracking-widest text-cyber-purple uppercase font-mono block">
-                        Selected Subscriptions Details
+                      <span className="text-[11px] font-bold text-white block group-hover:text-[#00e4ff] transition-colors leading-snug">
+                        {p.title}
                       </span>
-                      <span className="text-sm font-black text-white block mt-0.5">
-                        {activeDetailProduct.title}
-                      </span>
+                      <p className="text-[10px] text-slate-400 mt-1 leading-normal line-clamp-2">
+                        {p.desc}
+                      </p>
                     </div>
                   </div>
-                  
-                  <span className="text-[9px] font-black tracking-widest text-cosmic-lilac bg-cosmic-lilac/10 px-2.5 py-1 rounded-full uppercase border border-cosmic-lilac/20 font-mono">
-                    {activeDetailProduct.stock}
-                  </span>
-                </div>
 
-                {/* Description */}
-                <div className="p-3.5 bg-slate-950/40 rounded-2xl border border-white/[0.02] text-xs text-ash-gray leading-relaxed font-sans">
-                  {activeDetailProduct.desc}
-                </div>
+                  <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/[0.03]">
+                    <div className="flex flex-col">
+                      <span className="text-[7px] text-neutral-500 font-extrabold tracking-widest uppercase font-mono">VALUATION</span>
+                      <span className="text-[10px] font-black text-[#00b4ff] font-mono flex items-center gap-0.5 mt-0.5">
+                        <Coins className="w-2.5 h-2.5 text-[#00b4ff] shrink-0" />
+                        {p.price} CR
+                      </span>
+                    </div>
 
-                {/* Pricing & Checkout Block */}
-                <div className="flex items-center justify-between pt-3 border-t border-white/[0.04] mt-1">
-                  <div className="flex flex-col">
-                    <span className="text-[8px] text-neutral-500 uppercase tracking-wider font-bold font-mono">DISPATCH VALUATION</span>
-                    <span className="text-base font-black text-cyber-purple font-mono">
-                      {activeDetailProduct.price} Credits
+                    <div className={`p-1.5 rounded-lg border transition-all duration-300 ${
+                      isSelected 
+                        ? "bg-[#00b4ff] border-transparent text-black" 
+                        : "bg-white/5 border-white/[0.03] text-neutral-400 group-hover:text-white"
+                    }`}>
+                      <ArrowUpRight className="w-3 h-3" />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {filteredProducts.length === 0 && (
+              <div className="col-span-full text-center py-10 bg-white/[0.01] rounded-2xl border border-white/[0.02]">
+                <Search className="w-7 h-7 text-neutral-600 mx-auto mb-2" />
+                <span className="text-[10px] text-neutral-500 font-bold block uppercase tracking-wider font-mono">
+                  No matches found
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Sliding Details Drawer Sheet */}
+          <AnimatePresence>
+            {activeDetailProduct && (
+              <div 
+                className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 flex items-end justify-center p-0"
+                onClick={() => setActiveDetailProduct(null)}
+              >
+                <motion.div
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "100%" }}
+                  transition={{ type: "spring", damping: 28, stiffness: 350 }}
+                  className="w-full max-w-[480px] bg-[#070a18] border-t border-white/[0.08] rounded-t-[2rem] p-6 shadow-2xl flex flex-col gap-5 text-left relative z-50 pb-8"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Drag Indicator Bar */}
+                  <div className="w-12 h-1 bg-white/10 rounded-full mx-auto -mt-2 mb-2" />
+
+                  {/* Header */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-1 bg-[#02040c] rounded-2xl border border-white/[0.05]">
+                        {getIcon(activeDetailProduct.id, true, "w-11 h-11")}
+                      </div>
+                      <div>
+                        <span className="text-[8px] font-black tracking-widest text-[#00b4ff] uppercase font-mono block">
+                          Secure Vault Licensing
+                        </span>
+                        <span className="text-xs font-black text-white block mt-0.5 leading-snug">
+                          {activeDetailProduct.title}
+                        </span>
+                      </div>
+                    </div>
+
+                    <span className="text-[8px] font-bold tracking-widest text-[#00e4ff] bg-[#00e4ff]/8 px-2.5 py-1 rounded-full uppercase border border-[#00e4ff]/10 font-mono">
+                      {activeDetailProduct.stock}
                     </span>
                   </div>
 
-                  <button
-                    onClick={() => setShowConfirmModal(activeDetailProduct)}
-                    disabled={buyingProductId !== null}
-                    className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-cyber-purple to-cosmic-lilac hover:brightness-110 text-white text-[10px] font-black tracking-widest uppercase transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-95 shadow-[0_0_20px_rgba(79,125,255,0.25)]"
-                  >
-                    Purchase Vault Slot
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </motion.div>
+                  {/* Description & Specs block */}
+                  <div className="flex flex-col gap-3">
+                    <div className="p-4 bg-[#02040c]/60 rounded-2xl border border-white/[0.03] text-xs text-slate-400 leading-relaxed font-sans">
+                      {activeDetailProduct.desc}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="p-3 bg-[#02040c]/40 border border-white/[0.03] rounded-xl flex flex-col">
+                        <span className="text-[7.5px] text-neutral-500 font-bold uppercase tracking-wider font-mono">Dispatch Speed</span>
+                        <span className="text-[10px] text-white font-extrabold mt-0.5 uppercase tracking-wide">Instant Delivery</span>
+                      </div>
+                      <div className="p-3 bg-[#02040c]/40 border border-[#00b4ff]/10 rounded-xl flex flex-col">
+                        <span className="text-[7.5px] text-[#00e4ff]/60 font-bold uppercase tracking-wider font-mono">Account Type</span>
+                        <span className="text-[10px] text-[#00e4ff] font-extrabold mt-0.5 uppercase tracking-wide">Fully Secured</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer pricing & authorization checkout */}
+                  <div className="flex items-center justify-between pt-4 border-t border-white/[0.04] mt-2">
+                    <div className="flex flex-col">
+                      <span className="text-[7.5px] text-neutral-500 uppercase tracking-widest font-black font-mono">Authoritative Price</span>
+                      <span className="text-sm font-black text-[#00b4ff] font-mono flex items-center gap-1 mt-0.5">
+                        <Coins className="w-4 h-4 text-[#00b4ff]" />
+                        {activeDetailProduct.price} CR
+                      </span>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setActiveDetailProduct(null)}
+                        className="px-4 py-2.5 rounded-xl border border-white/[0.05] bg-white/5 hover:bg-white/10 text-slate-300 text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+                      >
+                        Dismiss
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowConfirmModal(activeDetailProduct);
+                          setActiveDetailProduct(null);
+                        }}
+                        disabled={buyingProductId !== null}
+                        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#007aff] to-[#00e4ff] text-black text-[10px] font-black tracking-widest uppercase transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-95 shadow-[0_4px_12px_rgba(0,228,255,0.15)] hover:shadow-[0_4px_20px_rgba(0,228,255,0.25)]"
+                      >
+                        Deploy Slot
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
             )}
           </AnimatePresence>
 
@@ -1123,7 +1049,7 @@ export default function ShopTab() {
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
                 transition={{ type: "spring", damping: 26, stiffness: 320 }}
-                className="w-full max-w-md bg-dark-card border border-white/[0.08] rounded-t-3xl p-6 shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col gap-4 text-left max-h-[85vh]"
+                className="w-full max-w-md bg-dark-card border border-white/[0.08] rounded-t-3xl p-6 shadow-2xl flex flex-col gap-4 text-left max-h-[85vh]"
               >
                 {/* Header */}
                 <div className="flex justify-between items-center pb-2 border-b border-white/[0.03]">
@@ -1192,8 +1118,8 @@ export default function ShopTab() {
                           }}
                           className={`p-3 rounded-2xl flex items-center justify-between gap-3 text-left transition-all duration-300 group cursor-pointer ${
                             isSelected 
-                              ? "bg-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.15)]" 
-                              : "bg-slate-950/40 hover:bg-slate-900/40 border border-white/[0.02] hover:border-purple-500/15"
+                              ? "bg-white/10 border border-white/15 shadow-sm" 
+                              : "bg-slate-950/40 hover:bg-slate-900/40 border border-white/[0.02] hover:border-white/10"
                           }`}
                         >
                           <div className="flex items-center gap-3 min-w-0">

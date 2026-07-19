@@ -1,6 +1,8 @@
 import React from "react";
-import { Home, ShoppingBag, Mail, UserCheck, User, Shield, Sparkles } from "lucide-react";
+import { Home, ShoppingBag, Mail, UserCheck, User, Shield } from "lucide-react";
 import { TabId } from "../types";
+import { motion } from "motion/react";
+import RobotCompanion from "./RobotCompanion";
 
 interface NavbarProps {
   activeTab: TabId;
@@ -17,11 +19,48 @@ export default function Navbar({ activeTab, onTabChange, isOwner }: NavbarProps)
     { id: "profile" as TabId, label: "Profile", icon: User },
   ];
 
+  // Dynamically include Admin tab if owner
+  const items = [...navItems];
+  if (isOwner && !items.some(i => i.id === "admin")) {
+    items.push({ id: "admin" as TabId, label: "Admin", icon: Shield });
+  }
 
+  const activeIndex = items.findIndex((item) => item.id === activeTab);
+  const mascotLeft = items.length > 0 ? ((activeIndex + 0.5) / items.length) * 100 : 50;
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 h-16 bg-dark-surface/95 border-t border-white/[0.04] backdrop-blur-md flex items-center justify-around px-2 z-40 select-none">
-      {navItems.map((item) => {
+    <div className="absolute bottom-4 left-4 right-4 h-[74px] rounded-[24px] bg-[#030612]/80 border border-white/[0.09] backdrop-blur-[24px] flex items-center justify-around px-2 z-40 select-none shadow-[0_12px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(0,180,255,0.15),inset_0_1px_1px_rgba(255,255,255,0.15)]">
+      {/* Liquid edge neon reflex line */}
+      <div className="absolute top-0 inset-x-6 h-[1.2px] bg-gradient-to-r from-transparent via-[#00e4ff]/60 to-transparent shadow-[0_1px_12px_rgba(0,228,255,0.6)] pointer-events-none" />
+      
+      {/* Glossy top reflection layer resembling an iOS curved glass sheet */}
+      <div className="absolute inset-x-0 top-0 bottom-1/2 rounded-t-[24px] bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none" />
+
+      {/* Redesigned Premium Floating Mascot centered precisely above the active tab button with high-end physics spring */}
+      <motion.div
+        animate={{ left: `${mascotLeft}%` }}
+        transition={{
+          type: "spring",
+          stiffness: 220,
+          damping: 24,
+          mass: 0.8
+        }}
+        className="absolute -top-[45px] -translate-x-1/2 z-50 pointer-events-none"
+      >
+        <RobotCompanion activeTab={activeTab} items={items} />
+      </motion.div>
+
+      {/* SVG Definitions for the premium neon gradient fill/stroke */}
+      <svg className="absolute w-0 h-0" width="0" height="0">
+        <defs>
+          <linearGradient id="activeTabGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#00e4ff" />
+            <stop offset="100%" stopColor="#007aff" />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      {items.map((item) => {
         const Icon = item.icon;
         const isActive = activeTab === item.id;
 
@@ -30,26 +69,42 @@ export default function Navbar({ activeTab, onTabChange, isOwner }: NavbarProps)
             key={item.id}
             id={`nav-btn-${item.id}`}
             onClick={() => onTabChange(item.id)}
-            className="flex flex-col items-center justify-center flex-1 py-1 h-full relative transition-all duration-200 cursor-pointer"
+            className="flex flex-col items-center justify-center flex-1 h-full py-2 relative transition-all duration-300 cursor-pointer group"
           >
-            {/* Soft background glow for active item */}
+            {/* Premium iOS Liquid Glass capsule background with layoutId animation to slide smoothly */}
             {isActive && (
-              <span className="absolute inset-x-4 top-0 h-[2px] bg-cyber-purple shadow-[0_-4px_12px_rgba(124,58,237,0.5)]" />
+              <motion.div
+                layoutId="active-nav-pill"
+                transition={{
+                  type: "spring",
+                  stiffness: 380,
+                  damping: 30
+                }}
+                className="absolute inset-x-1 inset-y-1.5 rounded-[18px] bg-white/5 border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] -z-10"
+              />
             )}
 
+            {/* Icon Wrapper with fluid responsive scaling */}
             <div
-              className={`p-1 rounded-xl transition-all duration-300 ${
+              className={`p-1.5 rounded-xl transition-all duration-300 relative ${
                 isActive
-                  ? "text-cyber-purple scale-110"
-                  : "text-neutral-400 hover:text-neutral-200"
+                  ? "scale-[1.12]"
+                  : "text-slate-400 group-hover:text-slate-200 group-hover:scale-105"
               }`}
             >
-              <Icon className="w-5 h-5" />
+              <Icon 
+                className="w-[19px] h-[19px] transition-all duration-300" 
+                stroke={isActive ? "url(#activeTabGrad)" : "currentColor"}
+                strokeWidth={isActive ? 2.5 : 1.8}
+              />
             </div>
 
+            {/* Custom high-scannable uppercase label */}
             <span
-              className={`text-[10px] font-medium tracking-wide transition-colors ${
-                isActive ? "text-cyber-purple font-semibold" : "text-neutral-500"
+              className={`text-[8px] font-black uppercase tracking-widest mt-0.5 transition-all duration-300 ${
+                isActive 
+                  ? "text-[#00e4ff]" 
+                  : "text-slate-500 group-hover:text-slate-400"
               }`}
             >
               {item.label}

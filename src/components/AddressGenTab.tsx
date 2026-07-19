@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { UserCheck, Copy, Check, RefreshCw, MapPin, Globe, Shield, Briefcase, CreditCard, ChevronRight } from "lucide-react";
 import { incrementAnalytic } from "../utils/analytics";
 import { FakeAddress } from "../types";
-import { generateFakeAddress, COUNTRY_DATA } from "../utils";
+import { generateFakeAddress, COUNTRY_DATA, getAbsoluteUrl } from "../utils";
 
 export default function AddressGenTab() {
   const [selectedCountry, setSelectedCountry] = useState("US");
@@ -15,7 +15,7 @@ export default function AddressGenTab() {
     setGenerating(true);
     const country = (typeof countryOverride === "string" ? countryOverride : undefined) || selectedCountry;
     try {
-      const res = await fetch(`/api/addressgen?country=${country}`);
+      const res = await fetch(getAbsoluteUrl(`/api/addressgen?country=${country}`));
       if (res.ok) {
         const data = await res.json();
         setIdentity(data.address);

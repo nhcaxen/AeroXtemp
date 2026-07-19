@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { incrementAnalytic } from "../utils/analytics";
+import { getAbsoluteUrl } from "../utils";
 import { 
   Mail, 
   Copy, 
@@ -136,7 +137,8 @@ export default function TempMailTab() {
     try {
       const savedUser = localStorage.getItem("aerox_tg_user") || "AeroX_Developer";
       const savedDisplay = localStorage.getItem("aerox_tg_display") || "AeroX VIP Member";
-      const res = await fetch(`/api/user-profile?telegramId=${encodeURIComponent(tgId)}&username=${encodeURIComponent(savedUser)}&displayName=${encodeURIComponent(savedDisplay)}`);
+      const apiUrl = getAbsoluteUrl(`/api/user-profile?telegramId=${encodeURIComponent(tgId)}&username=${encodeURIComponent(savedUser)}&displayName=${encodeURIComponent(savedDisplay)}`);
+      const res = await fetch(apiUrl);
       if (res.ok) {
         const data = await res.json();
         setUserProfile(data);
@@ -150,7 +152,7 @@ export default function TempMailTab() {
   // Helper for API fetch with exponential backoff and retries
   const fetchWithRetry = async (url: string, options: RequestInit = {}, retries = 3, delay = 1000): Promise<Response> => {
     try {
-      const res = await fetch(url, options);
+      const res = await fetch(getAbsoluteUrl(url), options);
       if (!res.ok && retries > 0) {
         if (res.status === 429 || res.status >= 500) {
           await new Promise(resolve => setTimeout(resolve, delay));
@@ -176,7 +178,8 @@ export default function TempMailTab() {
     const tgId = getTelegramId();
 
     try {
-      const res = await fetch("/api/mailboxes", {
+      const apiUrl = getAbsoluteUrl("/api/mailboxes");
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -215,7 +218,8 @@ export default function TempMailTab() {
     setError(null);
     const tgId = getTelegramId();
     try {
-      const chargeRes = await fetch("/api/mailboxes/generate", {
+      const apiUrl = getAbsoluteUrl("/api/mailboxes/generate");
+      const chargeRes = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ telegramId: tgId })
@@ -242,7 +246,8 @@ export default function TempMailTab() {
         }
       } catch (directErr) {
         console.warn("Direct 1SecMail API failed, using backend proxy fallback:", directErr);
-        const response = await fetch("/api/tempmail/random");
+        const apiUrl = getAbsoluteUrl("/api/tempmail/random");
+        const response = await fetch(apiUrl);
         if (!response.ok) {
           throw new Error(`Failed to generate temporary email address (${response.status})`);
         }
@@ -299,7 +304,8 @@ export default function TempMailTab() {
         }
       } catch (directErr) {
         console.warn("Direct 1SecMail inbox fetch failed, using backend proxy fallback:", directErr);
-        const res = await fetch(`/api/tempmail/inbox?login=${encodeURIComponent(login)}&domain=${encodeURIComponent(domain)}`);
+        const apiUrl = getAbsoluteUrl(`/api/tempmail/inbox?login=${encodeURIComponent(login)}&domain=${encodeURIComponent(domain)}`);
+        const res = await fetch(apiUrl);
         if (res.ok) {
           const data = await res.json();
           rawMessages = data.messages || [];
@@ -349,7 +355,8 @@ export default function TempMailTab() {
         }
       } catch (directErr) {
         console.warn("Direct 1SecMail message fetch failed, using backend proxy fallback:", directErr);
-        const res = await fetch(`/api/tempmail/message?login=${encodeURIComponent(login)}&domain=${encodeURIComponent(domain)}&id=${encodeURIComponent(msgId)}`);
+        const apiUrl = getAbsoluteUrl(`/api/tempmail/message?login=${encodeURIComponent(login)}&domain=${encodeURIComponent(domain)}&id=${encodeURIComponent(msgId)}`);
+        const res = await fetch(apiUrl);
         if (res.ok) {
           const data = await res.json();
           msgData = data.message;
@@ -421,7 +428,8 @@ export default function TempMailTab() {
     setRecoveryError(null);
     const tgId = getTelegramId();
     try {
-      const res = await fetch(`/api/mailboxes?telegramId=${encodeURIComponent(tgId)}&search=${encodeURIComponent(searchQuery)}&sort=${sortBy}`);
+      const apiUrl = getAbsoluteUrl(`/api/mailboxes?telegramId=${encodeURIComponent(tgId)}&search=${encodeURIComponent(searchQuery)}&sort=${sortBy}`);
+      const res = await fetch(apiUrl);
       if (res.ok) {
         const data = await res.json();
         setMailboxes(data.mailboxes || []);
@@ -438,7 +446,8 @@ export default function TempMailTab() {
   const handleDeleteMailboxFromDb = async (mailboxId: number) => {
     const tgId = getTelegramId();
     try {
-      const res = await fetch("/api/mailboxes/delete", {
+      const apiUrl = getAbsoluteUrl("/api/mailboxes/delete");
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: mailboxId, telegramId: tgId })
@@ -462,7 +471,8 @@ export default function TempMailTab() {
     setRecoveryError(null);
     const tgId = getTelegramId();
     try {
-      const res = await fetch("/api/mailboxes/activate", {
+      const apiUrl = getAbsoluteUrl("/api/mailboxes/activate");
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: mailbox.id, telegramId: tgId })
@@ -488,7 +498,8 @@ export default function TempMailTab() {
     setIsRecoveredInboxOffline(false);
     const tgId = getTelegramId();
     try {
-      const res = await fetch("/api/mailboxes/open", {
+      const apiUrl = getAbsoluteUrl("/api/mailboxes/open");
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: mailbox.id, telegramId: tgId })
@@ -529,7 +540,8 @@ export default function TempMailTab() {
           }
         } catch (directErr) {
           console.warn("Direct 1SecMail fetch for recovered box failed, falling back to proxy:", directErr);
-          const res = await fetch(`/api/mailboxes/${mailboxId}/messages?telegramId=${encodeURIComponent(tgId)}`);
+          const apiUrl = getAbsoluteUrl(`/api/mailboxes/${mailboxId}/messages?telegramId=${encodeURIComponent(tgId)}`);
+          const res = await fetch(apiUrl);
           if (res.ok) {
             const data = await res.json();
             rawMessages = data.messages || [];
@@ -556,7 +568,8 @@ export default function TempMailTab() {
       }
 
       // Default implementation for Mail.tm
-      const res = await fetch(`/api/mailboxes/${mailboxId}/messages?telegramId=${encodeURIComponent(tgId)}`);
+      const apiUrl = getAbsoluteUrl(`/api/mailboxes/${mailboxId}/messages?telegramId=${encodeURIComponent(tgId)}`);
+      const res = await fetch(apiUrl);
       if (res.ok) {
         const data = await res.json();
         setRecoveredMessages(data.messages || []);
@@ -602,7 +615,8 @@ export default function TempMailTab() {
           }
         } catch (directErr) {
           console.warn("Direct 1SecMail detail fetch for recovered box failed, falling back to proxy:", directErr);
-          const res = await fetch(`/api/mailboxes/${openedRecoveredMailbox.id}/messages/${msgId}?telegramId=${encodeURIComponent(tgId)}`);
+          const apiUrl = getAbsoluteUrl(`/api/mailboxes/${openedRecoveredMailbox.id}/messages/${msgId}?telegramId=${encodeURIComponent(tgId)}`);
+          const res = await fetch(apiUrl);
           if (res.ok) {
             const data = await res.json();
             msgDetails = data.message;
@@ -619,7 +633,8 @@ export default function TempMailTab() {
       }
 
       // Default implementation for Mail.tm
-      const res = await fetch(`/api/mailboxes/${openedRecoveredMailbox.id}/messages/${msgId}?telegramId=${encodeURIComponent(tgId)}`);
+      const apiUrl = getAbsoluteUrl(`/api/mailboxes/${openedRecoveredMailbox.id}/messages/${msgId}?telegramId=${encodeURIComponent(tgId)}`);
+      const res = await fetch(apiUrl);
       if (res.ok) {
         const data = await res.json();
         setSelectedRecoveredMessage(data.message);

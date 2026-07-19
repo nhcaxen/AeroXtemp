@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { getAbsoluteUrl } from "../utils";
 import { 
   Users, 
   Shield, 
@@ -91,7 +92,8 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
   const fetchStats = async () => {
     setIsLoadingStats(true);
     try {
-      const res = await fetch("/api/admin/dashboard-stats", {
+      const apiUrl = getAbsoluteUrl("/api/admin/dashboard-stats");
+      const res = await fetch(apiUrl, {
         headers: { "x-admin-id": adminTelegramId }
       });
       if (res.ok) {
@@ -112,7 +114,8 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
   const fetchRedeemCodes = async () => {
     setIsLoadingCodes(true);
     try {
-      const res = await fetch("/api/admin/redeem/list", {
+      const apiUrl = getAbsoluteUrl("/api/admin/redeem/list");
+      const res = await fetch(apiUrl, {
         headers: { "x-admin-id": adminTelegramId }
       });
       if (res.ok) {
@@ -147,7 +150,8 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
 
     setIsSearching(true);
     try {
-      const res = await fetch(`/api/admin/users/search?query=${encodeURIComponent(searchQuery)}`, {
+      const apiUrl = getAbsoluteUrl(`/api/admin/users/search?query=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(apiUrl, {
         headers: { "x-admin-id": adminTelegramId }
       });
       if (res.ok) {
@@ -173,7 +177,8 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
     if (!selectedUser) return;
     setIsUpdatingPremium(true);
     try {
-      const res = await fetch("/api/admin/users/update-premium", {
+      const apiUrl = getAbsoluteUrl("/api/admin/users/update-premium");
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -213,7 +218,8 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
 
     setIsUpdatingCredits(true);
     try {
-      const res = await fetch("/api/admin/users/update-credits", {
+      const apiUrl = getAbsoluteUrl("/api/admin/users/update-credits");
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -268,7 +274,8 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
         credits: redeemType === "credits" ? redeemCredits : 0
       };
 
-      const res = await fetch("/api/admin/redeem/generate", {
+      const apiUrl = getAbsoluteUrl("/api/admin/redeem/generate");
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -296,7 +303,8 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
 
   const handleDisableCode = async (codeId: number) => {
     try {
-      const res = await fetch("/api/admin/redeem/disable", {
+      const apiUrl = getAbsoluteUrl("/api/admin/redeem/disable");
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -319,7 +327,8 @@ export default function AdminTab({ adminTelegramId }: AdminTabProps) {
 
   const handleDeleteCode = async (codeId: number) => {
     try {
-      const res = await fetch("/api/admin/redeem/delete", {
+      const apiUrl = getAbsoluteUrl("/api/admin/redeem/delete");
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

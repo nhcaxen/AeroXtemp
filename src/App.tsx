@@ -8,16 +8,22 @@ import TempMailTab from "./components/TempMailTab";
 import AddressGenTab from "./components/AddressGenTab";
 import ProfileTab from "./components/ProfileTab";
 import AdminTab from "./components/AdminTab";
+import { getAbsoluteUrl } from "./utils";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("home");
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
+  const handleTabChange = (newTab: TabId) => {
+    setActiveTab(newTab);
+  };
+
   const fetchUserProfile = async (id: string, userNm: string, disp: string, photoUrl: string = "", referrerId: string = "") => {
     setIsLoadingProfile(true);
     try {
-      const res = await fetch(`/api/user-profile?telegramId=${encodeURIComponent(id)}&username=${encodeURIComponent(userNm)}&displayName=${encodeURIComponent(disp)}&photoUrl=${encodeURIComponent(photoUrl)}&referrerId=${encodeURIComponent(referrerId)}`);
+      const apiUrl = getAbsoluteUrl(`/api/user-profile?telegramId=${encodeURIComponent(id)}&username=${encodeURIComponent(userNm)}&displayName=${encodeURIComponent(disp)}&photoUrl=${encodeURIComponent(photoUrl)}&referrerId=${encodeURIComponent(referrerId)}`);
+      const res = await fetch(apiUrl);
       if (res.ok) {
         const data = await res.json();
         setUserProfile(data);
@@ -78,7 +84,7 @@ export default function App() {
       case "home":
         return (
           <HomeTab
-            onTabChange={setActiveTab}
+            onTabChange={handleTabChange}
           />
         );
       case "cardgen":
@@ -88,7 +94,7 @@ export default function App() {
       case "addressgen":
         return <AddressGenTab />;
       case "profile":
-        return <ProfileTab onTabChange={setActiveTab} />;
+        return <ProfileTab onTabChange={handleTabChange} />;
       case "admin":
         if (userProfile?.role === "owner") {
           return <AdminTab adminTelegramId={userProfile.telegramId} />;
@@ -104,23 +110,27 @@ export default function App() {
       default:
         return (
           <HomeTab
-            onTabChange={setActiveTab}
+            onTabChange={handleTabChange}
           />
         );
     }
   };
 
   return (
-    <TelegramFrame activeTab={activeTab} onTabChange={setActiveTab}>
-      {/* Scrollable content container for active tab */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
-        {renderActiveTab()}
+    <TelegramFrame activeTab={activeTab} onTabChange={handleTabChange}>
+      {/* Scrollable content container for active tab with touch gestures for swiping navigation */}
+      <div 
+        className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-none relative w-full h-full"
+      >
+        <div className="w-full min-h-full">
+          {renderActiveTab()}
+        </div>
       </div>
 
       {/* Sticky Bottom Navigation menu bar */}
       <Navbar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         isOwner={userProfile?.role === "owner"}
       />
     </TelegramFrame>

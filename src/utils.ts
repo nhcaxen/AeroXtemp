@@ -668,3 +668,107 @@ export function generateFakeAddress(countryCode: string): FakeAddress {
     avatar
   };
 }
+
+/**
+ * Resolves a relative URL path to an absolute URL with an HTTP/HTTPS protocol.
+ * This prevents DOMException: "The string did not match the expected pattern."
+ * thrown by WebKit/Safari when calling fetch with a relative path inside an iframe/opaque origin.
+ */
+export function getAbsoluteUrl(urlPath: string): string {
+  if (typeof urlPath !== "string") return urlPath;
+  if (urlPath.startsWith("http://") || urlPath.startsWith("https://")) {
+    return urlPath;
+  }
+
+  const cleanPath = urlPath.startsWith("/") ? urlPath : `/${urlPath}`;
+
+  // Default fallback if window/document is not defined (e.g. Server-Side Rendering)
+  if (typeof window === "undefined") {
+    return cleanPath;
+  }
+
+  let origin = window.location.origin;
+
+  // 1. If origin is "null" or invalid, try import.meta.url
+  if (!origin || origin === "null" || !origin.startsWith("http")) {
+    try {
+      // @ts-ignore
+      const metaUrl = import.meta.url;
+      if (metaUrl && metaUrl.startsWith("http")) {
+        const parsedMeta = new URL(metaUrl);
+        origin = `${parsedMeta.protocol}//${parsedMeta.host}`;
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // 2. Try document.currentScript
+  if (!origin || origin === "null" || !origin.startsWith("http")) {
+    try {
+      if (typeof document !== "undefined" && document.currentScript) {
+        const scriptSrc = (document.currentScript as HTMLScriptElement).src;
+        if (scriptSrc && scriptSrc.startsWith("http")) {
+          const parsedScript = new URL(scriptSrc);
+          origin = `${parsedScript.protocol}//${parsedScript.host}`;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // 3. Scan document.scripts for absolute paths
+  if (!origin || origin === "null" || !origin.startsWith("http")) {
+    try {
+      if (typeof document !== "undefined") {
+        const scripts = document.getElementsByTagName("script");
+        for (let i = 0; i < scripts.length; i++) {
+          const src = scripts[i].src;
+          if (src && src.startsWith("http")) {
+            const parsedScript = new URL(src);
+            origin = `${parsedScript.protocol}//${parsedScript.host}`;
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // 4. Try window.location.href
+  if (!origin || origin === "null" || !origin.startsWith("http")) {
+    try {
+      const parsed = new URL(window.location.href);
+      if (parsed.protocol.startsWith("http")) {
+        origin = `${parsed.protocol}//${parsed.host}`;
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // 5. Try document.referrer
+  if (!origin || origin === "null" || !origin.startsWith("http")) {
+    try {
+      if (typeof document !== "undefined" && document.referrer) {
+        const parsedRef = new URL(document.referrer);
+        if (parsedRef.protocol.startsWith("http")) {
+          origin = `${parsedRef.protocol}//${parsedRef.host}`;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // If we succeeded in resolving a valid origin, prepend it
+  if (origin && origin !== "null" && origin.startsWith("http")) {
+    return `${origin}${cleanPath}`;
+  }
+
+  // Final fallback
+  return cleanPath;
+}
+
