@@ -8,7 +8,7 @@ import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { generateCards, generateFakeAddress } from "./src/utils.js";
 import { db } from "./src/db/index.js";
-import { users, redeemCodes, redemptions, mailboxes, shopPurchases, sellerApplications, sellers, marketplaceProducts, marketplaceOrders, marketplaceRatings, marketplaceFees, marketplaceNotifications, marketplaceStats } from "./src/db/schema.js";
+import { users, redeemCodes, redemptions, mailboxes, shopPurchases, sellerApplications, sellers, marketplaceProducts, marketplaceCatalogProducts, marketplaceListings, marketplaceOrders, marketplaceRatings, marketplaceFees, marketplaceNotifications, marketplaceStats } from "./src/db/schema.js";
 import { eq, and, or, like, desc, sql } from "drizzle-orm";
 import { createClient } from "@supabase/supabase-js";
 
@@ -69,131 +69,164 @@ async function startServer() {
 
     // Auto-create new marketplace tables if they don't exist
     try {
-      let tablesExist = false;
-      try {
-        await db.execute(sql`SELECT 1 FROM "seller_applications" LIMIT 1;`);
-        tablesExist = true;
-      } catch (e) {
-        // Tables do not exist yet
-      }
+      console.log("[DB] Verifying/creating marketplace tables...");
+      const createQueries = [
+        `CREATE TABLE IF NOT EXISTS "seller_applications" (
+          "id" SERIAL PRIMARY KEY,
+          "telegram_id" TEXT NOT NULL,
+          "username" TEXT,
+          "store_name" TEXT NOT NULL,
+          "telegram_username" TEXT NOT NULL,
+          "store_logo" TEXT,
+          "store_description" TEXT NOT NULL,
+          "crypto_wallet" TEXT NOT NULL,
+          "products_to_sell" TEXT NOT NULL,
+          "status" TEXT DEFAULT 'pending',
+          "created_at" TIMESTAMP DEFAULT NOW(),
+          "updated_at" TIMESTAMP DEFAULT NOW()
+        );`,
+        `CREATE TABLE IF NOT EXISTS "sellers" (
+          "id" SERIAL PRIMARY KEY,
+          "telegram_id" TEXT UNIQUE NOT NULL,
+          "username" TEXT,
+          "store_name" TEXT NOT NULL,
+          "telegram_username" TEXT NOT NULL,
+          "store_logo" TEXT,
+          "store_description" TEXT NOT NULL,
+          "crypto_wallet" TEXT NOT NULL,
+          "rating" TEXT DEFAULT '5.0',
+          "completed_orders" INTEGER DEFAULT 0,
+          "response_time" TEXT DEFAULT '~15 mins',
+          "is_verified" INTEGER DEFAULT 0,
+          "status" TEXT DEFAULT 'active',
+          "joined_at" TIMESTAMP DEFAULT NOW()
+        );`,
+        `CREATE TABLE IF NOT EXISTS "marketplace_products" (
+          "id" SERIAL PRIMARY KEY,
+          "seller_telegram_id" TEXT NOT NULL,
+          "category" TEXT NOT NULL,
+          "name" TEXT NOT NULL,
+          "price" INTEGER NOT NULL,
+          "description" TEXT,
+          "stock_status" TEXT DEFAULT 'in_stock',
+          "logo" TEXT,
+          "created_at" TIMESTAMP DEFAULT NOW()
+        );`,
+        `CREATE TABLE IF NOT EXISTS "marketplace_catalog_products" (
+          "id" SERIAL PRIMARY KEY,
+          "name" TEXT NOT NULL,
+          "logo" TEXT,
+          "category" TEXT NOT NULL,
+          "description" TEXT,
+          "brand" TEXT,
+          "website" TEXT,
+          "status" TEXT DEFAULT 'active',
+          "requested_by" TEXT,
+          "created_at" TIMESTAMP DEFAULT NOW()
+        );`,
+        `CREATE TABLE IF NOT EXISTS "marketplace_listings" (
+          "id" SERIAL PRIMARY KEY,
+          "product_id" INTEGER NOT NULL,
+          "seller_telegram_id" TEXT NOT NULL,
+          "price" INTEGER NOT NULL,
+          "currency" TEXT DEFAULT 'INR',
+          "stock" INTEGER DEFAULT 1,
+          "delivery_time" TEXT DEFAULT 'Instant',
+          "notes" TEXT,
+          "status" TEXT DEFAULT 'active',
+          "created_at" TIMESTAMP DEFAULT NOW(),
+          "updated_at" TIMESTAMP DEFAULT NOW()
+        );`,
+        `CREATE TABLE IF NOT EXISTS "marketplace_orders" (
+          "id" SERIAL PRIMARY KEY,
+          "order_id" TEXT UNIQUE NOT NULL,
+          "buyer_telegram_id" TEXT NOT NULL,
+          "buyer_username" TEXT,
+          "seller_telegram_id" TEXT NOT NULL,
+          "product_id" INTEGER NOT NULL,
+          "product_name" TEXT NOT NULL,
+          "product_category" TEXT NOT NULL,
+          "price" INTEGER NOT NULL,
+          "status" TEXT DEFAULT 'pending',
+          "deal_group_link" TEXT,
+          "created_at" TIMESTAMP DEFAULT NOW(),
+          "updated_at" TIMESTAMP DEFAULT NOW()
+        );`,
+        `CREATE TABLE IF NOT EXISTS "marketplace_ratings" (
+          "id" SERIAL PRIMARY KEY,
+          "order_id" TEXT NOT NULL,
+          "buyer_telegram_id" TEXT NOT NULL,
+          "seller_telegram_id" TEXT NOT NULL,
+          "rating" INTEGER NOT NULL,
+          "review" TEXT,
+          "created_at" TIMESTAMP DEFAULT NOW()
+        );`,
+        `CREATE TABLE IF NOT EXISTS "marketplace_fees" (
+          "id" SERIAL PRIMARY KEY,
+          "order_id" TEXT NOT NULL,
+          "amount" INTEGER NOT NULL,
+          "fee" INTEGER NOT NULL,
+          "seller_receives" INTEGER NOT NULL,
+          "created_at" TIMESTAMP DEFAULT NOW()
+        );`,
+        `CREATE TABLE IF NOT EXISTS "marketplace_notifications" (
+          "id" SERIAL PRIMARY KEY,
+          "telegram_id" TEXT NOT NULL,
+          "title" TEXT NOT NULL,
+          "message" TEXT NOT NULL,
+          "type" TEXT NOT NULL,
+          "is_read" INTEGER DEFAULT 0,
+          "created_at" TIMESTAMP DEFAULT NOW()
+        );`,
+        `CREATE TABLE IF NOT EXISTS "marketplace_stats" (
+          "id" SERIAL PRIMARY KEY,
+          "total_sales" INTEGER DEFAULT 0,
+          "total_volume" INTEGER DEFAULT 0,
+          "total_commission" INTEGER DEFAULT 0,
+          "updated_at" TIMESTAMP DEFAULT NOW()
+        );`
+      ];
 
-      if (!tablesExist) {
-        console.log("[DB] Auto-creating/verifying marketplace tables...");
-        await db.execute(sql`
-          CREATE TABLE IF NOT EXISTS "seller_applications" (
-            "id" SERIAL PRIMARY KEY,
-            "telegram_id" TEXT NOT NULL,
-            "username" TEXT,
-            "store_name" TEXT NOT NULL,
-            "telegram_username" TEXT NOT NULL,
-            "store_logo" TEXT,
-            "store_description" TEXT NOT NULL,
-            "crypto_wallet" TEXT NOT NULL,
-            "products_to_sell" TEXT NOT NULL,
-            "status" TEXT DEFAULT 'pending',
-            "created_at" TIMESTAMP DEFAULT NOW(),
-            "updated_at" TIMESTAMP DEFAULT NOW()
-          );
-        `);
-        await db.execute(sql`
-          CREATE TABLE IF NOT EXISTS "sellers" (
-            "id" SERIAL PRIMARY KEY,
-            "telegram_id" TEXT UNIQUE NOT NULL,
-            "username" TEXT,
-            "store_name" TEXT NOT NULL,
-            "telegram_username" TEXT NOT NULL,
-            "store_logo" TEXT,
-            "store_description" TEXT NOT NULL,
-            "crypto_wallet" TEXT NOT NULL,
-            "rating" TEXT DEFAULT '5.0',
-            "completed_orders" INTEGER DEFAULT 0,
-            "response_time" TEXT DEFAULT '~15 mins',
-            "is_verified" INTEGER DEFAULT 0,
-            "status" TEXT DEFAULT 'active',
-            "joined_at" TIMESTAMP DEFAULT NOW()
-          );
-        `);
-        await db.execute(sql`
-          CREATE TABLE IF NOT EXISTS "marketplace_products" (
-            "id" SERIAL PRIMARY KEY,
-            "seller_telegram_id" TEXT NOT NULL,
-            "category" TEXT NOT NULL,
-            "name" TEXT NOT NULL,
-            "price" INTEGER NOT NULL,
-            "description" TEXT,
-            "stock_status" TEXT DEFAULT 'in_stock',
-            "logo" TEXT,
-            "created_at" TIMESTAMP DEFAULT NOW()
-          );
-        `);
-        await db.execute(sql`
-          CREATE TABLE IF NOT EXISTS "marketplace_orders" (
-            "id" SERIAL PRIMARY KEY,
-            "order_id" TEXT UNIQUE NOT NULL,
-            "buyer_telegram_id" TEXT NOT NULL,
-            "buyer_username" TEXT,
-            "seller_telegram_id" TEXT NOT NULL,
-            "product_id" INTEGER NOT NULL,
-            "product_name" TEXT NOT NULL,
-            "product_category" TEXT NOT NULL,
-            "price" INTEGER NOT NULL,
-            "status" TEXT DEFAULT 'pending',
-            "deal_group_link" TEXT,
-            "created_at" TIMESTAMP DEFAULT NOW(),
-            "updated_at" TIMESTAMP DEFAULT NOW()
-          );
-        `);
-        await db.execute(sql`
-          CREATE TABLE IF NOT EXISTS "marketplace_ratings" (
-            "id" SERIAL PRIMARY KEY,
-            "order_id" TEXT NOT NULL,
-            "buyer_telegram_id" TEXT NOT NULL,
-            "seller_telegram_id" TEXT NOT NULL,
-            "rating" INTEGER NOT NULL,
-            "review" TEXT,
-            "created_at" TIMESTAMP DEFAULT NOW()
-          );
-        `);
-        await db.execute(sql`
-          CREATE TABLE IF NOT EXISTS "marketplace_fees" (
-            "id" SERIAL PRIMARY KEY,
-            "order_id" TEXT NOT NULL,
-            "amount" INTEGER NOT NULL,
-            "fee" INTEGER NOT NULL,
-            "seller_receives" INTEGER NOT NULL,
-            "created_at" TIMESTAMP DEFAULT NOW()
-          );
-        `);
-        await db.execute(sql`
-          CREATE TABLE IF NOT EXISTS "marketplace_notifications" (
-            "id" SERIAL PRIMARY KEY,
-            "telegram_id" TEXT NOT NULL,
-            "title" TEXT NOT NULL,
-            "message" TEXT NOT NULL,
-            "type" TEXT NOT NULL,
-            "is_read" INTEGER DEFAULT 0,
-            "created_at" TIMESTAMP DEFAULT NOW()
-          );
-        `);
-        await db.execute(sql`
-          CREATE TABLE IF NOT EXISTS "marketplace_stats" (
-            "id" SERIAL PRIMARY KEY,
-            "total_sales" INTEGER DEFAULT 0,
-            "total_volume" INTEGER DEFAULT 0,
-            "total_commission" INTEGER DEFAULT 0,
-            "updated_at" TIMESTAMP DEFAULT NOW()
-          );
-        `);
-        console.log("[DB] Marketplace tables verified/created successfully.");
-      } else {
-        console.log("[DB] Marketplace tables already exist. Skipping auto-creation.");
+      for (const query of createQueries) {
+        try {
+          await db.execute(sql.raw(query));
+        } catch (e: any) {
+          console.warn("[DB] Error running schema query:", e.message);
+        }
+      }
+      console.log("[DB] All marketplace tables verified/created successfully.");
+
+      // Seed catalog products if empty
+      try {
+        const [existingCatalog] = await db.select({ count: sql`count(*)` }).from(marketplaceCatalogProducts);
+        const count = Number(existingCatalog?.count || 0);
+        if (count === 0) {
+          console.log("[DB] Seeding initial catalog products...");
+          const seedProducts = [
+            { name: "ChatGPT Plus", logo: "gpt_plus", category: "AI", description: "Official shared and private slots for ChatGPT Plus.", brand: "OpenAI", status: "active" },
+            { name: "Gemini Advanced", logo: "gemini_adv", category: "AI", description: "Google Gemini Advanced subscription.", brand: "Google", status: "active" },
+            { name: "Netflix Premium", logo: "netflix_4k", category: "OTT", description: "Netflix Premium Ultra HD accounts.", brand: "Netflix", status: "active" },
+            { name: "Spotify Premium", logo: "spotify_fam", category: "OTT", description: "Spotify Premium family slots.", brand: "Spotify", status: "active" },
+            { name: "Canva Pro", logo: "canva_pro", category: "AI", description: "Canva Pro private team and inv links.", brand: "Canva", status: "active" },
+            { name: "NordVPN", logo: "nordvpn", category: "VPN", description: "High-speed encrypted VPN profiles.", brand: "NordVPN", status: "active" },
+            { name: "ExpressVPN", logo: "expressvpn", category: "VPN", description: "ExpressVPN premium activation keys.", brand: "ExpressVPN", status: "active" },
+            { name: "Claude Pro", logo: "claude_pro", category: "AI", description: "Anthropic Claude Pro premium slots.", brand: "Anthropic", status: "active" },
+            { name: "Telegram Premium", logo: "telegram_premium", category: "Instagram", description: "Telegram Premium gift links and logins.", brand: "Telegram", status: "active" }
+          ];
+          for (const p of seedProducts) {
+            await db.insert(marketplaceCatalogProducts).values(p);
+          }
+          console.log("[DB] Seeding completed successfully.");
+        }
+      } catch (err: any) {
+        console.warn("[DB WARNING] Failed to seed catalog products:", err.message);
       }
     } catch (err: any) {
       console.warn("[DB WARNING] Failed to auto-create marketplace tables:", err.message);
     }
     
     // Check tables existence using light SELECT queries (app user has DML/DQL permissions but no DDL privileges)
-    const requiredTables = ["users", "redeem_codes", "redemptions", "mailboxes", "seller_applications", "sellers", "marketplace_products", "marketplace_orders"];
+    const requiredTables = ["users", "redeem_codes", "redemptions", "mailboxes", "seller_applications", "sellers", "marketplace_products", "marketplace_catalog_products", "marketplace_listings", "marketplace_orders"];
     for (const table of requiredTables) {
       try {
         await db.execute(sql.raw(`SELECT 1 FROM "${table}" LIMIT 1;`));
@@ -3434,103 +3467,194 @@ async function startServer() {
     }
   });
 
-  // Seller: Get Products
-  app.get("/api/marketplace/seller/products", async (req, res) => {
-    const { telegramId } = req.query;
-    if (!telegramId || typeof telegramId !== "string") {
-      return res.status(400).json({ error: "telegramId is required" });
-    }
-
+  // Buyer/Seller: Get Active Catalog Products
+  app.get("/api/marketplace/catalog/products", async (req, res) => {
     try {
       const prods = await db.select()
-        .from(marketplaceProducts)
-        .where(eq(marketplaceProducts.sellerTelegramId, telegramId))
-        .orderBy(desc(marketplaceProducts.createdAt));
-
+        .from(marketplaceCatalogProducts)
+        .where(eq(marketplaceCatalogProducts.status, "active"))
+        .orderBy(desc(marketplaceCatalogProducts.createdAt));
       res.json({ products: prods });
     } catch (err: any) {
       res.status(500).json({ error: getDbErrorMessage(err) });
     }
   });
 
-  // Seller: Add Product
-  app.post("/api/marketplace/seller/products/add", async (req, res) => {
-    const { telegramId, category, name, price, description, stockStatus, logo } = req.body;
-    if (!telegramId || !category || !name || !price) {
-      return res.status(400).json({ error: "Missing product fields" });
+  // Seller: Request New Catalog Product
+  app.post("/api/marketplace/seller/catalog/request", async (req, res) => {
+    const { telegramId, name, category, description, brand, website } = req.body;
+    if (!telegramId || !name || !category || !description) {
+      return res.status(400).json({ error: "Missing required product request fields" });
+    }
+
+    try {
+      // Check active seller
+      const [seller] = await db.select().from(sellers).where(eq(sellers.telegramId, telegramId)).limit(1);
+      if (!seller || seller.status !== "active") {
+        return res.status(403).json({ error: "Only active sellers can request products" });
+      }
+
+      // Check unique name to prevent duplicates
+      const [existing] = await db.select()
+        .from(marketplaceCatalogProducts)
+        .where(sql`LOWER(name) = LOWER(${name})`)
+        .limit(1);
+      if (existing) {
+        return res.status(400).json({ error: "This product already exists in the catalog" });
+      }
+
+      await db.insert(marketplaceCatalogProducts).values({
+        name,
+        category,
+        description,
+        brand: brand || name,
+        website: website || null,
+        status: "pending_review",
+        requestedBy: telegramId
+      });
+
+      res.json({ success: true, message: "Product request submitted for Admin review!" });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Seller: Get Own Listings
+  app.get("/api/marketplace/seller/listings", async (req, res) => {
+    const { telegramId } = req.query;
+    if (!telegramId || typeof telegramId !== "string") {
+      return res.status(400).json({ error: "telegramId is required" });
+    }
+
+    try {
+      const listings = await db.select()
+        .from(marketplaceListings)
+        .where(eq(marketplaceListings.sellerTelegramId, telegramId))
+        .orderBy(desc(marketplaceListings.createdAt));
+
+      // Fetch all catalog products to map them
+      const catalog = await db.select().from(marketplaceCatalogProducts);
+
+      const formatted = listings.map(l => {
+        const prod = catalog.find(p => p.id === l.productId);
+        return {
+          id: l.id,
+          productId: l.productId,
+          sellerTelegramId: l.sellerTelegramId,
+          price: l.price,
+          currency: l.currency,
+          stock: l.stock,
+          deliveryTime: l.deliveryTime,
+          notes: l.notes,
+          status: l.status,
+          createdAt: l.createdAt,
+          name: prod ? prod.name : "Unknown Product",
+          category: prod ? prod.category : "AI",
+          logo: prod ? prod.logo : null,
+          description: prod ? prod.description : ""
+        };
+      });
+
+      res.json({ listings: formatted });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Seller: Add Listing
+  app.post("/api/marketplace/seller/listings/add", async (req, res) => {
+    const { telegramId, productId, price, stock, deliveryTime, notes } = req.body;
+    if (!telegramId || !productId || !price) {
+      return res.status(400).json({ error: "Missing required listing fields" });
     }
 
     try {
       const [seller] = await db.select().from(sellers).where(eq(sellers.telegramId, telegramId)).limit(1);
       if (!seller || seller.status !== "active") {
-        return res.status(403).json({ error: "Only active sellers can list products" });
+        return res.status(403).json({ error: "Only active sellers can add listings" });
       }
 
-      await db.insert(marketplaceProducts).values({
+      // Check if catalog product is approved
+      const [prod] = await db.select().from(marketplaceCatalogProducts).where(eq(marketplaceCatalogProducts.id, parseInt(productId, 10))).limit(1);
+      if (!prod || prod.status !== "active") {
+        return res.status(400).json({ error: "Catalog product is not available for listing" });
+      }
+
+      // Check if seller already has an active listing for this product
+      const [existingListing] = await db.select()
+        .from(marketplaceListings)
+        .where(and(eq(marketplaceListings.sellerTelegramId, telegramId), eq(marketplaceListings.productId, parseInt(productId, 10))))
+        .limit(1);
+
+      if (existingListing) {
+        return res.status(400).json({ error: "You already have a listing for this product. Edit your existing listing instead." });
+      }
+
+      await db.insert(marketplaceListings).values({
+        productId: parseInt(productId, 10),
         sellerTelegramId: telegramId,
-        category,
-        name,
         price: parseInt(price, 10),
-        description: description || "",
-        stockStatus: stockStatus || "in_stock",
-        logo: logo || null
+        stock: stock ? parseInt(stock, 10) : 1,
+        deliveryTime: deliveryTime || "Instant",
+        notes: notes || "",
+        status: "active"
       });
 
-      res.json({ success: true, message: "Product listed successfully" });
+      res.json({ success: true, message: "Listing created successfully!" });
     } catch (err: any) {
       res.status(500).json({ error: getDbErrorMessage(err) });
     }
   });
 
-  // Seller: Edit Product
-  app.post("/api/marketplace/seller/products/edit/:id", async (req, res) => {
+  // Seller: Edit Listing
+  app.post("/api/marketplace/seller/listings/edit/:id", async (req, res) => {
     const { id } = req.params;
-    const { telegramId, category, name, price, description, stockStatus, logo } = req.body;
+    const { telegramId, price, stock, deliveryTime, notes, status } = req.body;
 
     try {
-      const [prod] = await db.select().from(marketplaceProducts).where(eq(marketplaceProducts.id, parseInt(id, 10))).limit(1);
-      if (!prod) {
-        return res.status(444).json({ error: "Product not found" });
+      const [listing] = await db.select().from(marketplaceListings).where(eq(marketplaceListings.id, parseInt(id, 10))).limit(1);
+      if (!listing) {
+        return res.status(444).json({ error: "Listing not found" });
       }
 
-      if (prod.sellerTelegramId !== telegramId) {
-        return res.status(403).json({ error: "Unauthorised to edit this product" });
+      if (listing.sellerTelegramId !== telegramId) {
+        return res.status(403).json({ error: "Unauthorised" });
       }
 
-      await db.update(marketplaceProducts)
+      await db.update(marketplaceListings)
         .set({
-          category: category || prod.category,
-          name: name || prod.name,
-          price: price ? parseInt(price, 10) : prod.price,
-          description: description !== undefined ? description : prod.description,
-          stockStatus: stockStatus || prod.stockStatus,
-          logo: logo !== undefined ? logo : prod.logo
+          price: price ? parseInt(price, 10) : listing.price,
+          stock: stock !== undefined ? parseInt(stock, 10) : listing.stock,
+          deliveryTime: deliveryTime || listing.deliveryTime,
+          notes: notes !== undefined ? notes : listing.notes,
+          status: status || listing.status,
+          updatedAt: new Date()
         })
-        .where(eq(marketplaceProducts.id, parseInt(id, 10)));
+        .where(eq(marketplaceListings.id, parseInt(id, 10)));
 
-      res.json({ success: true, message: "Product updated successfully" });
+      res.json({ success: true, message: "Listing updated successfully" });
     } catch (err: any) {
       res.status(500).json({ error: getDbErrorMessage(err) });
     }
   });
 
-  // Seller: Delete Product
-  app.delete("/api/marketplace/seller/products/:id", async (req, res) => {
+  // Seller: Delete Listing
+  app.delete("/api/marketplace/seller/listings/:id", async (req, res) => {
     const { id } = req.params;
     const { telegramId } = req.body;
 
     try {
-      const [prod] = await db.select().from(marketplaceProducts).where(eq(marketplaceProducts.id, parseInt(id, 10))).limit(1);
-      if (!prod) {
-        return res.status(444).json({ error: "Product not found" });
+      const [listing] = await db.select().from(marketplaceListings).where(eq(marketplaceListings.id, parseInt(id, 10))).limit(1);
+      if (!listing) {
+        return res.status(444).json({ error: "Listing not found" });
       }
 
-      if (prod.sellerTelegramId !== telegramId) {
-        return res.status(403).json({ error: "Unauthorised to delete this product" });
+      if (listing.sellerTelegramId !== telegramId) {
+        return res.status(403).json({ error: "Unauthorised" });
       }
 
-      await db.delete(marketplaceProducts).where(eq(marketplaceProducts.id, parseInt(id, 10)));
-      res.json({ success: true, message: "Product deleted successfully" });
+      await db.delete(marketplaceListings).where(eq(marketplaceListings.id, parseInt(id, 10)));
+      res.json({ success: true, message: "Listing deleted successfully" });
     } catch (err: any) {
       res.status(500).json({ error: getDbErrorMessage(err) });
     }
@@ -3599,63 +3723,62 @@ async function startServer() {
         return res.json({ products: [] });
       }
 
-      const allProds = await db.select()
-        .from(marketplaceProducts)
-        .where(and(sql`seller_telegram_id = ANY(${sellerIds})`, eq(marketplaceProducts.stockStatus, "in_stock")));
+      const allCatalog = await db.select()
+        .from(marketplaceCatalogProducts)
+        .where(eq(marketplaceCatalogProducts.status, "active"));
 
-      const groupedMap: { [name: string]: any } = {};
+      const allListings = await db.select()
+        .from(marketplaceListings)
+        .where(and(sql`seller_telegram_id = ANY(${sellerIds})`, eq(marketplaceListings.status, "active")));
 
-      for (const p of allProds) {
-        const normName = p.name.trim();
-        const seller = activeSellers.find(s => s.telegramId === p.sellerTelegramId);
+      const groupedMap: { [prodId: number]: any } = {};
+
+      for (const l of allListings) {
+        const prod = allCatalog.find(p => p.id === l.productId);
+        if (!prod) continue;
+
+        const seller = activeSellers.find(s => s.telegramId === l.sellerTelegramId);
         if (!seller) continue;
 
-        if (!groupedMap[normName]) {
-          groupedMap[normName] = {
-            name: p.name,
-            category: p.category,
-            lowestPrice: p.price,
-            sellersCount: 1,
-            logo: p.logo || null,
-            bestSellerName: seller.storeName,
-            bestSellerVerified: seller.isVerified === 1,
-            bestSellerRating: seller.rating,
-            offerings: [
+        if (l.stock <= 0) continue; // Out of stock items are not active offerings
+
+        const prodId = prod.id;
+        if (!groupedMap[prodId]) {
+          groupedMap[prodId] = {
+            productName: prod.name,
+            productCategory: prod.category,
+            productDescription: prod.description,
+            lowestPrice: l.price,
+            logo: prod.logo,
+            sellers: [
               {
-                productId: p.id,
-                sellerTelegramId: p.sellerTelegramId,
-                sellerName: seller.storeName,
-                sellerLogo: seller.storeLogo,
-                sellerRating: seller.rating,
-                sellerVerified: seller.isVerified === 1,
-                price: p.price,
-                description: p.description
+                productId: l.id, // Using listing ID as offering's productId for smooth checkout integration
+                sellerTelegramId: l.sellerTelegramId,
+                storeName: seller.storeName,
+                storeLogo: seller.storeLogo,
+                rating: seller.rating ? parseFloat(seller.rating) : 5.0,
+                completedDeals: seller.completedOrders || 0,
+                isVerified: seller.isVerified,
+                price: l.price,
+                description: l.notes || prod.description || ""
               }
             ]
           };
         } else {
-          groupedMap[normName].sellersCount += 1;
-          groupedMap[normName].offerings.push({
-            productId: p.id,
-            sellerTelegramId: p.sellerTelegramId,
-            sellerName: seller.storeName,
-            sellerLogo: seller.storeLogo,
-            sellerRating: seller.rating,
-            sellerVerified: seller.isVerified === 1,
-            price: p.price,
-            description: p.description
+          groupedMap[prodId].sellers.push({
+            productId: l.id,
+            sellerTelegramId: l.sellerTelegramId,
+            storeName: seller.storeName,
+            storeLogo: seller.storeLogo,
+            rating: seller.rating ? parseFloat(seller.rating) : 5.0,
+            completedDeals: seller.completedOrders || 0,
+            isVerified: seller.isVerified,
+            price: l.price,
+            description: l.notes || prod.description || ""
           });
 
-          groupedMap[normName].offerings.sort((a: any, b: any) => a.price - b.price);
-
-          const cheapest = groupedMap[normName].offerings[0];
-          groupedMap[normName].lowestPrice = cheapest.price;
-          groupedMap[normName].bestSellerName = cheapest.sellerName;
-          groupedMap[normName].bestSellerVerified = cheapest.sellerVerified;
-          groupedMap[normName].bestSellerRating = cheapest.sellerRating;
-          if (p.logo && !groupedMap[normName].logo) {
-            groupedMap[normName].logo = p.logo;
-          }
+          groupedMap[prodId].sellers.sort((a: any, b: any) => a.price - b.price);
+          groupedMap[prodId].lowestPrice = groupedMap[prodId].sellers[0].price;
         }
       }
 
@@ -3673,8 +3796,15 @@ async function startServer() {
     }
 
     try {
-      const [prod] = await db.select().from(marketplaceProducts).where(eq(marketplaceProducts.id, parseInt(productId, 10))).limit(1);
-      if (!prod) {
+      // Look up listing by ID
+      const [listing] = await db.select().from(marketplaceListings).where(eq(marketplaceListings.id, parseInt(productId, 10))).limit(1);
+      if (!listing) {
+        return res.status(444).json({ error: "Listing not found" });
+      }
+
+      // Look up associated catalog product
+      const [catalogProd] = await db.select().from(marketplaceCatalogProducts).where(eq(marketplaceCatalogProducts.id, listing.productId)).limit(1);
+      if (!catalogProd) {
         return res.status(444).json({ error: "Product not found" });
       }
 
@@ -3693,22 +3823,149 @@ async function startServer() {
         orderId,
         buyerTelegramId,
         buyerUsername: buyerUsername || "Anonymous",
-        sellerTelegramId: prod.sellerTelegramId,
-        productId: prod.id,
-        productName: prod.name,
-        productCategory: prod.category,
-        price: prod.price,
+        sellerTelegramId: listing.sellerTelegramId,
+        productId: catalogProd.id,
+        productName: catalogProd.name,
+        productCategory: catalogProd.category,
+        price: listing.price,
         status: "pending"
       });
 
       await db.insert(marketplaceNotifications).values({
-        telegramId: prod.sellerTelegramId,
+        telegramId: listing.sellerTelegramId,
         title: "New Order Request!",
-        message: `Order ID: ${orderId}. Product: ${prod.name}. Price: ₹${prod.price}. Buyer: @${buyerUsername || "Anonymous"}. Action Required.`,
+        message: `Order ID: ${orderId}. Product: ${catalogProd.name}. Price: ₹${listing.price}. Buyer: @${buyerUsername || "Anonymous"}. Action Required.`,
         type: "order"
       });
 
       res.json({ success: true, orderId });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Admin: Get All Catalog Products (including pending_review)
+  app.get("/api/marketplace/admin/catalog/products", async (req, res) => {
+    const { telegramId } = req.query;
+    const ownerId = getOwnerId();
+    const cleanOwnerId = String(ownerId).trim().replace(/['"]/g, "");
+    const cleanTgId = String(telegramId).trim().replace(/['"]/g, "");
+    const isAdmin = (cleanTgId === cleanOwnerId || cleanTgId === "5834920194" || cleanTgId === "1817159548");
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Unauthorised admin access" });
+    }
+
+    try {
+      const prods = await db.select().from(marketplaceCatalogProducts).orderBy(desc(marketplaceCatalogProducts.createdAt));
+      res.json({ products: prods });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Admin: Add Catalog Product
+  app.post("/api/marketplace/admin/catalog/add", async (req, res) => {
+    const { telegramId, name, logo, category, description, brand } = req.body;
+    const ownerId = getOwnerId();
+    const cleanOwnerId = String(ownerId).trim().replace(/['"]/g, "");
+    const cleanTgId = String(telegramId).trim().replace(/['"]/g, "");
+    const isAdmin = (cleanTgId === cleanOwnerId || cleanTgId === "5834920194" || cleanTgId === "1817159548");
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Unauthorised admin access" });
+    }
+
+    if (!name || !category) {
+      return res.status(400).json({ error: "Product name and category are required" });
+    }
+
+    try {
+      // Check unique
+      const [existing] = await db.select().from(marketplaceCatalogProducts).where(sql`LOWER(name) = LOWER(${name})`).limit(1);
+      if (existing) {
+        return res.status(400).json({ error: "Product already exists in catalog" });
+      }
+
+      await db.insert(marketplaceCatalogProducts).values({
+        name,
+        logo: logo || null,
+        category,
+        description: description || "",
+        brand: brand || name,
+        status: "active"
+      });
+
+      res.json({ success: true, message: "Catalog product added successfully!" });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Admin: Update Catalog Product Status/Details
+  app.post("/api/marketplace/admin/catalog/edit/:id", async (req, res) => {
+    const { id } = req.params;
+    const { telegramId, name, logo, category, description, brand, status } = req.body;
+    const ownerId = getOwnerId();
+    const cleanOwnerId = String(ownerId).trim().replace(/['"]/g, "");
+    const cleanTgId = String(telegramId).trim().replace(/['"]/g, "");
+    const isAdmin = (cleanTgId === cleanOwnerId || cleanTgId === "5834920194" || cleanTgId === "1817159548");
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Unauthorised admin access" });
+    }
+
+    try {
+      const [existing] = await db.select().from(marketplaceCatalogProducts).where(eq(marketplaceCatalogProducts.id, parseInt(id, 10))).limit(1);
+      if (!existing) {
+        return res.status(444).json({ error: "Catalog product not found" });
+      }
+
+      await db.update(marketplaceCatalogProducts)
+        .set({
+          name: name || existing.name,
+          logo: logo !== undefined ? logo : existing.logo,
+          category: category || existing.category,
+          description: description !== undefined ? description : existing.description,
+          brand: brand || existing.brand,
+          status: status || existing.status
+        })
+        .where(eq(marketplaceCatalogProducts.id, parseInt(id, 10)));
+
+      // If approved, notify seller who requested it
+      if (status === "active" && existing.requestedBy && existing.status === "pending_review") {
+        await db.insert(marketplaceNotifications).values({
+          telegramId: existing.requestedBy,
+          title: "Product Request Approved! 🚀",
+          message: `Your request for "${existing.name}" has been approved and published to the catalog. You can now create your listings for it!`,
+          type: "application"
+        });
+      }
+
+      res.json({ success: true, message: "Catalog product updated successfully" });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Admin: Delete Catalog Product
+  app.delete("/api/marketplace/admin/catalog/:id", async (req, res) => {
+    const { id } = req.params;
+    const { telegramId } = req.body;
+    const ownerId = getOwnerId();
+    const cleanOwnerId = String(ownerId).trim().replace(/['"]/g, "");
+    const cleanTgId = String(telegramId).trim().replace(/['"]/g, "");
+    const isAdmin = (cleanTgId === cleanOwnerId || cleanTgId === "5834920194" || cleanTgId === "1817159548");
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Unauthorised admin access" });
+    }
+
+    try {
+      await db.delete(marketplaceCatalogProducts).where(eq(marketplaceCatalogProducts.id, parseInt(id, 10)));
+      // Also delete any listings associated with this catalog product
+      await db.delete(marketplaceListings).where(eq(marketplaceListings.productId, parseInt(id, 10)));
+      res.json({ success: true, message: "Catalog product and associated listings deleted" });
     } catch (err: any) {
       res.status(500).json({ error: getDbErrorMessage(err) });
     }

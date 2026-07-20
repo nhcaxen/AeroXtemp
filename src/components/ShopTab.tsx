@@ -326,6 +326,33 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showEditProductModal, setShowEditProductModal] = useState<any | null>(null);
 
+  // Catalog + Listings state
+  const [catalogProducts, setCatalogProducts] = useState<any[]>([]);
+  const [selectedCatalogProduct, setSelectedCatalogProduct] = useState<any | null>(null);
+  const [showRequestProductModal, setShowRequestProductModal] = useState(false);
+  const [reqProductName, setReqProductName] = useState("");
+  const [reqProductCategory, setReqProductCategory] = useState("AI");
+  const [reqProductDescription, setReqProductDescription] = useState("");
+  const [reqProductBrand, setReqProductBrand] = useState("");
+  const [reqProductWebsite, setReqProductWebsite] = useState("");
+
+  // Listing inputs
+  const [listPrice, setListPrice] = useState("");
+  const [listStock, setListStock] = useState("10");
+  const [listDeliveryTime, setListDeliveryTime] = useState("Instant");
+  const [listNotes, setListNotes] = useState("");
+
+  // Admin Catalog Management state
+  const [adminCatalogProducts, setAdminCatalogProducts] = useState<any[]>([]);
+  const [showAdminCatalogModal, setShowAdminCatalogModal] = useState(false);
+  const [adminCatalogName, setAdminCatalogName] = useState("");
+  const [adminCatalogCategory, setAdminCatalogCategory] = useState("AI");
+  const [adminCatalogDescription, setAdminCatalogDescription] = useState("");
+  const [adminCatalogBrand, setAdminCatalogBrand] = useState("");
+  const [adminCatalogLogo, setAdminCatalogLogo] = useState("");
+  const [adminCatalogStatus, setAdminCatalogStatus] = useState("active");
+  const [editingAdminCatalogProduct, setEditingAdminCatalogProduct] = useState<any | null>(null);
+
   // Add/Edit Product inputs
   const [prodCategory, setProdCategory] = useState("AI");
   const [prodName, setProdName] = useState("");
@@ -466,6 +493,32 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
     }
   };
 
+  const fetchCatalogProducts = async () => {
+    try {
+      const apiUrl = getAbsoluteUrl("/api/marketplace/catalog/products");
+      const res = await fetch(apiUrl);
+      if (res.ok) {
+        const data = await res.json();
+        setCatalogProducts(data.products || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch catalog products", err);
+    }
+  };
+
+  const fetchAdminCatalogProducts = async () => {
+    try {
+      const apiUrl = getAbsoluteUrl(`/api/marketplace/admin/catalog/products?telegramId=${encodeURIComponent(telegramId)}`);
+      const res = await fetch(apiUrl);
+      if (res.ok) {
+        const data = await res.json();
+        setAdminCatalogProducts(data.products || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch admin catalog products", err);
+    }
+  };
+
   const fetchSellerData = async () => {
     try {
       // Profile
@@ -491,12 +544,12 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
         setSellerStats(statsData.stats);
       }
 
-      // Products
-      const prodsUrl = getAbsoluteUrl(`/api/marketplace/seller/products?telegramId=${encodeURIComponent(telegramId)}`);
-      const prodsRes = await fetch(prodsUrl);
-      if (prodsRes.ok) {
-        const prodsData = await prodsRes.json();
-        setSellerProducts(prodsData.products || []);
+      // Listings
+      const listingsUrl = getAbsoluteUrl(`/api/marketplace/seller/listings?telegramId=${encodeURIComponent(telegramId)}`);
+      const listingsRes = await fetch(listingsUrl);
+      if (listingsRes.ok) {
+        const listingsData = await listingsRes.json();
+        setSellerProducts(listingsData.listings || []);
       }
 
       // Orders
@@ -506,6 +559,9 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
         const ordsData = await ordsRes.json();
         setSellerOrders(ordsData.orders || []);
       }
+
+      // Also load approved catalog products
+      fetchCatalogProducts();
     } catch (err) {
       console.error("Failed to fetch seller data", err);
     }
@@ -545,6 +601,9 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
         const statsData = await statsRes.json();
         setAdminStats(statsData.stats);
       }
+
+      // Fetch all catalog products for Admin
+      fetchAdminCatalogProducts();
     } catch (err) {
       console.error("Failed to fetch admin data", err);
     }
@@ -593,39 +652,79 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
     }
   };
 
-  // Product Add handler
-  const handleAddProduct = async (e: React.FormEvent) => {
+  // Request Catalog Product handler
+  const handleRequestProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!prodName || !prodPrice) {
-      setErrorMsg("Product name and price are required");
+    if (!reqProductName || !reqProductCategory || !reqProductDescription) {
+      setErrorMsg("Product name, category, and description are required");
       return;
     }
     setSubmittingProduct(true);
     setErrorMsg(null);
     try {
-      const apiUrl = getAbsoluteUrl("/api/marketplace/seller/products/add");
+      const apiUrl = getAbsoluteUrl("/api/marketplace/seller/catalog/request");
       const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           telegramId,
-          category: prodCategory,
-          name: prodName,
-          price: prodPrice,
-          description: prodDescription,
-          logo: prodLogo,
-          stockStatus: prodStockStatus
+          name: reqProductName,
+          category: reqProductCategory,
+          description: reqProductDescription,
+          brand: reqProductBrand,
+          website: reqProductWebsite
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to submit request");
+      }
+      setReqProductName("");
+      setReqProductCategory("AI");
+      setReqProductDescription("");
+      setReqProductBrand("");
+      setReqProductWebsite("");
+      setShowRequestProductModal(false);
+      alert("Catalog product request submitted to admins for verification!");
+    } catch (err: any) {
+      setErrorMsg(err.message);
+    } finally {
+      setSubmittingProduct(false);
+    }
+  };
+
+  // Listing Add handler
+  const handleAddProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCatalogProduct || !listPrice) {
+      setErrorMsg("Catalog product and price are required");
+      return;
+    }
+    setSubmittingProduct(true);
+    setErrorMsg(null);
+    try {
+      const apiUrl = getAbsoluteUrl("/api/marketplace/seller/listings/add");
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          telegramId,
+          productId: selectedCatalogProduct.id,
+          price: listPrice,
+          stock: listStock,
+          deliveryTime: listDeliveryTime,
+          notes: listNotes
         })
       });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Failed to list product");
       }
-      setProdName("");
-      setProdPrice("");
-      setProdDescription("");
-      setProdLogo("");
-      setProdStockStatus("in_stock");
+      setListPrice("");
+      setListStock("10");
+      setListDeliveryTime("Instant");
+      setListNotes("");
+      setSelectedCatalogProduct(null);
       setShowAddProductModal(false);
       fetchSellerData();
       fetchMarketplaceProducts();
@@ -636,30 +735,29 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
     }
   };
 
-  // Product Edit handler
+  // Listing Edit handler
   const handleEditProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!showEditProductModal) return;
     setSubmittingProduct(true);
     setErrorMsg(null);
     try {
-      const apiUrl = getAbsoluteUrl(`/api/marketplace/seller/products/edit/${showEditProductModal.id}`);
+      const apiUrl = getAbsoluteUrl(`/api/marketplace/seller/listings/edit/${showEditProductModal.id}`);
       const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           telegramId,
-          category: prodCategory,
-          name: prodName,
-          price: prodPrice,
-          description: prodDescription,
-          logo: prodLogo,
-          stockStatus: prodStockStatus
+          price: listPrice,
+          stock: listStock,
+          deliveryTime: listDeliveryTime,
+          notes: listNotes,
+          status: prodStockStatus === "in_stock" ? "active" : "inactive"
         })
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to update product");
+        throw new Error(data.error || "Failed to update listing");
       }
       setShowEditProductModal(null);
       fetchSellerData();
@@ -671,11 +769,11 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
     }
   };
 
-  // Product Delete handler
+  // Listing Delete handler
   const handleDeleteProduct = async (id: number) => {
     if (!confirm("Are you sure you want to delete this product listing?")) return;
     try {
-      const apiUrl = getAbsoluteUrl(`/api/marketplace/seller/products/${id}`);
+      const apiUrl = getAbsoluteUrl(`/api/marketplace/seller/listings/${id}`);
       const res = await fetch(apiUrl, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
@@ -683,7 +781,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to delete product");
+        throw new Error(data.error || "Failed to delete listing");
       }
       fetchSellerData();
       fetchMarketplaceProducts();
@@ -932,6 +1030,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
     
     // Core marketplace boots
     fetchMarketplaceProducts();
+    fetchCatalogProducts();
     fetchApplicationStatus();
     fetchBuyerOrders();
     fetchNotifications();
@@ -941,6 +1040,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
     if (activeTab === "marketplace") {
       fetchUserCredits();
       fetchMarketplaceProducts();
+      fetchCatalogProducts();
       fetchApplicationStatus();
       fetchBuyerOrders();
       fetchNotifications();
@@ -2077,12 +2177,11 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                         <span className="text-[9px] text-neutral-500 font-black uppercase tracking-wider font-mono">Store Offerings Catalog</span>
                         <button
                           onClick={() => {
-                            setProdCategory("AI");
-                            setProdName("");
-                            setProdPrice("");
-                            setProdDescription("");
-                            setProdLogo("");
-                            setProdStockStatus("in_stock");
+                            setListPrice("");
+                            setListStock("10");
+                            setListDeliveryTime("Instant");
+                            setListNotes("");
+                            setSelectedCatalogProduct(null);
                             setShowAddProductModal(true);
                           }}
                           className="py-1 px-2.5 rounded-lg bg-[#0a0304] border border-rose-500/20 hover:border-rose-500/40 text-rose-300 hover:text-rose-200 text-[9px] font-black uppercase font-mono flex items-center gap-1 cursor-pointer transition-all"
@@ -2100,18 +2199,17 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                                 <span className="text-[8px] text-zinc-400 font-bold block uppercase tracking-widest font-mono">{p.category}</span>
                                 <span className="text-xs font-bold text-white block mt-0.5 truncate">{p.name}</span>
                                 <span className="text-[9px] text-neutral-400 block font-mono mt-0.5">
-                                  Price: ₹{p.price} • {p.stockStatus === "in_stock" ? "✅ In Stock" : "❌ Out of Stock"}
+                                  Price: ₹{p.price} • Stock: {p.stock} • Delivery: {p.deliveryTime || "Instant"} • {p.stockStatus === "in_stock" ? "✅ Active" : "❌ Suspended"}
                                 </span>
                               </div>
                               <div className="flex gap-1.5 shrink-0">
                                 <button
                                   onClick={() => {
-                                    setProdCategory(p.category);
-                                    setProdName(p.name);
-                                    setProdPrice(p.price.toString());
-                                    setProdDescription(p.description || "");
-                                    setProdLogo(p.logo || "");
-                                    setProdStockStatus(p.stockStatus);
+                                    setListPrice(p.price.toString());
+                                    setListStock(p.stock ? p.stock.toString() : "10");
+                                    setListDeliveryTime(p.deliveryTime || "Instant");
+                                    setListNotes(p.notes || "");
+                                    setProdStockStatus(p.status === "active" ? "in_stock" : "out_of_stock");
                                     setShowEditProductModal(p);
                                   }}
                                   className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white cursor-pointer"
@@ -2139,7 +2237,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                       </div>
                     </div>
 
-                    {/* ADD PRODUCT MODAL */}
+                    {/* ADD PRODUCT MODAL -> LIST NEW OFFERING WITH AUTOCOMPLETE */}
                     {showAddProductModal && (
                       <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-50 p-4">
                         <motion.div
@@ -2157,87 +2255,153 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                             </button>
                           </div>
 
-                          <form onSubmit={handleAddProduct} className="flex flex-col gap-3">
-                            <div className="flex flex-col gap-1">
-                              <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Category</label>
-                              <select
-                                value={prodCategory}
-                                onChange={(e) => setProdCategory(e.target.value)}
-                                className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none"
-                              >
-                                <option value="AI">AI & Dev Tools</option>
-                                <option value="VPN">Secured VPNs</option>
-                                <option value="OTT">OTT / Streams</option>
-                                <option value="Instagram">Instagram & Aged PVAs</option>
-                              </select>
-                            </div>
+                          {!selectedCatalogProduct ? (
+                            <div className="flex flex-col gap-3">
+                              <span className="text-[10px] text-zinc-400 font-bold block uppercase font-mono">1. Select Catalog Product</span>
+                              <div className="flex flex-col gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="🔍 Search catalog (e.g. Netflix, ChatGPT)..."
+                                  value={modalSearchQuery}
+                                  onChange={(e) => setModalSearchQuery(e.target.value)}
+                                  className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono"
+                                />
 
-                            <div className="flex flex-col gap-1">
-                              <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Product Name *</label>
-                              <input
-                                type="text"
-                                value={prodName}
-                                onChange={(e) => setProdName(e.target.value)}
-                                placeholder="e.g. ChatGPT Plus (Shared Slot)"
-                                className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono"
-                              />
-                            </div>
+                                <div className="max-h-48 overflow-y-auto flex flex-col gap-1.5 pr-1">
+                                  {catalogProducts
+                                    .filter((p) => p.name.toLowerCase().includes(modalSearchQuery.toLowerCase()))
+                                    .map((p) => (
+                                      <button
+                                        key={p.id}
+                                        type="button"
+                                        onClick={() => setSelectedCatalogProduct(p)}
+                                        className="w-full p-2.5 rounded-xl bg-slate-950/60 border border-white/[0.04] hover:border-rose-500/30 text-left cursor-pointer transition-all flex items-center gap-2"
+                                      >
+                                        <div className="w-6 h-6 shrink-0 rounded bg-slate-900 flex items-center justify-center text-xs text-neutral-400">
+                                          {p.logo ? (
+                                            <div dangerouslySetInnerHTML={{ __html: p.logo }} className="w-4 h-4 flex items-center justify-center" />
+                                          ) : (
+                                            "📦"
+                                          )}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                          <div className="flex justify-between items-center">
+                                            <span className="text-xs font-bold text-white truncate block">{p.name}</span>
+                                            <span className="text-[7px] text-zinc-400 px-1.5 py-0.5 rounded bg-white/5 font-mono uppercase shrink-0">{p.category}</span>
+                                          </div>
+                                          <span className="text-[9px] text-neutral-400 truncate block mt-0.5">{p.description}</span>
+                                        </div>
+                                      </button>
+                                    ))}
+                                  {catalogProducts.filter((p) => p.name.toLowerCase().includes(modalSearchQuery.toLowerCase())).length === 0 && (
+                                    <div className="text-center py-6 text-neutral-500 text-[10px] uppercase font-mono">
+                                      No matching catalog items found
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
 
-                            <div className="flex flex-col gap-1">
-                              <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Price (INR ₹) *</label>
-                              <input
-                                type="number"
-                                value={prodPrice}
-                                onChange={(e) => setProdPrice(e.target.value)}
-                                placeholder="e.g. 299"
-                                className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono"
-                              />
+                              <div className="pt-2 border-t border-white/[0.03] flex flex-col gap-2">
+                                <span className="text-[9px] text-neutral-500 text-center font-mono">Can't find your product in our official directory?</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setShowAddProductModal(false);
+                                    setShowRequestProductModal(true);
+                                  }}
+                                  className="w-full py-2 rounded-xl bg-rose-950/20 hover:bg-rose-950/40 border border-rose-500/20 text-rose-300 hover:text-rose-200 text-[10px] font-black uppercase transition-all cursor-pointer text-center font-mono"
+                                >
+                                  Request to Add New Product
+                                </button>
+                              </div>
                             </div>
+                          ) : (
+                            <form onSubmit={handleAddProduct} className="flex flex-col gap-3">
+                              <div className="p-3 rounded-xl bg-slate-950/80 border border-white/[0.04] flex items-center justify-between gap-3">
+                                <div className="min-w-0 flex-1">
+                                  <span className="text-[8px] text-zinc-400 font-mono uppercase block">{selectedCatalogProduct.category}</span>
+                                  <span className="text-xs font-black text-white block mt-0.5">{selectedCatalogProduct.name}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedCatalogProduct(null)}
+                                  className="px-2 py-1 rounded bg-white/5 text-[9px] hover:bg-white/10 text-neutral-400 hover:text-white font-mono cursor-pointer uppercase shrink-0"
+                                >
+                                  Change
+                                </button>
+                              </div>
 
-                            <div className="flex flex-col gap-1">
-                              <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Description / Offer Specifications</label>
-                              <textarea
-                                rows={2}
-                                value={prodDescription}
-                                onChange={(e) => setProdDescription(e.target.value)}
-                                placeholder="Details about subscription warranty, duration, screen slot assign, etc."
-                                className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono resize-none"
-                              />
-                            </div>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Price (INR ₹) *</label>
+                                <input
+                                  type="number"
+                                  value={listPrice}
+                                  onChange={(e) => setListPrice(e.target.value)}
+                                  placeholder="e.g. 299"
+                                  className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono"
+                                />
+                              </div>
 
-                            <div className="flex flex-col gap-1">
-                              <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Logo URL (Optional)</label>
-                              <input
-                                type="text"
-                                value={prodLogo}
-                                onChange={(e) => setProdLogo(e.target.value)}
-                                placeholder="https://example.com/logo.png"
-                                className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono"
-                              />
-                            </div>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Stock Quantity</label>
+                                  <input
+                                    type="number"
+                                    value={listStock}
+                                    onChange={(e) => setListStock(e.target.value)}
+                                    placeholder="e.g. 10"
+                                    className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono"
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Delivery Time</label>
+                                  <select
+                                    value={listDeliveryTime}
+                                    onChange={(e) => setListDeliveryTime(e.target.value)}
+                                    className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono h-[34px]"
+                                  >
+                                    <option value="Instant">Instant Delivery</option>
+                                    <option value="1-2 Hours">1-2 Hours</option>
+                                    <option value="12 Hours">12 Hours</option>
+                                    <option value="24 Hours">24 Hours</option>
+                                  </select>
+                                </div>
+                              </div>
 
-                            <div className="flex gap-3 pt-2">
-                              <button
-                                type="button"
-                                onClick={() => setShowAddProductModal(false)}
-                                className="flex-1 py-2 rounded-xl border border-rose-500/10 hover:border-rose-500/30 bg-[#0a0304] hover:bg-rose-950/20 text-neutral-300 hover:text-rose-300 text-[10px] font-black uppercase transition-all cursor-pointer"
-                              >
-                                Dismiss
-                              </button>
-                              <button
-                                type="submit"
-                                disabled={submittingProduct}
-                                className="flex-1 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 border border-rose-500/20 text-white text-[10px] font-black uppercase transition-all cursor-pointer shadow-lg shadow-rose-500/10"
-                              >
-                                {submittingProduct ? "LISTING..." : "LIST DEPLOY"}
-                              </button>
-                            </div>
-                          </form>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Listing Delivery Notes / Specs</label>
+                                <textarea
+                                  rows={2}
+                                  value={listNotes}
+                                  onChange={(e) => setListNotes(e.target.value)}
+                                  placeholder="Details about warranty duration, screen slot profile, instructions..."
+                                  className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono resize-none"
+                                />
+                              </div>
+
+                              <div className="flex gap-3 pt-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setShowAddProductModal(false)}
+                                  className="flex-1 py-2 rounded-xl border border-rose-500/10 hover:border-rose-500/30 bg-[#0a0304] hover:bg-rose-950/20 text-neutral-300 hover:text-rose-300 text-[10px] font-black uppercase transition-all cursor-pointer"
+                                >
+                                  Dismiss
+                                </button>
+                                <button
+                                  type="submit"
+                                  disabled={submittingProduct}
+                                  className="flex-1 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 border border-rose-500/20 text-white text-[10px] font-black uppercase transition-all cursor-pointer shadow-lg shadow-rose-500/10"
+                                >
+                                  {submittingProduct ? "LISTING..." : "LIST DEPLOY"}
+                                </button>
+                              </div>
+                            </form>
+                          )}
                         </motion.div>
                       </div>
                     )}
 
-                    {/* EDIT PRODUCT MODAL */}
+                    {/* EDIT LISTING MODAL */}
                     {showEditProductModal && (
                       <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-50 p-4">
                         <motion.div
@@ -2256,46 +2420,54 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                           </div>
 
                           <form onSubmit={handleEditProduct} className="flex flex-col gap-3">
-                            <div className="flex flex-col gap-1">
-                              <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Category</label>
-                              <select
-                                value={prodCategory}
-                                onChange={(e) => setProdCategory(e.target.value)}
-                                className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none"
-                              >
-                                <option value="AI">AI & Dev Tools</option>
-                                <option value="VPN">Secured VPNs</option>
-                                <option value="OTT">OTT / Streams</option>
-                                <option value="Instagram">Instagram & Aged PVAs</option>
-                              </select>
-                            </div>
-
-                            <div className="flex flex-col gap-1">
-                              <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Product Name *</label>
-                              <input
-                                type="text"
-                                value={prodName}
-                                onChange={(e) => setProdName(e.target.value)}
-                                className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono"
-                              />
+                            <div className="p-3 rounded-xl bg-slate-950/80 border border-white/[0.04] flex items-center gap-3">
+                              <div className="min-w-0 flex-1">
+                                <span className="text-[8px] text-zinc-400 font-mono uppercase block">{showEditProductModal.category}</span>
+                                <span className="text-xs font-black text-white block mt-0.5">{showEditProductModal.name}</span>
+                              </div>
                             </div>
 
                             <div className="flex flex-col gap-1">
                               <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Price (INR ₹) *</label>
                               <input
                                 type="number"
-                                value={prodPrice}
-                                onChange={(e) => setProdPrice(e.target.value)}
+                                value={listPrice}
+                                onChange={(e) => setListPrice(e.target.value)}
                                 className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono"
                               />
                             </div>
 
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="flex flex-col gap-1">
+                                <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Stock Quantity</label>
+                                <input
+                                  type="number"
+                                  value={listStock}
+                                  onChange={(e) => setListStock(e.target.value)}
+                                  className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Delivery Time</label>
+                                <select
+                                  value={listDeliveryTime}
+                                  onChange={(e) => setListDeliveryTime(e.target.value)}
+                                  className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono h-[34px]"
+                                >
+                                  <option value="Instant">Instant Delivery</option>
+                                  <option value="1-2 Hours">1-2 Hours</option>
+                                  <option value="12 Hours">12 Hours</option>
+                                  <option value="24 Hours">24 Hours</option>
+                                </select>
+                              </div>
+                            </div>
+
                             <div className="flex flex-col gap-1">
-                              <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Description / Offer Specifications</label>
+                              <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Listing Delivery Notes / Specs</label>
                               <textarea
                                 rows={2}
-                                value={prodDescription}
-                                onChange={(e) => setProdDescription(e.target.value)}
+                                value={listNotes}
+                                onChange={(e) => setListNotes(e.target.value)}
                                 className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono resize-none"
                               />
                             </div>
@@ -2305,10 +2477,10 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                               <select
                                 value={prodStockStatus}
                                 onChange={(e) => setProdStockStatus(e.target.value)}
-                                className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none"
+                                className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none h-[34px]"
                               >
-                                <option value="in_stock">In Stock</option>
-                                <option value="out_of_stock">Out Of Stock</option>
+                                <option value="in_stock">In Stock / Active</option>
+                                <option value="out_of_stock">Out of Stock / Suspended</option>
                               </select>
                             </div>
 
@@ -2326,6 +2498,108 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                                 className="flex-1 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 border border-rose-500/20 text-white text-[10px] font-black uppercase transition-all cursor-pointer shadow-lg shadow-rose-500/10"
                               >
                                 {submittingProduct ? "SAVING..." : "SAVE UPDATE"}
+                              </button>
+                            </div>
+                          </form>
+                        </motion.div>
+                      </div>
+                    )}
+
+                    {/* REQUEST CATALOG PRODUCT MODAL */}
+                    {showRequestProductModal && (
+                      <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-50 p-4">
+                        <motion.div
+                          initial={{ scale: 0.95, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="w-full max-w-sm bg-dark-card border border-white/[0.08] rounded-3xl p-6 shadow-2xl flex flex-col gap-4 text-left"
+                        >
+                          <div className="flex justify-between items-start pb-2 border-b border-white/[0.03]">
+                            <div>
+                              <span className="text-[8px] text-neutral-400 font-black tracking-widest uppercase font-mono block">Product Request</span>
+                              <span className="text-xs font-black text-white mt-1 block font-sans">SUGGEST DIRECTORY ITEM</span>
+                            </div>
+                            <button onClick={() => setShowRequestProductModal(false)} className="p-1 rounded-full bg-slate-900 text-neutral-400 hover:text-white">
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          <form onSubmit={handleRequestProduct} className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Category *</label>
+                              <select
+                                value={reqProductCategory}
+                                onChange={(e) => setReqProductCategory(e.target.value)}
+                                className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none"
+                              >
+                                <option value="AI">AI & Dev Tools</option>
+                                <option value="VPN">Secured VPNs</option>
+                                <option value="OTT">OTT / Streams</option>
+                                <option value="Instagram">Instagram & Aged PVAs</option>
+                              </select>
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Product Name *</label>
+                              <input
+                                type="text"
+                                value={reqProductName}
+                                onChange={(e) => setReqProductName(e.target.value)}
+                                placeholder="e.g. ChatGPT Pro Max Slot"
+                                className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono"
+                              />
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Brief Description / Features *</label>
+                              <textarea
+                                rows={2}
+                                value={reqProductDescription}
+                                onChange={(e) => setReqProductDescription(e.target.value)}
+                                placeholder="Details about this service so admins can verify and prepare the logo/metadata."
+                                className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono resize-none"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="flex flex-col gap-1">
+                                <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Brand Developer</label>
+                                <input
+                                  type="text"
+                                  value={reqProductBrand}
+                                  onChange={(e) => setReqProductBrand(e.target.value)}
+                                  placeholder="e.g. OpenAI"
+                                  className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">Official Website</label>
+                                <input
+                                  type="text"
+                                  value={reqProductWebsite}
+                                  onChange={(e) => setReqProductWebsite(e.target.value)}
+                                  placeholder="openai.com"
+                                  className="px-3 py-2 bg-slate-950 border border-white/[0.06] rounded-xl text-xs text-white focus:outline-none font-mono"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowRequestProductModal(false);
+                                  setShowAddProductModal(true);
+                                }}
+                                className="flex-1 py-2 rounded-xl border border-rose-500/10 hover:border-rose-500/30 bg-[#0a0304] hover:bg-rose-950/20 text-neutral-300 hover:text-rose-300 text-[10px] font-black uppercase transition-all cursor-pointer font-mono"
+                              >
+                                Back
+                              </button>
+                              <button
+                                type="submit"
+                                disabled={submittingProduct}
+                                className="flex-1 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 border border-rose-500/20 text-white text-[10px] font-black uppercase transition-all cursor-pointer shadow-lg shadow-rose-500/10"
+                              >
+                                {submittingProduct ? "SENDING..." : "SUBMIT REQUEST"}
                               </button>
                             </div>
                           </form>

@@ -84,178 +84,102 @@ export default function TelegramFrame({ children, activeTab, onTabChange }: Tele
           }} 
         >
           <div className="flex items-center gap-2.5">
-            {/* Premium counter-rotating tech emblem logo with animated holographic baby dragon */}
+            {/* Premium counter-rotating tech emblem logo with animated Soft Crimson/Light Red Gradient Winking Face */}
             <div className="relative w-9 h-9 flex items-center justify-center group">
-              {/* Sleek high-tech outer radar sweeping circle */}
-              <div className="absolute inset-0 rounded-full border border-white/5 group-hover:border-white/10 transition-colors duration-300" />
-              <div className="absolute inset-0 rounded-full border-t-2 border-white opacity-40 animate-[spin_4s_linear_infinite]" />
+              {/* Sleek crimson-accented outer radar sweeping circle */}
+              <div className="absolute inset-0 rounded-full border border-rose-500/10 group-hover:border-rose-500/20 transition-colors duration-300" />
+              <div className="absolute inset-0 rounded-full border-t-2 border-rose-500 opacity-50 animate-[spin_4s_linear_infinite]" />
               
-              {/* Inside custom high-contrast animated cute cyber robot logo */}
+              {/* Inside custom Soft Crimson / Light Red Gradient Winking Logo */}
               <svg 
-                className="w-7 h-7 relative z-10 transition-all duration-300 group-hover:scale-110" 
-                viewBox="0 0 64 64" 
+                className="w-[26px] h-[26px] relative z-10 transition-all duration-300 group-hover:scale-110 logo-glowing-effect" 
+                viewBox="0 0 100 100" 
                 fill="none" 
                 xmlns="http://www.w3.org/2000/svg"
               >
+                <defs>
+                  <linearGradient id="crimsonLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#ff758f" />
+                    <stop offset="100%" stopColor="#c9184a" />
+                  </linearGradient>
+                </defs>
+                
                 <style>{`
-                  @keyframes robotFloat {
-                    0%, 100% { transform: translateY(0px); }
-                    50% { transform: translateY(-1.5px); }
+                  @keyframes logoFloat {
+                    0%, 100% { transform: translateY(0px) scale(1); }
+                    50% { transform: translateY(-2px) scale(1.02); }
                   }
-                  @keyframes robotBlink {
+                  @keyframes eyeBlink {
                     0%, 90%, 100% { transform: scaleY(1); }
                     95% { transform: scaleY(0.1); }
                   }
-                  @keyframes antennaGlow {
-                    0%, 100% { filter: drop-shadow(0 0 1px #ffffff); opacity: 0.7; }
-                    50% { filter: drop-shadow(0 0 4px #ffffff); opacity: 1; }
+                  @keyframes winkNudge {
+                    0%, 100% { transform: translate(0, 0) scale(1); }
+                    50% { transform: translate(0.5px, -0.3px) scale(1.03); }
                   }
-                  @keyframes earWiggle {
-                    0%, 100% { transform: rotate(0deg); }
-                    50% { transform: rotate(5deg); }
+                  .anim-logo-container {
+                    animation: logoFloat 4s ease-in-out infinite;
                   }
-                  .anim-robot-head {
-                    animation: robotFloat 3s ease-in-out infinite;
+                  .anim-eye-blink {
+                    transform-origin: 35px 42px;
+                    animation: eyeBlink 4s ease-in-out infinite;
                   }
-                  .anim-robot-blink {
-                    transform-origin: center;
-                    animation: robotBlink 4s ease-in-out infinite;
+                  .anim-wink-nudge {
+                    transform-origin: 65px 41px;
+                    animation: winkNudge 3s ease-in-out infinite;
                   }
-                  .anim-antenna {
-                    animation: antennaGlow 1.5s ease-in-out infinite;
+                  .logo-glowing-effect {
+                    filter: drop-shadow(0 2px 6px rgba(201, 24, 74, 0.4));
+                    transition: filter 0.3s ease;
                   }
-                  .anim-ear-left {
-                    transform-origin: 18px 28px;
-                    animation: earWiggle 2s ease-in-out infinite;
-                  }
-                  .anim-ear-right {
-                    transform-origin: 46px 28px;
-                    animation: earWiggle 2s ease-in-out infinite reverse;
+                  .group:hover .logo-glowing-effect {
+                    filter: drop-shadow(0 4px 12px rgba(201, 24, 74, 0.65));
                   }
                 `}</style>
 
-                {/* Antenna */}
-                <g className="anim-robot-head">
-                  <path 
-                    d="M 32,18 L 32,10" 
-                    stroke="rgba(255, 255, 255, 0.6)" 
-                    strokeWidth="1.5" 
-                    strokeLinecap="round" 
+                {/* Ambient floating container group */}
+                <g className="anim-logo-container">
+                  {/* Squircle Background */}
+                  <rect 
+                    x="4" 
+                    y="4" 
+                    width="92" 
+                    height="92" 
+                    rx="26" 
+                    fill="url(#crimsonLogoGrad)" 
                   />
+
+                  {/* Left Eye (Blinking) */}
                   <circle 
-                    className="anim-antenna" 
-                    cx="32" 
-                    cy="8" 
-                    r="3.5" 
-                    fill="#ffffff" 
+                    className="anim-eye-blink" 
+                    cx="35" 
+                    cy="42" 
+                    r="7.5" 
+                    fill="#121212" 
                   />
-                </g>
 
-                {/* Left Ear */}
-                <rect 
-                  className="anim-ear-left" 
-                  x="12" 
-                  y="22" 
-                  width="4" 
-                  height="12" 
-                  rx="2" 
-                  fill="#0c0e18" 
-                  stroke="rgba(255, 255, 255, 0.45)" 
-                  strokeWidth="1" 
-                />
-
-                {/* Right Ear */}
-                <rect 
-                  className="anim-ear-right" 
-                  x="48" 
-                  y="22" 
-                  width="4" 
-                  height="12" 
-                  rx="2" 
-                  fill="#0c0e18" 
-                  stroke="rgba(255, 255, 255, 0.45)" 
-                  strokeWidth="1" 
-                />
-
-                {/* Robot Main Head Body */}
-                <g className="anim-robot-head">
-                  {/* Outer metallic head chassis */}
+                  {/* Right Eye (Winking) */}
                   <rect 
-                    x="16" 
-                    y="16" 
-                    width="32" 
-                    height="28" 
-                    rx="9" 
-                    fill="#0c0e18" 
-                    stroke="rgba(255, 255, 255, 0.5)" 
-                    strokeWidth="1.2" 
+                    className="anim-wink-nudge"
+                    x="54" 
+                    y="38" 
+                    width="22" 
+                    height="7.5" 
+                    rx="2" 
+                    transform="rotate(-6 65 41)" 
+                    fill="#121212" 
                   />
 
-                  {/* Glass Screen Face */}
-                  <rect 
-                    x="20" 
-                    y="20" 
-                    width="24" 
-                    height="20" 
-                    rx="6" 
-                    fill="rgba(255, 255, 255, 0.05)" 
-                    stroke="rgba(255, 255, 255, 0.2)" 
-                    strokeWidth="0.8" 
-                  />
-
-                  {/* Left Eye */}
-                  <g className="anim-robot-blink" style={{ transformOrigin: "26px 28px" }}>
-                    <circle 
-                      cx="26" 
-                      cy="28" 
-                      r="3.5" 
-                      fill="url(#robotEyeGrad)" 
-                    />
-                    <circle 
-                      cx="25" 
-                      cy="26.5" 
-                      r="1" 
-                      fill="#ffffff" 
-                    />
-                  </g>
-
-                  {/* Right Eye */}
-                  <g className="anim-robot-blink" style={{ transformOrigin: "38px 28px" }}>
-                    <circle 
-                      cx="38" 
-                      cy="28" 
-                      r="3.5" 
-                      fill="url(#robotEyeGrad)" 
-                    />
-                    <circle 
-                      cx="37" 
-                      cy="26.5" 
-                      r="1" 
-                      fill="#ffffff" 
-                    />
-                  </g>
-
-                  {/* Cute Smiling Mouth */}
+                  {/* Smiling Loop Mouth */}
                   <path 
-                    d="M 30,34 Q 32,36.5 34,34" 
-                    stroke="#ffffff" 
-                    strokeWidth="1.2" 
+                    d="M 35,55 C 35,72 60,75 66,60 C 69,53 77,53 77,60 C 77,67 69,67 66,60" 
+                    stroke="#121212" 
+                    strokeWidth="8" 
                     strokeLinecap="round" 
+                    strokeLinejoin="round" 
                     fill="none" 
                   />
-
-                  {/* Rosy blush cheeks */}
-                  <circle cx="23" cy="33" r="1.5" fill="rgba(244, 63, 94, 0.4)" />
-                  <circle cx="41" cy="33" r="1.5" fill="rgba(244, 63, 94, 0.4)" />
                 </g>
-
-                <defs>
-                  <linearGradient id="robotEyeGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#ffffff" />
-                    <stop offset="40%" stopColor="#ffffff" />
-                    <stop offset="100%" stopColor="#a1a1aa" />
-                  </linearGradient>
-                </defs>
               </svg>
             </div>
             

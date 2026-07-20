@@ -114,6 +114,33 @@ export const marketplaceProducts = pgTable("marketplace_products", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const marketplaceCatalogProducts = pgTable("marketplace_catalog_products", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  logo: text("logo"), // SVG Logo markup or URL
+  category: text("category").notNull(),
+  description: text("description"),
+  brand: text("brand"),
+  website: text("website"),
+  status: text("status").default("active"), // "active" | "pending_review"
+  requestedBy: text("requested_by"), // telegramId or null
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const marketplaceListings = pgTable("marketplace_listings", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull(),
+  sellerTelegramId: text("seller_telegram_id").notNull(),
+  price: integer("price").notNull(),
+  currency: text("currency").default("INR"),
+  stock: integer("stock").default(1),
+  deliveryTime: text("delivery_time").default("Instant"),
+  notes: text("notes"),
+  status: text("status").default("active"), // "active" | "inactive"
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const marketplaceOrders = pgTable("marketplace_orders", {
   id: serial("id").primaryKey(),
   orderId: text("order_id").unique().notNull(), // AEROX-XXXXX
