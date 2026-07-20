@@ -1,158 +1,380 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { TabId } from "../types";
 import { 
-  Heart, 
-  Palette, 
-  Store, 
-  Building2, 
-  Presentation, 
-  GraduationCap 
+  Sparkles, 
+  Mail,
+  User,
+  Zap,
+  ArrowRight
 } from "lucide-react";
+import { getAbsoluteUrl } from "../utils";
+import { motion, AnimatePresence } from "motion/react";
+
+interface ServerUserProfile {
+  telegramId: string;
+  username: string;
+  displayName: string;
+  plan: "free" | "premium" | "owner";
+  credits: number;
+  joined: string;
+  role?: string;
+  photoUrl?: string | null;
+  totalRecoveries?: number;
+  totalMailboxesCreated?: number;
+  activeMailboxes?: number;
+  deletedMailboxes?: number;
+  referralsCount?: number;
+  resetTimer?: string;
+  planExpiry?: string | null;
+  trialDaysRemaining?: number;
+}
 
 interface HomeTabProps {
   onTabChange: (tab: TabId) => void;
 }
 
 export default function HomeTab({ onTabChange }: HomeTabProps) {
-  const [selectedUse, setSelectedUse] = useState("personal");
+  const [telegramId, setTelegramId] = useState("5834920194");
+  const [username, setUsername] = useState("AeroX_Developer");
+  const [displayName, setDisplayName] = useState("AeroX VIP Member");
+  const [userProfile, setUserProfile] = useState<ServerUserProfile | null>(null);
 
-  const handleNextAction = () => {
-    if (selectedUse === "profit" || selectedUse === "personal") {
-      onTabChange("cardgen");
-    } else if (selectedUse === "small_biz" || selectedUse === "large_corp") {
-      onTabChange("addressgen");
-    } else {
-      onTabChange("tempmail");
+  // Slide state
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const autoSlideTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const fetchUserProfile = async (id: string, userNm: string, disp: string, photoUrl: string = "") => {
+    try {
+      const apiUrl = getAbsoluteUrl(`/api/user-profile?telegramId=${encodeURIComponent(id)}&username=${encodeURIComponent(userNm)}&displayName=${encodeURIComponent(disp)}&photoUrl=${encodeURIComponent(photoUrl)}`);
+      const res = await fetch(apiUrl);
+      if (res.ok) {
+        const data = await res.json();
+        setUserProfile(data);
+        // Sync profile state with root App immediately
+        window.dispatchEvent(new CustomEvent("aerox_profile_updated", { detail: data }));
+      }
+    } catch (err) {
+      console.error("Failed to load user profile from database", err);
     }
   };
 
-  const categories = [
-    { 
-      id: "profit", 
-      label: "Profit or charity", 
-      icon: <Heart className="w-8 h-8 transition-transform group-hover:scale-110 duration-300" stroke="url(#blueCyanGrad)" strokeWidth={1.8} /> 
+  // Setup auto sliding rotation every 5 seconds
+  const resetAutoSlideTimer = () => {
+    if (autoSlideTimerRef.current) {
+      clearInterval(autoSlideTimerRef.current);
+    }
+    autoSlideTimerRef.current = setInterval(() => {
+      setCurrentSlideIndex((prev) => (prev + 1) % 3);
+    }, 5000);
+  };
+
+  useEffect(() => {
+    resetAutoSlideTimer();
+    return () => {
+      if (autoSlideTimerRef.current) {
+        clearInterval(autoSlideTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    // Load Telegram WebApp user context if inside Telegram
+    const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+    let initialId = "5834920194";
+    let initialUser = "AeroX_Developer";
+    let initialDisplay = "AeroX VIP Member";
+    let initialPhotoUrl = "";
+
+    if (tgUser) {
+      initialId = String(tgUser.id);
+      initialUser = tgUser.username || `user_${initialId.substring(0, 5)}`;
+      initialDisplay = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") || "Telegram Member";
+      initialPhotoUrl = tgUser.photo_url || "";
+      
+      setTelegramId(initialId);
+      setUsername(initialUser);
+      setDisplayName(initialDisplay);
+    } else {
+      const savedId = localStorage.getItem("aerox_tg_id");
+      const savedUser = localStorage.getItem("aerox_tg_user");
+      const savedDisplay = localStorage.getItem("aerox_tg_display");
+      
+      if (savedId) {
+        initialId = savedId;
+        setTelegramId(savedId);
+      }
+      if (savedUser) {
+        initialUser = savedUser;
+        setUsername(savedUser);
+      }
+      if (savedDisplay) {
+        initialDisplay = savedDisplay;
+        setDisplayName(savedDisplay);
+      }
+    }
+
+    fetchUserProfile(initialId, initialUser, initialDisplay, initialPhotoUrl);
+
+    const handleProfileUpdated = (e: any) => {
+      if (e.detail && e.detail.telegramId === initialId) {
+        setUserProfile(e.detail);
+      }
+    };
+    window.addEventListener("aerox_profile_updated", handleProfileUpdated);
+
+    return () => {
+      window.removeEventListener("aerox_profile_updated", handleProfileUpdated);
+    };
+  }, []);
+
+  // Premium slider cards - downscaled and direct
+  const mainCards = [
+    {
+      id: "cardgen" as TabId, // Shop Tab ID (aliased back to original routing)
+      tag: "PREMIUM STORE",
+      title: "AeroX Premium Shop",
+      subtitle: "Instant Premium Shared Accounts",
+      description: "Get immediate access to premium shared subscriptions & tools.",
+      btnText: "Open Shop",
+      color: "from-[#142d70] via-[#091030] to-[#040612]",
+      borderColor: "border-sky-500/20 hover:border-sky-400/40",
+      textColor: "text-[#5dbcfc]",
+      graphicType: "shop"
     },
-    { 
-      id: "personal", 
-      label: "Personal", 
-      icon: <Palette className="w-8 h-8 transition-transform group-hover:scale-110 duration-300" stroke="url(#blueCyanGrad)" strokeWidth={1.8} /> 
+    {
+      id: "tempmail" as TabId, // Temp Mail Tab ID
+      tag: "DISPOSABLE INBOX",
+      title: "Temp Mail Sandbox",
+      subtitle: "Instant Free Live Mailbox",
+      description: "Receive private validation and OTP confirmation emails live.",
+      btnText: "Open Mailbox",
+      color: "from-[#22124a] via-[#0d0a22] to-[#040612]",
+      borderColor: "border-purple-500/20 hover:border-purple-400/40",
+      textColor: "text-purple-400",
+      graphicType: "mail"
     },
-    { 
-      id: "small_biz", 
-      label: "Small business", 
-      icon: <Store className="w-8 h-8 transition-transform group-hover:scale-110 duration-300" stroke="url(#blueCyanGrad)" strokeWidth={1.8} /> 
-    },
-    { 
-      id: "large_corp", 
-      label: "Large company", 
-      icon: <Building2 className="w-8 h-8 transition-transform group-hover:scale-110 duration-300" stroke="url(#blueCyanGrad)" strokeWidth={1.8} /> 
-    },
-    { 
-      id: "teacher", 
-      label: "Teacher", 
-      icon: <Presentation className="w-8 h-8 transition-transform group-hover:scale-110 duration-300" stroke="url(#blueCyanGrad)" strokeWidth={1.8} /> 
-    },
-    { 
-      id: "student", 
-      label: "Student", 
-      icon: <GraduationCap className="w-8 h-8 transition-transform group-hover:scale-110 duration-300" stroke="url(#blueCyanGrad)" strokeWidth={1.8} /> 
+    {
+      id: "addressgen" as TabId, // Fake Address Tab ID
+      tag: "IDENTITY CREATOR",
+      title: "Fake Address Generator",
+      subtitle: "Premium Billing Identity Profiles",
+      description: "Deploy highly realistic billing addresses and fake SSN info.",
+      btnText: "Generate Now",
+      color: "from-[#062018] via-[#030d0a] to-[#040612]",
+      borderColor: "border-emerald-500/20 hover:border-emerald-400/40",
+      textColor: "text-emerald-400",
+      graphicType: "identity"
     }
   ];
 
+  const handleIndicatorClick = (index: number) => {
+    setCurrentSlideIndex(index);
+    resetAutoSlideTimer();
+  };
+
+  const activeSlide = mainCards[currentSlideIndex];
+
   return (
-    <div className="flex flex-col items-center justify-between min-h-[85vh] px-6 pt-10 pb-8 select-none relative overflow-hidden">
-      {/* SVG Definitions for global neon gradients used in the icons */}
-      <svg className="absolute w-0 h-0" width="0" height="0">
-        <defs>
-          <linearGradient id="blueCyanGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#00e4ff" />
-            <stop offset="100%" stopColor="#007aff" />
-          </linearGradient>
-        </defs>
-      </svg>
-
-      {/* Background ambient neon glows to match the beautiful Canva AI screenshot */}
-      <div className="absolute top-[-10%] left-[-20%] w-[80vw] h-[80vw] rounded-full bg-gradient-to-br from-[#00b4ff]/04 to-transparent blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-20%] w-[80vw] h-[80vw] rounded-full bg-gradient-to-tr from-[#00e4ff]/03 to-transparent blur-[120px] pointer-events-none" />
-
-      {/* Header Section */}
-      <div className="flex flex-col items-center text-center z-10 w-full max-w-md animate-fade-in">
-        {/* Custom Cursive cursive style Brand Logo - matching Canva's text layout */}
-        <h1 className="text-3xl font-serif italic font-medium text-[#00e4ff] tracking-wide mb-3">
-          AeroX
-        </h1>
-
-        <h2 className="text-[21px] font-bold text-white tracking-tight leading-tight max-w-xs font-sans">
-          What will you be using AeroX for?
-        </h2>
-
-        <p className="text-[11px] text-slate-400 mt-2 font-medium">
-          Let us know so we can build you a better homepage.
-        </p>
+    <div className="flex flex-col select-none relative overflow-x-hidden min-h-[85vh] px-5 pt-4 pb-24 scrollbar-none text-white font-sans">
+      
+      {/* SECTION 1: HEADER & GREETING */}
+      <div className="flex items-center justify-between mb-4 mt-1 select-none">
+        <div className="flex items-center gap-2">
+          <div className="relative w-9 h-9 rounded-full overflow-hidden border border-cyan-500/20 bg-gradient-to-tr from-[#111428] to-[#0c0e18] flex items-center justify-center shrink-0 shadow-md">
+            {userProfile?.photoUrl ? (
+              <img 
+                src={userProfile.photoUrl} 
+                alt="Avatar" 
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <User className="w-4.5 h-4.5 text-cyan-400" />
+            )}
+            <div className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border border-[#030612]" />
+          </div>
+          <div>
+            <h2 className="text-[13px] font-extrabold text-white tracking-tight leading-none mb-0.5 truncate max-w-[170px]">
+              Hi, {userProfile?.displayName || displayName}
+            </h2>
+            <p className="text-[8px] text-[#00e4ff]/70 font-bold uppercase tracking-wider flex items-center gap-0.5">
+              <Zap className="w-2 h-2 text-cyan-400 animate-pulse" />
+              {userProfile?.role === "owner" ? "Owner Access" : userProfile?.plan === "premium" ? "VIP Premium" : "Free Member"}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          <button 
+            onClick={() => onTabChange("profile")}
+            className="px-2 py-1 rounded-md bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.04] text-[9px] font-bold text-slate-300 uppercase tracking-wider transition-all cursor-pointer active:scale-95"
+          >
+            VIP Code
+          </button>
+        </div>
       </div>
 
-      {/* 2x3 Grid of premium soft tactile cards */}
-      <div className="grid grid-cols-2 gap-4 w-full max-w-sm mt-8 mb-8 z-10">
-        {categories.map((item) => {
-          const isSelected = selectedUse === item.id;
-          return (
-            <div
-              key={item.id}
-              onClick={() => setSelectedUse(item.id)}
-              className={`group relative p-5 rounded-[22px] cursor-pointer text-center flex flex-col items-center justify-center min-h-[120px] transition-all duration-300 border ${
-                isSelected
-                  ? "bg-gradient-to-b from-[#007aff] to-[#00d4ff] border-transparent text-white shadow-[0_4px_16px_rgba(0,122,255,0.2)] scale-[1.02]"
-                  : "bg-[#0b0f1d]/80 border-white/[0.04] text-slate-300 hover:border-[#00e4ff]/15 hover:bg-[#0f152d] shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
-              }`}
-            >
-              {/* Glow backdrop behind selected item */}
-              {isSelected && (
-                <div className="absolute inset-0 rounded-[22px] bg-gradient-to-b from-[#007aff]/10 to-[#00d4ff]/10 blur-sm -z-10" />
-              )}
+      {/* SECTION 2: DOWN-SCALED, ULTRA-COMPACT PREMIUM SLIDING CAROUSEL */}
+      <div className="w-full relative select-none mt-1">
+        <div 
+          className={`w-full min-h-[148px] rounded-[24px] bg-gradient-to-br ${activeSlide.color} border ${activeSlide.borderColor} p-4.5 relative overflow-hidden transition-all duration-300 shadow-[0_8px_24px_rgba(0,0,0,0.5)] flex flex-col justify-between`}
+        >
+          {/* Sheen reflection */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none" />
 
-              {/* Radio Selector in the top right corner */}
-              <div className="absolute top-3 right-3">
-                <div className={`w-4.5 h-4.5 rounded-full flex items-center justify-center border transition-all ${
-                  isSelected
-                    ? "border-white bg-white"
-                    : "border-slate-700 bg-transparent"
-                }`}>
-                  {isSelected && (
-                    <div className="w-2 h-2 rounded-full bg-[#007aff]" />
+          {/* Slide Content */}
+          <div className="flex-1 flex flex-row items-center justify-between w-full h-full gap-2">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentSlideIndex}
+                initial={{ opacity: 0, x: 8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -8 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="flex-1 flex flex-row items-center justify-between w-full h-full gap-3"
+              >
+                {/* Left side info column */}
+                <div className="flex-1 flex flex-col justify-between h-full min-w-0 py-0.5">
+                  <div>
+                    {/* Tiny Tag */}
+                    <span className="text-[7px] font-black tracking-widest uppercase text-slate-400 mb-1.5 block">
+                      {activeSlide.tag}
+                    </span>
+                    
+                    {/* Clean compact Title */}
+                    <h4 className="text-[14.5px] font-black text-white tracking-tight leading-tight mb-0.5 truncate">
+                      {activeSlide.title}
+                    </h4>
+
+                    {/* Subtitle with theme match accent color */}
+                    <p className={`text-[10px] font-extrabold ${activeSlide.textColor} tracking-tight mb-1.5 truncate`}>
+                      {activeSlide.subtitle}
+                    </p>
+
+                    {/* Short refined description */}
+                    <p className="text-[9px] text-slate-400 font-medium leading-relaxed max-w-[95%] line-clamp-2">
+                      {activeSlide.description}
+                    </p>
+                  </div>
+
+                  {/* Clean Down-scaled Button CTA */}
+                  <div className="mt-3">
+                    <button
+                      onClick={() => onTabChange(activeSlide.id)}
+                      className="bg-white hover:bg-slate-100 active:scale-95 text-[#030612] px-3.5 py-1.5 rounded-full text-[9.5px] font-black transition-all cursor-pointer inline-flex items-center gap-1 shadow-sm"
+                    >
+                      {activeSlide.btnText}
+                      <ArrowRight className="w-3 h-3" strokeWidth={3} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right side compact visual graphic widget */}
+                <div className="flex shrink-0 items-center justify-center w-[98px] h-full relative">
+                  {activeSlide.graphicType === "shop" && (
+                    <motion.div 
+                      initial={{ rotate: 1, scale: 0.94 }}
+                      animate={{ rotate: 0, scale: 1 }}
+                      transition={{ type: "spring", stiffness: 140, damping: 14 }}
+                      className="w-[95px] h-[58px] bg-[#070a18] border border-sky-500/20 rounded-lg p-2 flex flex-col justify-between shadow-md relative select-none overflow-hidden"
+                    >
+                      <div className="absolute -right-4 -bottom-4 w-10 h-10 bg-sky-500/10 rounded-full blur-lg pointer-events-none" />
+                      <div className="flex justify-between items-start">
+                        {/* Metallic credit chip */}
+                        <div className="w-4 h-3 bg-gradient-to-br from-amber-300 via-amber-400 to-yellow-600 rounded-[2px] relative shadow-sm">
+                          <div className="absolute inset-x-0.5 top-0.5 bottom-0.5 border-y border-amber-950/20" />
+                          <div className="absolute inset-y-0.5 left-0.5 right-0.5 border-x border-amber-950/20" />
+                        </div>
+                        {/* Compact Wi-fi indicator */}
+                        <div className="flex gap-[1px] items-end h-2">
+                          <div className="w-[1px] h-1 bg-[#5dbcfc] rounded-full" />
+                          <div className="w-[1px] h-1.5 bg-[#5dbcfc] rounded-full" />
+                          <div className="w-[1px] h-2 bg-[#5dbcfc] rounded-full" />
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-[6px] font-bold text-slate-500 tracking-wider block">AeroX Pro</span>
+                        <div className="text-[7.5px] font-mono text-[#5dbcfc] font-bold mt-0.5 tracking-wider">
+                          •••• •••• 5092
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeSlide.graphicType === "mail" && (
+                    <motion.div 
+                      initial={{ rotate: -1, scale: 0.94 }}
+                      animate={{ rotate: 0, scale: 1 }}
+                      transition={{ type: "spring", stiffness: 140, damping: 14 }}
+                      className="w-[95px] h-[58px] bg-[#09071b] border border-purple-500/20 rounded-lg p-2 flex flex-col justify-between shadow-md relative select-none overflow-hidden"
+                    >
+                      <div className="absolute -right-4 -bottom-4 w-10 h-10 bg-purple-500/10 rounded-full blur-lg pointer-events-none" />
+                      <div className="flex justify-between items-center">
+                        <div className="w-5.5 h-5.5 rounded bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/15">
+                          <Mail className="w-3 h-3" />
+                        </div>
+                        <div className="flex items-center gap-0.5 bg-purple-500/15 border border-purple-500/25 px-1 py-0.5 rounded-full">
+                          <span className="w-1 h-1 bg-purple-400 rounded-full animate-pulse" />
+                          <span className="text-[4.5px] font-black uppercase text-purple-300 tracking-wider">LIVE</span>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-[6px] font-bold text-slate-500 tracking-wider block">Inbox Feed</span>
+                        <div className="text-[7.5px] text-purple-300 font-semibold truncate">
+                          support@aerox.vip
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeSlide.graphicType === "identity" && (
+                    <motion.div 
+                      initial={{ rotate: 1, scale: 0.94 }}
+                      animate={{ rotate: 0, scale: 1 }}
+                      transition={{ type: "spring", stiffness: 140, damping: 14 }}
+                      className="w-[95px] h-[58px] bg-[#04100d] border border-emerald-500/20 rounded-lg p-2 flex flex-col justify-between shadow-md relative select-none overflow-hidden"
+                    >
+                      <div className="absolute -right-4 -bottom-4 w-10 h-10 bg-emerald-500/10 rounded-full blur-lg pointer-events-none" />
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/15 shrink-0">
+                          <User className="w-3 h-3" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="h-1 bg-emerald-500/20 rounded w-8 animate-pulse" />
+                          <div className="h-0.5 bg-emerald-500/10 rounded w-5 mt-0.5" />
+                        </div>
+                      </div>
+                      <div className="border-t border-emerald-500/15 pt-1">
+                        <div className="flex justify-between items-center text-[5.5px] font-mono text-slate-400">
+                          <span>SSN SECURE</span>
+                          <span className="text-emerald-400 font-bold">100%</span>
+                        </div>
+                      </div>
+                    </motion.div>
                   )}
                 </div>
-              </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
-              {/* Icon Container with centered layout */}
-              <div className="mb-3.5 flex items-center justify-center">
-                {isSelected ? (
-                  // White icon on selected state
-                  React.cloneElement(item.icon, { stroke: "#ffffff" })
-                ) : (
-                  // Gradient icon on unselected state
-                  item.icon
-                )}
-              </div>
-
-              {/* Label below the icon */}
-              <span className={`text-[11px] font-semibold tracking-wide ${
-                isSelected ? "text-white font-bold" : "text-slate-300 font-medium"
-              }`}>
-                {item.label}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Bottom Action Button matching the Canva AI UI perfectly */}
-      <div className="w-full max-w-sm z-10 mt-auto px-1">
-        <button
-          onClick={handleNextAction}
-          className="w-full py-3.5 rounded-2xl bg-[#007aff] hover:bg-[#008cff] active:scale-[0.98] transition-all text-[12px] font-bold text-white shadow-[0_2px_8px_rgba(0,122,255,0.15)] cursor-pointer flex items-center justify-center tracking-wider"
-        >
-          Next
-        </button>
+          {/* Indicator Dot Navigation matches precisely in small scale */}
+          <div className="absolute right-4.5 bottom-4 flex items-center gap-1.5">
+            {mainCards.map((_, idx) => {
+              const isActive = currentSlideIndex === idx;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handleIndicatorClick(idx)}
+                  className={`transition-all duration-300 cursor-pointer ${
+                    isActive 
+                      ? "w-6 h-1 bg-[#00e4ff] rounded-full shadow-[0_0_8px_rgba(0,228,255,0.7)]" 
+                      : "w-1.5 h-1.5 bg-slate-600 hover:bg-slate-500 rounded-full"
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

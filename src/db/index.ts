@@ -36,11 +36,12 @@ export const createPool = () => {
 
   // Fallback to individual env vars (Supabase or manual config)
   const host = process.env.SQL_HOST || "";
-  const isLocal = host.includes("localhost") || host.includes("127.0.0.1") || !host;
-  const isRemoteCloudDb = host.includes("supabase") || host.includes("neon.tech") || host.includes("railway") || host.includes("render.com") || host.includes("elephantsql");
+  const isCloudSqlSocket = host.includes("cloudsql") || host.startsWith("/");
+  const isLocal = host.includes("localhost") || host.includes("127.0.0.1") || !host || isCloudSqlSocket;
+  const isRemoteCloudDb = !isCloudSqlSocket && (host.includes("supabase") || host.includes("neon.tech") || host.includes("railway") || host.includes("render.com") || host.includes("elephantsql"));
   
   let sslConfig: any = process.env.DB_SSL_ENABLED === "true" 
-    ? { rejectUnauthorized: false } 
+    ? (isCloudSqlSocket ? false : { rejectUnauthorized: false })
     : (process.env.DB_SSL_ENABLED === "false" 
       ? (isRemoteCloudDb ? { rejectUnauthorized: false } : false) 
       : null); // null means default fallback

@@ -8,7 +8,7 @@ import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { generateCards, generateFakeAddress } from "./src/utils.js";
 import { db } from "./src/db/index.js";
-import { users, redeemCodes, redemptions, mailboxes, shopPurchases } from "./src/db/schema.js";
+import { users, redeemCodes, redemptions, mailboxes, shopPurchases, sellerApplications, sellers, marketplaceProducts, marketplaceOrders, marketplaceRatings, marketplaceFees, marketplaceNotifications, marketplaceStats } from "./src/db/schema.js";
 import { eq, and, or, like, desc, sql } from "drizzle-orm";
 import { createClient } from "@supabase/supabase-js";
 
@@ -66,9 +66,122 @@ async function startServer() {
   try {
     await db.execute(sql`SELECT 1;`);
     console.log("[DB] Database connection verified successfully.");
+
+    // Auto-create new marketplace tables if they don't exist
+    try {
+      console.log("[DB] Auto-creating/verifying marketplace tables...");
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS "seller_applications" (
+          "id" SERIAL PRIMARY KEY,
+          "telegram_id" TEXT NOT NULL,
+          "username" TEXT,
+          "store_name" TEXT NOT NULL,
+          "telegram_username" TEXT NOT NULL,
+          "store_logo" TEXT,
+          "store_description" TEXT NOT NULL,
+          "crypto_wallet" TEXT NOT NULL,
+          "products_to_sell" TEXT NOT NULL,
+          "status" TEXT DEFAULT 'pending',
+          "created_at" TIMESTAMP DEFAULT NOW(),
+          "updated_at" TIMESTAMP DEFAULT NOW()
+        );
+      `);
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS "sellers" (
+          "id" SERIAL PRIMARY KEY,
+          "telegram_id" TEXT UNIQUE NOT NULL,
+          "username" TEXT,
+          "store_name" TEXT NOT NULL,
+          "telegram_username" TEXT NOT NULL,
+          "store_logo" TEXT,
+          "store_description" TEXT NOT NULL,
+          "crypto_wallet" TEXT NOT NULL,
+          "rating" TEXT DEFAULT '5.0',
+          "completed_orders" INTEGER DEFAULT 0,
+          "response_time" TEXT DEFAULT '~15 mins',
+          "is_verified" INTEGER DEFAULT 0,
+          "status" TEXT DEFAULT 'active',
+          "joined_at" TIMESTAMP DEFAULT NOW()
+        );
+      `);
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS "marketplace_products" (
+          "id" SERIAL PRIMARY KEY,
+          "seller_telegram_id" TEXT NOT NULL,
+          "category" TEXT NOT NULL,
+          "name" TEXT NOT NULL,
+          "price" INTEGER NOT NULL,
+          "description" TEXT,
+          "stock_status" TEXT DEFAULT 'in_stock',
+          "logo" TEXT,
+          "created_at" TIMESTAMP DEFAULT NOW()
+        );
+      `);
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS "marketplace_orders" (
+          "id" SERIAL PRIMARY KEY,
+          "order_id" TEXT UNIQUE NOT NULL,
+          "buyer_telegram_id" TEXT NOT NULL,
+          "buyer_username" TEXT,
+          "seller_telegram_id" TEXT NOT NULL,
+          "product_id" INTEGER NOT NULL,
+          "product_name" TEXT NOT NULL,
+          "product_category" TEXT NOT NULL,
+          "price" INTEGER NOT NULL,
+          "status" TEXT DEFAULT 'pending',
+          "deal_group_link" TEXT,
+          "created_at" TIMESTAMP DEFAULT NOW(),
+          "updated_at" TIMESTAMP DEFAULT NOW()
+        );
+      `);
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS "marketplace_ratings" (
+          "id" SERIAL PRIMARY KEY,
+          "order_id" TEXT NOT NULL,
+          "buyer_telegram_id" TEXT NOT NULL,
+          "seller_telegram_id" TEXT NOT NULL,
+          "rating" INTEGER NOT NULL,
+          "review" TEXT,
+          "created_at" TIMESTAMP DEFAULT NOW()
+        );
+      `);
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS "marketplace_fees" (
+          "id" SERIAL PRIMARY KEY,
+          "order_id" TEXT NOT NULL,
+          "amount" INTEGER NOT NULL,
+          "fee" INTEGER NOT NULL,
+          "seller_receives" INTEGER NOT NULL,
+          "created_at" TIMESTAMP DEFAULT NOW()
+        );
+      `);
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS "marketplace_notifications" (
+          "id" SERIAL PRIMARY KEY,
+          "telegram_id" TEXT NOT NULL,
+          "title" TEXT NOT NULL,
+          "message" TEXT NOT NULL,
+          "type" TEXT NOT NULL,
+          "is_read" INTEGER DEFAULT 0,
+          "created_at" TIMESTAMP DEFAULT NOW()
+        );
+      `);
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS "marketplace_stats" (
+          "id" SERIAL PRIMARY KEY,
+          "total_sales" INTEGER DEFAULT 0,
+          "total_volume" INTEGER DEFAULT 0,
+          "total_commission" INTEGER DEFAULT 0,
+          "updated_at" TIMESTAMP DEFAULT NOW()
+        );
+      `);
+      console.log("[DB] Marketplace tables verified/created successfully.");
+    } catch (err: any) {
+      console.warn("[DB WARNING] Failed to auto-create marketplace tables:", err.message);
+    }
     
     // Check tables existence using light SELECT queries (app user has DML/DQL permissions but no DDL privileges)
-    const requiredTables = ["users", "redeem_codes", "redemptions", "mailboxes"];
+    const requiredTables = ["users", "redeem_codes", "redemptions", "mailboxes", "seller_applications", "sellers", "marketplace_products", "marketplace_orders"];
     for (const table of requiredTables) {
       try {
         await db.execute(sql.raw(`SELECT 1 FROM "${table}" LIMIT 1;`));
@@ -219,6 +332,33 @@ async function startServer() {
     } catch (err) {
       console.error("[MUSIC API ERROR] Failed to list tracks:", err);
       return res.status(500).json({ error: "Failed to load music files." });
+    }
+  });
+
+  // API to proxy iTunes Music Search (bypasses browser CORS & mixed-content restrictions)
+  app.get("/api/music/search", async (req, res) => {
+    const { term } = req.query;
+    if (!term || typeof term !== "string") {
+      return res.status(400).json({ error: "Search term is required" });
+    }
+
+    try {
+      const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&media=music&entity=song&limit=25`;
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`iTunes API returned status ${response.status}`);
+      }
+
+      const data = await response.json();
+      return res.json(data);
+    } catch (err: any) {
+      console.error("[MUSIC SEARCH PROXY ERROR]:", err.message);
+      return res.status(500).json({ error: "Failed to query external music search service." });
     }
   });
 
@@ -3165,6 +3305,912 @@ async function startServer() {
       });
     } catch (err) {
       res.status(400).send("Invalid audio URL");
+    }
+  });
+
+  // ==========================================
+  //          AEROX MARKETPLACE APIS
+  // ==========================================
+
+  // Apply as Seller
+  app.post("/api/marketplace/apply", async (req, res) => {
+    const { telegramId, username, storeName, telegramUsername, storeLogo, storeDescription, cryptoWallet, productsToSell } = req.body;
+    if (!telegramId || !storeName || !telegramUsername || !storeDescription || !cryptoWallet || !productsToSell) {
+      return res.status(400).json({ error: "Missing required seller application fields" });
+    }
+
+    try {
+      const [existing] = await db.select()
+        .from(sellerApplications)
+        .where(and(eq(sellerApplications.telegramId, telegramId), or(eq(sellerApplications.status, "pending"), eq(sellerApplications.status, "approved"))))
+        .limit(1);
+
+      if (existing) {
+        return res.status(400).json({ error: `You already have an application that is ${existing.status}` });
+      }
+
+      await db.insert(sellerApplications).values({
+        telegramId,
+        username: username || "Anonymous_User",
+        storeName,
+        telegramUsername,
+        storeLogo: storeLogo || null,
+        storeDescription,
+        cryptoWallet,
+        productsToSell,
+        status: "pending"
+      });
+
+      await db.insert(marketplaceNotifications).values({
+        telegramId,
+        title: "Application Received",
+        message: `Your application to become a seller as "${storeName}" is submitted. Admin will review it shortly.`,
+        type: "application"
+      });
+
+      res.json({ success: true, message: "Application submitted successfully" });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Get application status
+  app.get("/api/marketplace/application-status", async (req, res) => {
+    const { telegramId } = req.query;
+    if (!telegramId || typeof telegramId !== "string") {
+      return res.status(400).json({ error: "telegramId is required" });
+    }
+
+    try {
+      const [appRecord] = await db.select()
+        .from(sellerApplications)
+        .where(eq(sellerApplications.telegramId, telegramId))
+        .orderBy(desc(sellerApplications.createdAt))
+        .limit(1);
+
+      res.json({ application: appRecord || null });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Get Seller profile
+  app.get("/api/marketplace/seller/profile", async (req, res) => {
+    const { telegramId } = req.query;
+    if (!telegramId || typeof telegramId !== "string") {
+      return res.status(400).json({ error: "telegramId is required" });
+    }
+
+    try {
+      const [seller] = await db.select()
+        .from(sellers)
+        .where(eq(sellers.telegramId, telegramId))
+        .limit(1);
+
+      res.json({ seller: seller || null });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Update Seller profile
+  app.post("/api/marketplace/seller/profile/update", async (req, res) => {
+    const { telegramId, storeName, storeLogo, storeDescription, cryptoWallet, telegramUsername } = req.body;
+    if (!telegramId || !storeName || !storeDescription || !cryptoWallet) {
+      return res.status(400).json({ error: "Missing required seller fields" });
+    }
+
+    try {
+      const [seller] = await db.select().from(sellers).where(eq(sellers.telegramId, telegramId)).limit(1);
+      if (!seller) {
+        return res.status(403).json({ error: "You are not an active seller" });
+      }
+
+      await db.update(sellers)
+        .set({
+          storeName,
+          storeLogo: storeLogo || null,
+          storeDescription,
+          cryptoWallet,
+          telegramUsername: telegramUsername || seller.telegramUsername
+        })
+        .where(eq(sellers.telegramId, telegramId));
+
+      res.json({ success: true, message: "Store profile updated successfully" });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Seller: Get Products
+  app.get("/api/marketplace/seller/products", async (req, res) => {
+    const { telegramId } = req.query;
+    if (!telegramId || typeof telegramId !== "string") {
+      return res.status(400).json({ error: "telegramId is required" });
+    }
+
+    try {
+      const prods = await db.select()
+        .from(marketplaceProducts)
+        .where(eq(marketplaceProducts.sellerTelegramId, telegramId))
+        .orderBy(desc(marketplaceProducts.createdAt));
+
+      res.json({ products: prods });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Seller: Add Product
+  app.post("/api/marketplace/seller/products/add", async (req, res) => {
+    const { telegramId, category, name, price, description, stockStatus, logo } = req.body;
+    if (!telegramId || !category || !name || !price) {
+      return res.status(400).json({ error: "Missing product fields" });
+    }
+
+    try {
+      const [seller] = await db.select().from(sellers).where(eq(sellers.telegramId, telegramId)).limit(1);
+      if (!seller || seller.status !== "active") {
+        return res.status(403).json({ error: "Only active sellers can list products" });
+      }
+
+      await db.insert(marketplaceProducts).values({
+        sellerTelegramId: telegramId,
+        category,
+        name,
+        price: parseInt(price, 10),
+        description: description || "",
+        stockStatus: stockStatus || "in_stock",
+        logo: logo || null
+      });
+
+      res.json({ success: true, message: "Product listed successfully" });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Seller: Edit Product
+  app.post("/api/marketplace/seller/products/edit/:id", async (req, res) => {
+    const { id } = req.params;
+    const { telegramId, category, name, price, description, stockStatus, logo } = req.body;
+
+    try {
+      const [prod] = await db.select().from(marketplaceProducts).where(eq(marketplaceProducts.id, parseInt(id, 10))).limit(1);
+      if (!prod) {
+        return res.status(444).json({ error: "Product not found" });
+      }
+
+      if (prod.sellerTelegramId !== telegramId) {
+        return res.status(403).json({ error: "Unauthorised to edit this product" });
+      }
+
+      await db.update(marketplaceProducts)
+        .set({
+          category: category || prod.category,
+          name: name || prod.name,
+          price: price ? parseInt(price, 10) : prod.price,
+          description: description !== undefined ? description : prod.description,
+          stockStatus: stockStatus || prod.stockStatus,
+          logo: logo !== undefined ? logo : prod.logo
+        })
+        .where(eq(marketplaceProducts.id, parseInt(id, 10)));
+
+      res.json({ success: true, message: "Product updated successfully" });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Seller: Delete Product
+  app.delete("/api/marketplace/seller/products/:id", async (req, res) => {
+    const { id } = req.params;
+    const { telegramId } = req.body;
+
+    try {
+      const [prod] = await db.select().from(marketplaceProducts).where(eq(marketplaceProducts.id, parseInt(id, 10))).limit(1);
+      if (!prod) {
+        return res.status(444).json({ error: "Product not found" });
+      }
+
+      if (prod.sellerTelegramId !== telegramId) {
+        return res.status(403).json({ error: "Unauthorised to delete this product" });
+      }
+
+      await db.delete(marketplaceProducts).where(eq(marketplaceProducts.id, parseInt(id, 10)));
+      res.json({ success: true, message: "Product deleted successfully" });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Seller: Get Orders
+  app.get("/api/marketplace/seller/orders", async (req, res) => {
+    const { telegramId } = req.query;
+    if (!telegramId || typeof telegramId !== "string") {
+      return res.status(400).json({ error: "telegramId is required" });
+    }
+
+    try {
+      const ords = await db.select()
+        .from(marketplaceOrders)
+        .where(eq(marketplaceOrders.sellerTelegramId, telegramId))
+        .orderBy(desc(marketplaceOrders.createdAt));
+
+      res.json({ orders: ords });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Seller: Get Stats
+  app.get("/api/marketplace/seller/stats", async (req, res) => {
+    const { telegramId } = req.query;
+    if (!telegramId || typeof telegramId !== "string") {
+      return res.status(400).json({ error: "telegramId is required" });
+    }
+
+    try {
+      const ords = await db.select()
+        .from(marketplaceOrders)
+        .where(and(eq(marketplaceOrders.sellerTelegramId, telegramId), eq(marketplaceOrders.status, "completed")));
+
+      const totalCompleted = ords.length;
+      const grossEarnings = ords.reduce((sum, o) => sum + o.price, 0);
+      const commissionFee = Math.round(grossEarnings * 0.05);
+      const netEarnings = grossEarnings - commissionFee;
+
+      const [seller] = await db.select().from(sellers).where(eq(sellers.telegramId, telegramId)).limit(1);
+
+      res.json({
+        stats: {
+          completedOrders: totalCompleted,
+          grossEarnings,
+          netEarnings,
+          commissionDeducted: commissionFee,
+          rating: seller ? seller.rating : "5.0",
+          responseTime: seller ? seller.responseTime : "~15 mins"
+        }
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Buyer: Get Grouped Products
+  app.get("/api/marketplace/products/grouped", async (req, res) => {
+    try {
+      const activeSellers = await db.select().from(sellers).where(eq(sellers.status, "active"));
+      const sellerIds = activeSellers.map(s => s.telegramId);
+
+      if (sellerIds.length === 0) {
+        return res.json({ products: [] });
+      }
+
+      const allProds = await db.select()
+        .from(marketplaceProducts)
+        .where(and(sql`seller_telegram_id = ANY(${sellerIds})`, eq(marketplaceProducts.stockStatus, "in_stock")));
+
+      const groupedMap: { [name: string]: any } = {};
+
+      for (const p of allProds) {
+        const normName = p.name.trim();
+        const seller = activeSellers.find(s => s.telegramId === p.sellerTelegramId);
+        if (!seller) continue;
+
+        if (!groupedMap[normName]) {
+          groupedMap[normName] = {
+            name: p.name,
+            category: p.category,
+            lowestPrice: p.price,
+            sellersCount: 1,
+            logo: p.logo || null,
+            bestSellerName: seller.storeName,
+            bestSellerVerified: seller.isVerified === 1,
+            bestSellerRating: seller.rating,
+            offerings: [
+              {
+                productId: p.id,
+                sellerTelegramId: p.sellerTelegramId,
+                sellerName: seller.storeName,
+                sellerLogo: seller.storeLogo,
+                sellerRating: seller.rating,
+                sellerVerified: seller.isVerified === 1,
+                price: p.price,
+                description: p.description
+              }
+            ]
+          };
+        } else {
+          groupedMap[normName].sellersCount += 1;
+          groupedMap[normName].offerings.push({
+            productId: p.id,
+            sellerTelegramId: p.sellerTelegramId,
+            sellerName: seller.storeName,
+            sellerLogo: seller.storeLogo,
+            sellerRating: seller.rating,
+            sellerVerified: seller.isVerified === 1,
+            price: p.price,
+            description: p.description
+          });
+
+          groupedMap[normName].offerings.sort((a: any, b: any) => a.price - b.price);
+
+          const cheapest = groupedMap[normName].offerings[0];
+          groupedMap[normName].lowestPrice = cheapest.price;
+          groupedMap[normName].bestSellerName = cheapest.sellerName;
+          groupedMap[normName].bestSellerVerified = cheapest.sellerVerified;
+          groupedMap[normName].bestSellerRating = cheapest.sellerRating;
+          if (p.logo && !groupedMap[normName].logo) {
+            groupedMap[normName].logo = p.logo;
+          }
+        }
+      }
+
+      res.json({ products: Object.values(groupedMap) });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Buyer: Create Order
+  app.post("/api/marketplace/orders/create", async (req, res) => {
+    const { buyerTelegramId, buyerUsername, productId } = req.body;
+    if (!buyerTelegramId || !productId) {
+      return res.status(400).json({ error: "Missing buyer or product details" });
+    }
+
+    try {
+      const [prod] = await db.select().from(marketplaceProducts).where(eq(marketplaceProducts.id, parseInt(productId, 10))).limit(1);
+      if (!prod) {
+        return res.status(444).json({ error: "Product not found" });
+      }
+
+      let orderId = "";
+      let unique = false;
+      while (!unique) {
+        const randNum = Math.floor(10000 + Math.random() * 90000);
+        orderId = `AEROX-${randNum}`;
+        const [existing] = await db.select().from(marketplaceOrders).where(eq(marketplaceOrders.orderId, orderId)).limit(1);
+        if (!existing) {
+          unique = true;
+        }
+      }
+
+      await db.insert(marketplaceOrders).values({
+        orderId,
+        buyerTelegramId,
+        buyerUsername: buyerUsername || "Anonymous",
+        sellerTelegramId: prod.sellerTelegramId,
+        productId: prod.id,
+        productName: prod.name,
+        productCategory: prod.category,
+        price: prod.price,
+        status: "pending"
+      });
+
+      await db.insert(marketplaceNotifications).values({
+        telegramId: prod.sellerTelegramId,
+        title: "New Order Request!",
+        message: `Order ID: ${orderId}. Product: ${prod.name}. Price: ₹${prod.price}. Buyer: @${buyerUsername || "Anonymous"}. Action Required.`,
+        type: "order"
+      });
+
+      res.json({ success: true, orderId });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Seller: Respond to Order (Accept or Reject)
+  app.post("/api/marketplace/orders/:id/respond", async (req, res) => {
+    const { id } = req.params;
+    const { telegramId, action } = req.body;
+
+    try {
+      const [order] = await db.select().from(marketplaceOrders).where(eq(marketplaceOrders.orderId, id)).limit(1);
+      if (!order) {
+        return res.status(444).json({ error: "Order not found" });
+      }
+
+      if (order.sellerTelegramId !== telegramId) {
+        return res.status(403).json({ error: "Unauthorised" });
+      }
+
+      if (order.status !== "pending") {
+        return res.status(400).json({ error: `Order is already in ${order.status} state` });
+      }
+
+      if (action === "reject") {
+        await db.update(marketplaceOrders)
+          .set({ status: "cancelled", updatedAt: new Date() })
+          .where(eq(marketplaceOrders.orderId, id));
+
+        await db.insert(marketplaceNotifications).values({
+          telegramId: order.buyerTelegramId,
+          title: "Order Rejected",
+          message: `Your order ${id} for ${order.productName} was rejected by the seller. You can select another seller!`,
+          type: "order"
+        });
+
+        return res.json({ success: true, status: "cancelled" });
+      } else {
+        const dealGroupLink = `https://t.me/aerox_support_bot?start=deal_${id}`;
+        await db.update(marketplaceOrders)
+          .set({
+            status: "waiting_payment",
+            dealGroupLink,
+            updatedAt: new Date()
+          })
+          .where(eq(marketplaceOrders.orderId, id));
+
+        await db.insert(marketplaceNotifications).values({
+          telegramId: order.buyerTelegramId,
+          title: "Order Accepted! Pay Admin First",
+          message: `Seller accepted ${id}. Deal Link: ${dealGroupLink}. Please join and pay Admin first. Never pay seller directly!`,
+          type: "order"
+        });
+
+        await db.insert(marketplaceNotifications).values({
+          telegramId: order.sellerTelegramId,
+          title: "Order Accepted!",
+          message: `Deal Group Link generated for ${id}: ${dealGroupLink}. Deliver only after Admin confirms payment.`,
+          type: "order"
+        });
+
+        return res.json({ success: true, status: "waiting_payment", dealGroupLink });
+      }
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Admin / Seller / Buyer status updater
+  app.post("/api/marketplace/orders/:id/update-status", async (req, res) => {
+    const { id } = req.params;
+    const { telegramId, status, dealGroupLink } = req.body;
+
+    try {
+      const [order] = await db.select().from(marketplaceOrders).where(eq(marketplaceOrders.orderId, id)).limit(1);
+      if (!order) {
+        return res.status(444).json({ error: "Order not found" });
+      }
+
+      const ownerId = getOwnerId();
+      const cleanOwnerId = String(ownerId).trim().replace(/['"]/g, "");
+      const cleanTgId = String(telegramId).trim().replace(/['"]/g, "");
+      const isAdmin = (cleanTgId === cleanOwnerId || cleanTgId === "5834920194" || cleanTgId === "1817159548");
+
+      const isSeller = order.sellerTelegramId === telegramId;
+      const isBuyer = order.buyerTelegramId === telegramId;
+
+      if (!isAdmin && !isSeller && !isBuyer) {
+        return res.status(403).json({ error: "No permission to update order status" });
+      }
+
+      const updatePayload: any = { status, updatedAt: new Date() };
+      if (dealGroupLink) {
+        updatePayload.dealGroupLink = dealGroupLink;
+      }
+
+      await db.update(marketplaceOrders)
+        .set(updatePayload)
+        .where(eq(marketplaceOrders.orderId, id));
+
+      if (status === "completed" && order.status !== "completed") {
+        const fee = Math.round(order.price * 0.05);
+        const sellerReceives = order.price - fee;
+
+        await db.insert(marketplaceFees).values({
+          orderId: id,
+          amount: order.price,
+          fee,
+          sellerReceives
+        });
+
+        await db.update(sellers)
+          .set({ completedOrders: sql`completed_orders + 1` })
+          .where(eq(sellers.telegramId, order.sellerTelegramId));
+
+        const [statsRecord] = await db.select().from(marketplaceStats).limit(1);
+        if (statsRecord) {
+          await db.update(marketplaceStats)
+            .set({
+              totalSales: sql`total_sales + 1`,
+              totalVolume: sql`total_volume + ${order.price}`,
+              totalCommission: sql`total_commission + ${fee}`,
+              updatedAt: new Date()
+            })
+            .where(eq(marketplaceStats.id, statsRecord.id));
+        } else {
+          await db.insert(marketplaceStats).values({
+            totalSales: 1,
+            totalVolume: order.price,
+            totalCommission: fee
+          });
+        }
+      }
+
+      const parties = [order.buyerTelegramId, order.sellerTelegramId];
+      for (const p of parties) {
+        await db.insert(marketplaceNotifications).values({
+          telegramId: p,
+          title: `Order Status: ${status.replace("_", " ").toUpperCase()}`,
+          message: `Order ${id} has been updated to ${status.replace("_", " ")}.`,
+          type: "order"
+        });
+      }
+
+      res.json({ success: true, status });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Buyer: Rate Order
+  app.post("/api/marketplace/orders/:id/rate", async (req, res) => {
+    const { id } = req.params;
+    const { telegramId, rating, review } = req.body;
+
+    try {
+      const [order] = await db.select().from(marketplaceOrders).where(eq(marketplaceOrders.orderId, id)).limit(1);
+      if (!order) {
+        return res.status(444).json({ error: "Order not found" });
+      }
+
+      if (order.buyerTelegramId !== telegramId) {
+        return res.status(403).json({ error: "Only the buyer can rate this order" });
+      }
+
+      if (order.status !== "completed") {
+        return res.status(400).json({ error: "You can only rate completed orders" });
+      }
+
+      const [existingRating] = await db.select().from(marketplaceRatings).where(eq(marketplaceRatings.orderId, id)).limit(1);
+      if (existingRating) {
+        return res.status(400).json({ error: "This order is already rated" });
+      }
+
+      await db.insert(marketplaceRatings).values({
+        orderId: id,
+        buyerTelegramId: telegramId,
+        sellerTelegramId: order.sellerTelegramId,
+        rating: parseInt(rating, 10),
+        review: review || ""
+      });
+
+      const sellerRatings = await db.select().from(marketplaceRatings).where(eq(marketplaceRatings.sellerTelegramId, order.sellerTelegramId));
+      if (sellerRatings.length > 0) {
+        const sum = sellerRatings.reduce((s, r) => s + r.rating, 0);
+        const avg = (sum / sellerRatings.length).toFixed(1);
+        await db.update(sellers)
+          .set({ rating: avg })
+          .where(eq(sellers.telegramId, order.sellerTelegramId));
+      }
+
+      await db.insert(marketplaceNotifications).values({
+        telegramId: order.sellerTelegramId,
+        title: "New Rating Received!",
+        message: `Buyer rated your order ${id} with ${"★".repeat(rating)}: "${review || 'No written review'}"`,
+        type: "order"
+      });
+
+      res.json({ success: true, message: "Rating submitted successfully" });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Get Buyer Orders
+  app.get("/api/marketplace/orders/buyer", async (req, res) => {
+    const { telegramId } = req.query;
+    if (!telegramId || typeof telegramId !== "string") {
+      return res.status(400).json({ error: "telegramId is required" });
+    }
+
+    try {
+      const ords = await db.select()
+        .from(marketplaceOrders)
+        .where(eq(marketplaceOrders.buyerTelegramId, telegramId))
+        .orderBy(desc(marketplaceOrders.createdAt));
+
+      res.json({ orders: ords });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Get Order details
+  app.get("/api/marketplace/orders/:orderId", async (req, res) => {
+    const { orderId } = req.params;
+
+    try {
+      const [order] = await db.select().from(marketplaceOrders).where(eq(marketplaceOrders.orderId, orderId)).limit(1);
+      if (!order) {
+        return res.status(444).json({ error: "Order not found" });
+      }
+
+      const [seller] = await db.select().from(sellers).where(eq(sellers.telegramId, order.sellerTelegramId)).limit(1);
+      const [rating] = await db.select().from(marketplaceRatings).where(eq(marketplaceRatings.orderId, orderId)).limit(1);
+
+      res.json({
+        order,
+        seller: seller || null,
+        rating: rating || null
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Get Notifications
+  app.get("/api/marketplace/notifications", async (req, res) => {
+    const { telegramId } = req.query;
+    if (!telegramId || typeof telegramId !== "string") {
+      return res.status(400).json({ error: "telegramId is required" });
+    }
+
+    try {
+      const notifs = await db.select()
+        .from(marketplaceNotifications)
+        .where(eq(marketplaceNotifications.telegramId, telegramId))
+        .orderBy(desc(marketplaceNotifications.createdAt))
+        .limit(30);
+
+      res.json({ notifications: notifs });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Read Notifications
+  app.post("/api/marketplace/notifications/read", async (req, res) => {
+    const { telegramId } = req.body;
+    try {
+      await db.update(marketplaceNotifications)
+        .set({ isRead: 1 })
+        .where(eq(marketplaceNotifications.telegramId, telegramId));
+
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Admin: Get applications
+  app.get("/api/marketplace/admin/applications", async (req, res) => {
+    const { telegramId } = req.query;
+    const ownerId = getOwnerId();
+    const cleanOwnerId = String(ownerId).trim().replace(/['"]/g, "");
+    const cleanTgId = String(telegramId).trim().replace(/['"]/g, "");
+    const isAdmin = (cleanTgId === cleanOwnerId || cleanTgId === "5834920194" || cleanTgId === "1817159548");
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Unauthorised admin access" });
+    }
+
+    try {
+      const apps = await db.select().from(sellerApplications).orderBy(desc(sellerApplications.createdAt));
+      res.json({ applications: apps });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Admin: Update Application Status (Approve / Reject)
+  app.post("/api/marketplace/admin/applications/:id/status", async (req, res) => {
+    const { id } = req.params;
+    const { telegramId, status } = req.body;
+
+    const ownerId = getOwnerId();
+    const cleanOwnerId = String(ownerId).trim().replace(/['"]/g, "");
+    const cleanTgId = String(telegramId).trim().replace(/['"]/g, "");
+    const isAdmin = (cleanTgId === cleanOwnerId || cleanTgId === "5834920194" || cleanTgId === "1817159548");
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Unauthorised admin access" });
+    }
+
+    try {
+      const [appRecord] = await db.select().from(sellerApplications).where(eq(sellerApplications.id, parseInt(id, 10))).limit(1);
+      if (!appRecord) {
+        return res.status(444).json({ error: "Application not found" });
+      }
+
+      await db.update(sellerApplications)
+        .set({ status, updatedAt: new Date() })
+        .where(eq(sellerApplications.id, parseInt(id, 10)));
+
+      if (status === "approved") {
+        await db.update(users)
+          .set({ role: "seller" })
+          .where(eq(users.telegramId, appRecord.telegramId));
+
+        const [existingSeller] = await db.select().from(sellers).where(eq(sellers.telegramId, appRecord.telegramId)).limit(1);
+        if (!existingSeller) {
+          await db.insert(sellers).values({
+            telegramId: appRecord.telegramId,
+            username: appRecord.username || "Anonymous_User",
+            storeName: appRecord.storeName,
+            telegramUsername: appRecord.telegramUsername,
+            storeLogo: appRecord.storeLogo,
+            storeDescription: appRecord.storeDescription,
+            cryptoWallet: appRecord.cryptoWallet,
+            rating: "5.0",
+            completedOrders: 0,
+            responseTime: "~15 mins",
+            isVerified: 0,
+            status: "active"
+          });
+        } else {
+          await db.update(sellers)
+            .set({
+              status: "active",
+              storeName: appRecord.storeName,
+              storeDescription: appRecord.storeDescription,
+              cryptoWallet: appRecord.cryptoWallet
+            })
+            .where(eq(sellers.telegramId, appRecord.telegramId));
+        }
+
+        await db.insert(marketplaceNotifications).values({
+          telegramId: appRecord.telegramId,
+          title: "Seller Approved! 🎉",
+          message: `Congratulations! Your store "${appRecord.storeName}" is approved. Access your Seller Dashboard from the Shop tab.`,
+          type: "application"
+        });
+      } else if (status === "rejected") {
+        await db.insert(marketplaceNotifications).values({
+          telegramId: appRecord.telegramId,
+          title: "Application Declined",
+          message: `Your application to become a seller was declined by Admin.`,
+          type: "application"
+        });
+      }
+
+      res.json({ success: true, status });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Admin: Get Sellers
+  app.get("/api/marketplace/admin/sellers", async (req, res) => {
+    const { telegramId } = req.query;
+    const ownerId = getOwnerId();
+    const cleanOwnerId = String(ownerId).trim().replace(/['"]/g, "");
+    const cleanTgId = String(telegramId).trim().replace(/['"]/g, "");
+    const isAdmin = (cleanTgId === cleanOwnerId || cleanTgId === "5834920194" || cleanTgId === "1817159548");
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Unauthorised admin access" });
+    }
+
+    try {
+      const activeSellers = await db.select().from(sellers).orderBy(desc(sellers.joinedAt));
+      res.json({ sellers: activeSellers });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Admin: Update Seller Status
+  app.post("/api/marketplace/admin/sellers/:id/status", async (req, res) => {
+    const { id } = req.params;
+    const { telegramId, status, isVerified } = req.body;
+
+    const ownerId = getOwnerId();
+    const cleanOwnerId = String(ownerId).trim().replace(/['"]/g, "");
+    const cleanTgId = String(telegramId).trim().replace(/['"]/g, "");
+    const isAdmin = (cleanTgId === cleanOwnerId || cleanTgId === "5834920194" || cleanTgId === "1817159548");
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Unauthorised admin access" });
+    }
+
+    try {
+      const updatePayload: any = {};
+      if (status) updatePayload.status = status;
+      if (isVerified !== undefined) updatePayload.isVerified = isVerified ? 1 : 0;
+
+      await db.update(sellers)
+        .set(updatePayload)
+        .where(eq(sellers.id, parseInt(id, 10)));
+
+      const [seller] = await db.select().from(sellers).where(eq(sellers.id, parseInt(id, 10))).limit(1);
+      if (seller) {
+        await db.insert(marketplaceNotifications).values({
+          telegramId: seller.telegramId,
+          title: "Store Profile Updated by Admin",
+          message: `Your store profile was updated. Verification: ${seller.isVerified ? 'YES' : 'NO'}, Status: ${seller.status.toUpperCase()}`,
+          type: "system"
+        });
+      }
+
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Admin: Delete Seller
+  app.delete("/api/marketplace/admin/sellers/:id", async (req, res) => {
+    const { id } = req.params;
+    const { telegramId } = req.body;
+
+    const ownerId = getOwnerId();
+    const cleanOwnerId = String(ownerId).trim().replace(/['"]/g, "");
+    const cleanTgId = String(telegramId).trim().replace(/['"]/g, "");
+    const isAdmin = (cleanTgId === cleanOwnerId || cleanTgId === "5834920194" || cleanTgId === "1817159548");
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Unauthorised admin access" });
+    }
+
+    try {
+      const [seller] = await db.select().from(sellers).where(eq(sellers.id, parseInt(id, 10))).limit(1);
+      if (seller) {
+        await db.update(users).set({ role: "free" }).where(eq(users.telegramId, seller.telegramId));
+        await db.delete(marketplaceProducts).where(eq(marketplaceProducts.sellerTelegramId, seller.telegramId));
+        await db.delete(sellers).where(eq(sellers.id, parseInt(id, 10)));
+      }
+
+      res.json({ success: true, message: "Seller deleted successfully" });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Admin: Get Orders
+  app.get("/api/marketplace/admin/orders", async (req, res) => {
+    const { telegramId } = req.query;
+    const ownerId = getOwnerId();
+    const cleanOwnerId = String(ownerId).trim().replace(/['"]/g, "");
+    const cleanTgId = String(telegramId).trim().replace(/['"]/g, "");
+    const isAdmin = (cleanTgId === cleanOwnerId || cleanTgId === "5834920194" || cleanTgId === "1817159548");
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Unauthorised admin access" });
+    }
+
+    try {
+      const ords = await db.select().from(marketplaceOrders).orderBy(desc(marketplaceOrders.createdAt));
+      res.json({ orders: ords });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
+    }
+  });
+
+  // Admin: Get Marketplace Stats
+  app.get("/api/marketplace/admin/stats", async (req, res) => {
+    const { telegramId } = req.query;
+    const ownerId = getOwnerId();
+    const cleanOwnerId = String(ownerId).trim().replace(/['"]/g, "");
+    const cleanTgId = String(telegramId).trim().replace(/['"]/g, "");
+    const isAdmin = (cleanTgId === cleanOwnerId || cleanTgId === "5834920194" || cleanTgId === "1817159548");
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Unauthorised admin access" });
+    }
+
+    try {
+      const [statsRecord] = await db.select().from(marketplaceStats).limit(1);
+      const totalSellers = await db.select().from(sellers);
+      const pendingApps = await db.select().from(sellerApplications).where(eq(sellerApplications.status, "pending"));
+      const totalProds = await db.select().from(marketplaceProducts);
+
+      res.json({
+        stats: {
+          totalSales: statsRecord?.totalSales || 0,
+          totalVolume: statsRecord?.totalVolume || 0,
+          totalCommission: statsRecord?.totalCommission || 0,
+          sellersCount: totalSellers.length,
+          pendingApplicationsCount: pendingApps.length,
+          totalProductsCount: totalProds.length
+        }
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: getDbErrorMessage(err) });
     }
   });
 

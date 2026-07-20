@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { UserCheck, Copy, Check, RefreshCw, MapPin, Globe, Shield, Briefcase, CreditCard, ChevronRight } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { UserCheck, Copy, Check, RefreshCw, MapPin, Globe, Shield, Briefcase, CreditCard, ChevronRight, Search, X } from "lucide-react";
 import { incrementAnalytic } from "../utils/analytics";
 import { FakeAddress } from "../types";
 import { generateFakeAddress, COUNTRY_DATA, getAbsoluteUrl } from "../utils";
+import { ALL_COUNTRIES, COUNTRY_FLAGS } from "../countries";
 
 export default function AddressGenTab() {
   const [selectedCountry, setSelectedCountry] = useState("US");
@@ -10,6 +11,7 @@ export default function AddressGenTab() {
   const [copiedAll, setCopiedAll] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleGenerate = async (countryOverride?: string | unknown) => {
     setGenerating(true);
@@ -78,63 +80,137 @@ Title: ${identity.jobTitle}
     setTimeout(() => setCopiedAll(false), 2000);
   };
 
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // Get flag representation for country code
   const getFlag = (code: string) => {
-    const flags: Record<string, string> = {
-      US: "🇺🇸",
-      UK: "🇬🇧",
-      DE: "🇩🇪",
-      RU: "🇷🇺",
-      CA: "🇨🇦",
-      IN: "🇮🇳",
-      FR: "🇫🇷",
-      AU: "🇦🇺",
-      JP: "🇯🇵",
-      BR: "🇧🇷",
-      CN: "🇨🇳",
-      AE: "🇦🇪",
-      ES: "🇪🇸"
-    };
-    return flags[code] || "🌐";
+    const uppercaseCode = code.toUpperCase();
+    const lookup = uppercaseCode === "UK" ? "GB" : uppercaseCode;
+    return COUNTRY_FLAGS[lookup] || "🌐";
   };
+
+  // Filter countries based on search query
+  const filteredCountries = Object.keys(ALL_COUNTRIES).filter((code) => {
+    const country = ALL_COUNTRIES[code];
+    return (
+      country.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      code.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
+
+  const activeCountryName = ALL_COUNTRIES[selectedCountry]?.name || COUNTRY_DATA[selectedCountry]?.name || selectedCountry;
+  const popularPresets = ["US", "GB", "IN", "PK", "CA", "DE", "AE", "SA"];
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-4 pb-8 select-none">
-      {/* Title block */}
-      <div className="text-center mb-1">
-        <h2 className="text-base font-extrabold tracking-wide text-white uppercase font-display flex items-center justify-center gap-1.5">
-          🗺️ Identity Gen Pro <span className="text-[10px] bg-cyber-purple/20 text-cosmic-lilac px-1.5 py-0.5 rounded">AUTO</span>
-        </h2>
-        <p className="text-[11px] text-neutral-400">
-          Procedural multinational address & profile builder for registrations and testing.
-        </p>
-      </div>
-
       {/* Generator setup panel */}
       <div className="p-4 rounded-2xl bg-dark-surface border border-white/[0.04] flex flex-col gap-3">
         <div className="grid grid-cols-1 gap-3">
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
               Target Country Identity
             </label>
-            <div className="flex gap-1.5 overflow-x-auto pb-1">
-              {Object.keys(COUNTRY_DATA).map((code) => (
-                <button
-                  key={code}
-                  onClick={() => {
-                    setSelectedCountry(code);
-                    handleGenerate(code);
+
+            {/* Country Search Bar & Autocomplete Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <div className="relative flex items-center mb-1">
+                <Search className="absolute left-3 w-3.5 h-3.5 text-neutral-500" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowDropdown(true);
                   }}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border shrink-0 cursor-pointer ${
-                    selectedCountry === code
-                      ? "bg-cyber-purple border-cyber-purple text-white shadow-lg"
-                      : "bg-void-black border-white/[0.05] text-neutral-400 hover:text-white"
-                  }`}
-                >
-                  <span>{getFlag(code)}</span>
-                  <span>{COUNTRY_DATA[code].name}</span>
-                </button>
-              ))}
+                  onFocus={() => setShowDropdown(true)}
+                  placeholder="Search country (e.g. us, uk, india, pakistan, afghanistan)..."
+                  className="pl-9 pr-8 py-2 w-full bg-void-black border border-white/[0.08] rounded-xl text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-cyber-purple transition-all"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2.5 p-1 text-neutral-500 hover:text-white transition-all cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Autocomplete Dropdown */}
+              {showDropdown && searchQuery.trim() !== "" && (
+                <div className="absolute z-30 top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-void-black/95 border border-white/[0.1] rounded-xl shadow-2xl p-1 flex flex-col gap-0.5 backdrop-blur-md">
+                  {filteredCountries.slice(0, 15).map((code) => (
+                    <button
+                      key={code}
+                      onClick={() => {
+                        const actualCode = code === "GB" ? "UK" : code;
+                        setSelectedCountry(actualCode);
+                        handleGenerate(actualCode);
+                        setSearchQuery("");
+                        setShowDropdown(false);
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-neutral-300 hover:text-white hover:bg-white/[0.04] transition-all text-left w-full cursor-pointer"
+                    >
+                      <span>{getFlag(code)}</span>
+                      <span className="flex-1">{ALL_COUNTRIES[code].name}</span>
+                      <span className="text-[10px] text-neutral-500 font-mono font-bold uppercase">{code}</span>
+                    </button>
+                  ))}
+                  {filteredCountries.length === 0 && (
+                    <div className="text-[11px] text-neutral-500 py-3 text-center">No matching countries found</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Popular country presets shown when search is empty */}
+            {searchQuery.trim() === "" && (
+              <div className="flex flex-col gap-1 mt-1">
+                <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Popular Presets</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {popularPresets.map((code) => {
+                    const actualCode = code === "GB" ? "UK" : code;
+                    const isSelected = selectedCountry === actualCode;
+                    return (
+                      <button
+                        key={code}
+                        onClick={() => {
+                          setSelectedCountry(actualCode);
+                          handleGenerate(actualCode);
+                        }}
+                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all border cursor-pointer ${
+                          isSelected
+                            ? "bg-cyber-purple border-cyber-purple text-white shadow-md shadow-cyber-purple/20"
+                            : "bg-void-black border-white/[0.05] text-neutral-400 hover:text-white hover:border-white/10"
+                        }`}
+                      >
+                        <span>{getFlag(code)}</span>
+                        <span>{code === "GB" ? "UK" : code}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Selected Active Country Badge */}
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.02] border border-white/[0.04] rounded-xl mt-1.5">
+              <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider">Active Target:</span>
+              <div className="flex items-center gap-1.5 text-xs font-bold text-white">
+                <span>{getFlag(selectedCountry)}</span>
+                <span>{activeCountryName}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -191,11 +267,11 @@ Title: ${identity.jobTitle}
             </div>
           </div>
 
-          {/* Group 1: Address Details */}
+          {/* Grouped Core Identity & Address Matrix */}
           <div className="p-4 rounded-2xl bg-dark-surface border border-white/[0.04] flex flex-col gap-2.5">
             <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1 border-b border-white/[0.04] pb-1">
               <MapPin className="w-3.5 h-3.5 text-cyber-purple" />
-              <span>Location Coordinates</span>
+              <span>Identity & Address Matrix</span>
             </div>
 
             {/* Street */}
@@ -240,8 +316,8 @@ Title: ${identity.jobTitle}
               </button>
             </div>
 
-            {/* Postcode */}
-            <div className="flex justify-between items-center py-1">
+            {/* Postcode / Zip */}
+            <div className="flex justify-between items-center py-1 border-b border-white/[0.02]">
               <div className="flex flex-col">
                 <span className="text-[9px] text-neutral-500 font-bold uppercase">Postcode / Zip</span>
                 <span className="text-xs font-mono font-bold text-white selection:bg-cyber-purple/40">{identity.zip}</span>
@@ -253,19 +329,11 @@ Title: ${identity.jobTitle}
                 {copiedKey === "zip" ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
-          </div>
 
-          {/* Group 2: Phone and ID Info */}
-          <div className="p-4 rounded-2xl bg-dark-surface border border-white/[0.04] flex flex-col gap-2.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1 border-b border-white/[0.04] pb-1">
-              <Shield className="w-3.5 h-3.5 text-hot-pink" />
-              <span>Contact & Regional IDs</span>
-            </div>
-
-            {/* Phone */}
+            {/* Number */}
             <div className="flex justify-between items-center py-1 border-b border-white/[0.02]">
               <div className="flex flex-col">
-                <span className="text-[9px] text-neutral-500 font-bold uppercase">Phone Number</span>
+                <span className="text-[9px] text-neutral-500 font-bold uppercase">Number</span>
                 <span className="text-xs font-mono font-bold text-white selection:bg-cyber-purple/40">{identity.phone}</span>
               </div>
               <button
@@ -276,12 +344,10 @@ Title: ${identity.jobTitle}
               </button>
             </div>
 
-            {/* SSN / ID */}
+            {/* SSN Code */}
             <div className="flex justify-between items-center py-1">
               <div className="flex flex-col">
-                <span className="text-[9px] text-neutral-500 font-bold uppercase">
-                  {selectedCountry === "IN" ? "Aadhaar Card" : selectedCountry === "RU" ? "SNILS Code" : "SSN Code"}
-                </span>
+                <span className="text-[9px] text-neutral-500 font-bold uppercase">SSN Code</span>
                 <span className="text-xs font-mono font-bold text-white selection:bg-cyber-purple/40">{identity.ssn}</span>
               </div>
               <button
@@ -293,7 +359,7 @@ Title: ${identity.jobTitle}
             </div>
           </div>
 
-          {/* Group 3: Online Credentials */}
+          {/* Group 2: Online Credentials */}
           <div className="p-4 rounded-2xl bg-dark-surface border border-white/[0.04] flex flex-col gap-2.5">
             <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1 border-b border-white/[0.04] pb-1">
               <Globe className="w-3.5 h-3.5 text-indigo-400" />
@@ -329,7 +395,7 @@ Title: ${identity.jobTitle}
             </div>
           </div>
 
-          {/* Group 4: Employment Details */}
+          {/* Group 3: Employment Details */}
           <div className="p-4 rounded-2xl bg-dark-surface border border-white/[0.04] flex flex-col gap-2.5">
             <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1 border-b border-white/[0.04] pb-1">
               <Briefcase className="w-3.5 h-3.5 text-teal-400" />
@@ -366,22 +432,6 @@ Title: ${identity.jobTitle}
           </div>
         </div>
       )}
-
-      {/* Futuristic Quote and Guidelines Box */}
-      <div className="relative p-4 rounded-xl border border-white/[0.04] bg-void-black/40 overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] mt-3">
-        <div className="absolute top-0 left-0 w-[3px] h-full bg-gradient-to-b from-cyber-purple to-pink-500" />
-        <div className="flex gap-3">
-          <span className="text-xl text-cyber-purple select-none shrink-0 font-serif leading-none mt-0.5">“</span>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-black text-pink-400 uppercase tracking-widest block">
-              Procedural Testing Integrity
-            </span>
-            <p className="text-[9.5px] text-neutral-400 leading-relaxed italic">
-              All identity matrices, credentials, and geographic locations are compiled procedurally using randomized cryptographic algorithms. None of the profiles correspond to real-world individuals or registered databases, keeping your sandbox activities entirely secure and compliant.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

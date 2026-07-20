@@ -112,49 +112,74 @@ export default function RobotCompanion({ activeTab = "home", items = [] }: Robot
       case "blink":
         return (
           <g filter="url(#cyanGlow)">
-            {/* Sleeping flat line eyes */}
-            <rect x="29" y="32" width="12" height="3.5" rx="1.7" fill="#00e4ff" />
-            <rect x="59" y="32" width="12" height="3.5" rx="1.7" fill="#00e4ff" />
+            {/* Sleeping flat line eyes with tiny cute end flicks */}
+            <rect x="28" y="32" width="13" height="3.5" rx="1.7" fill="#00e4ff" />
+            <rect x="59" y="32" width="13" height="3.5" rx="1.7" fill="#00e4ff" />
             {/* Symmetrical cute little smile */}
-            <path d="M 46 38.5 Q 50 41 54 38.5" stroke="#00e4ff" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+            <path d="M 45 38.5 Q 50 41.5 55 38.5" stroke="#00e4ff" strokeWidth="2.8" strokeLinecap="round" fill="none" />
           </g>
         );
       case "happy":
         return (
           <g filter="url(#cyanGlow)">
-            {/* Thick vertical capsule eyes just like Faw */}
-            <rect x="30" y="24" width="10" height="15" rx="5" fill="#00e4ff" />
-            <rect x="60" y="24" width="10" height="15" rx="5" fill="#00e4ff" />
-            {/* Cute semi-circular open smiling mouth */}
+            {/* Thick vertical capsule eyes just like Faw but with high-end inner shine */}
+            <rect x="30" y="24" width="10" height="15" rx="5" fill="#00e4ff" className="anim-eye-pulse" />
+            <rect x="60" y="24" width="10" height="15" rx="5" fill="#00e4ff" className="anim-eye-pulse" />
+            
+            {/* Super cute highlight stars inside happy capsules */}
+            <circle cx="33" cy="28" r="1.8" fill="#ffffff" />
+            <circle cx="63" cy="28" r="1.8" fill="#ffffff" />
+
+            {/* Cute semi-circular open smiling mouth with tongue detail */}
             <path d="M 44 38 A 6 6 0 0 0 56 38 Z" fill="#00e4ff" />
           </g>
         );
       case "curious":
         return (
           <g filter="url(#cyanGlow)">
-            {/* Adorable tilted expression */}
+            {/* Adorable tilted expression with a tiny floating curiosity sparkle */}
             <rect x="29" y="25" width="9" height="13" rx="4.5" fill="#00e4ff" transform="rotate(-6 33.5 31.5)" />
+            <circle cx="32" cy="29" r="1.5" fill="#ffffff" />
+
             <rect x="61" y="22" width="11" height="16" rx="5.5" fill="#00e4ff" transform="rotate(8 66.5 30)" />
+            <circle cx="64" cy="26" r="2" fill="#ffffff" />
+            
             {/* Curved questioning tiny mouth */}
             <circle cx="50" cy="38" r="2.8" fill="#00e4ff" />
             <path d="M 28 17 L 38 19" stroke="#00e4ff" strokeWidth="2.5" strokeLinecap="round" />
+
+            {/* Glowing cute question symbol */}
+            <path d="M 50 18 Q 52 14 54 16 T 50 20" stroke="#00e4ff" strokeWidth="1.2" strokeLinecap="round" fill="none" className="animate-pulse" />
+            <circle cx="50" cy="22" r="0.6" fill="#00e4ff" />
           </g>
         );
       case "thinking":
         return (
           <g filter="url(#cyanGlow)">
-            {/* Eyes looking slightly up and in */}
+            {/* Eyes looking slightly up and in with tiny moving thought sparkles */}
             <rect x="32" y="22" width="9" height="14" rx="4.5" fill="#00e4ff" />
+            <circle cx="34" cy="25" r="1.5" fill="#ffffff" />
+
             <rect x="59" y="22" width="9" height="14" rx="4.5" fill="#00e4ff" />
+            <circle cx="61" cy="25" r="1.5" fill="#ffffff" />
+
             {/* Cute tiny straight line mouth */}
             <rect x="46" y="37.5" width="8" height="2.5" rx="1.2" fill="#00e4ff" />
+            
+            {/* Micro cute light thought bubbles rising */}
+            <circle cx="49" cy="18" r="1.2" fill="#00e4ff" className="animate-ping" style={{ animationDuration: "1.5s" }} />
+            <circle cx="53" cy="15" r="0.8" fill="#ffd700" className="animate-pulse" />
           </g>
         );
       case "looking_left":
         return (
           <g filter="url(#cyanGlow)">
             <rect x="26" y="24" width="10" height="15" rx="5" fill="#00e4ff" />
+            <circle cx="29" cy="28" r="1.5" fill="#ffffff" />
+
             <rect x="56" y="24" width="10" height="15" rx="5" fill="#00e4ff" />
+            <circle cx="59" cy="28" r="1.5" fill="#ffffff" />
+
             <path d="M 41 38 A 4 4 0 0 0 49 38 Z" fill="#00e4ff" />
           </g>
         );
@@ -162,7 +187,11 @@ export default function RobotCompanion({ activeTab = "home", items = [] }: Robot
         return (
           <g filter="url(#cyanGlow)">
             <rect x="34" y="24" width="10" height="15" rx="5" fill="#00e4ff" />
+            <circle cx="37" cy="28" r="1.5" fill="#ffffff" />
+
             <rect x="64" y="24" width="10" height="15" rx="5" fill="#00e4ff" />
+            <circle cx="67" cy="28" r="1.5" fill="#ffffff" />
+
             <path d="M 51 38 A 4 4 0 0 0 59 38 Z" fill="#00e4ff" />
           </g>
         );
@@ -174,6 +203,8 @@ export default function RobotCompanion({ activeTab = "home", items = [] }: Robot
             <path d="M 59 30 Q 65 37 71 30" stroke="#007aff" strokeWidth="4.2" strokeLinecap="round" fill="none" />
             {/* Tiny sleeping bubble mouth */}
             <circle cx="50" cy="38" r="2" fill="#007aff" />
+            {/* Rising "Zzz" lettering effect done elegantly */}
+            <path d="M 72 20 L 76 20 L 72 24 L 76 24" stroke="#007aff" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" fill="none" className="animate-[bounce_2s_infinite]" />
           </g>
         );
       case "loading":
@@ -185,9 +216,14 @@ export default function RobotCompanion({ activeTab = "home", items = [] }: Robot
       case "wink":
         return (
           <g filter="url(#cyanGlow)">
-            {/* Smiling arch left, happy thick capsule right */}
+            {/* Smiling arch left, happy thick capsule right with high-end spark */}
             <path d="M 28 32 Q 34 23 40 32" stroke="#00e4ff" strokeWidth="5.5" strokeLinecap="round" fill="none" />
             <rect x="60" y="24" width="10" height="15" rx="5" fill="#00e4ff" />
+            <circle cx="63" cy="28" r="2" fill="#ffffff" />
+            
+            {/* Floating tiny heart next to the wink for extra premium cuteness */}
+            <path d="M 74 25 C 74 24, 72 23, 71 24 C 70 25, 70 27, 72 29 L 74 31 L 76 29 C 78 27, 78 25, 77 24 C 76 23, 74 24, 74 25 Z" fill="#ff4688" className="animate-pulse" />
+
             {/* Big happy open mouth */}
             <path d="M 44 37 A 6 6 0 0 0 56 37 Z" fill="#00e4ff" />
           </g>
@@ -196,19 +232,28 @@ export default function RobotCompanion({ activeTab = "home", items = [] }: Robot
         return (
           <g filter="url(#cyanGlow)">
             {/* Squinting closed eyes (> <) */}
-            <path d="M 28 27 L 37 32 L 28 37" stroke="#00e4ff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-            <path d="M 72 27 L 63 32 L 72 37" stroke="#00e4ff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <path d="M 28 27 L 37 32 L 28 37" stroke="#00e4ff" strokeWidth="5.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <path d="M 72 27 L 63 32 L 72 37" stroke="#00e4ff" strokeWidth="5.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
             {/* Super happy wide smile */}
             <path d="M 43 36 A 7 7 0 0 0 57 36 Z" fill="#00e4ff" />
+            {/* Double cheek glow */}
+            <circle cx="31" cy="38" r="1.5" fill="#ffffff" opacity="0.8" />
+            <circle cx="69" cy="38" r="1.5" fill="#ffffff" opacity="0.8" />
           </g>
         );
       case "surprise":
         return (
           <g filter="url(#cyanGlow)">
-            {/* Giant cute wide open circular eyes */}
-            <circle cx="34" cy="30" r="8" stroke="#00e4ff" strokeWidth="4" fill="none" />
-            <circle cx="66" cy="30" r="8" stroke="#00e4ff" strokeWidth="4" fill="none" />
-            <circle cx="50" cy="39" r="4.2" fill="#00e4ff" />
+            {/* Giant cute wide open circular eyes with tiny shock reflections */}
+            <circle cx="34" cy="30" r="8.5" stroke="#00e4ff" strokeWidth="4" fill="none" />
+            <circle cx="34" cy="30" r="3" fill="#00e4ff" />
+            <circle cx="32.5" cy="28.5" r="1" fill="#ffffff" />
+
+            <circle cx="66" cy="30" r="8.5" stroke="#00e4ff" strokeWidth="4" fill="none" />
+            <circle cx="66" cy="30" r="3" fill="#00e4ff" />
+            <circle cx="64.5" cy="28.5" r="1" fill="#ffffff" />
+            
+            <circle cx="50" cy="39" r="4.5" fill="#00e4ff" />
           </g>
         );
       default:
@@ -217,6 +262,8 @@ export default function RobotCompanion({ activeTab = "home", items = [] }: Robot
             {/* Default signature Faw Face: Two capsule eyes + happy glowing semi-circle smile */}
             <rect x="30" y="24" width="10" height="15" rx="5" fill="#00e4ff" />
             <rect x="60" y="24" width="10" height="15" rx="5" fill="#00e4ff" />
+            <circle cx="33" cy="28" r="1.8" fill="#ffffff" />
+            <circle cx="63" cy="28" r="1.8" fill="#ffffff" />
             <path d="M 44 38 A 6 6 0 0 0 56 38 Z" fill="#00e4ff" />
           </g>
         );
@@ -350,70 +397,117 @@ export default function RobotCompanion({ activeTab = "home", items = [] }: Robot
             </clipPath>
           </defs>
 
-          {/* Core premium CSS loops */}
+          {/* Masterclass Premium CSS animation loops with Pixar-like physics (inertia, squash/stretch, secondary lag) */}
           <style>{`
             @keyframes fawFloat {
-              0%, 100% { transform: translateY(0px) rotate(0deg); }
-              50% { transform: translateY(-4px) rotate(0.6deg); }
+              0% {
+                transform: translateY(0px) scale(1) rotate(0deg);
+              }
+              50% {
+                transform: translateY(-4.5px) scale(0.97, 1.03) rotate(0.6deg);
+              }
+              100% {
+                transform: translateY(0px) scale(1) rotate(0deg);
+              }
             }
             @keyframes fawBobHead {
-              0%, 100% { transform: translateY(0px) rotate(0deg); }
-              50% { transform: translateY(-1.5px) rotate(-1deg); }
+              0% {
+                transform: translateY(0px) rotate(0deg);
+              }
+              45% {
+                transform: translateY(-1.8px) rotate(-1.2deg);
+              }
+              100% {
+                transform: translateY(0px) rotate(0deg);
+              }
             }
             @keyframes fawLeftArmSwing {
-              0%, 100% { transform: rotate(0deg); }
-              50% { transform: rotate(-8deg); }
+              0% {
+                transform: rotate(0deg) translateY(0);
+              }
+              50% {
+                transform: rotate(-10deg) translateY(-0.5px);
+              }
+              100% {
+                transform: rotate(0deg) translateY(0);
+              }
             }
             @keyframes fawRightArmSwing {
-              0%, 100% { transform: rotate(0deg); }
-              50% { transform: rotate(8deg); }
+              0% {
+                transform: rotate(0deg) translateY(0);
+              }
+              50% {
+                transform: rotate(10deg) translateY(0.5px);
+              }
+              100% {
+                transform: rotate(0deg) translateY(0);
+              }
             }
             @keyframes waveArmAction {
               0%, 100% { transform: rotate(0deg); }
-              50% { transform: rotate(-38deg); }
+              50% { transform: rotate(-42deg) translateX(-1px); }
             }
             @keyframes glassShimmer {
-              0% { transform: translateX(-55px) translateY(-15px) rotate(-35deg); opacity: 0.1; }
-              35%, 100% { transform: translateX(85px) translateY(25px) rotate(-35deg); opacity: 0.55; }
+              0% { transform: translateX(-60px) translateY(-15px) rotate(-35deg); opacity: 0.1; }
+              40%, 100% { transform: translateX(90px) translateY(25px) rotate(-35deg); opacity: 0.6; }
             }
             @keyframes floatAccessory {
               0%, 100% { transform: translateY(0px) rotate(0deg); }
-              50% { transform: translateY(-1.5px) rotate(3deg); }
+              50% { transform: translateY(-2px) rotate(4deg); }
             }
             @keyframes antennaTilt {
-              0%, 100% { transform: rotate(-2deg); }
-              50% { transform: rotate(3deg); }
+              0% { transform: rotate(-3deg); }
+              50% { transform: rotate(4deg) translateY(0.3px); }
+              100% { transform: rotate(-3deg); }
+            }
+            @keyframes cheekPulse {
+              0%, 100% { opacity: 0.7; transform: scale(1); }
+              50% { opacity: 0.95; transform: scale(1.1); }
+            }
+            @keyframes eyePulse {
+              0%, 100% { filter: drop-shadow(0 0 1px rgba(0,228,255,0.4)); }
+              50% { filter: drop-shadow(0 0 3.5px rgba(0,228,255,0.85)); }
             }
             .anim-premium-float {
-              animation: fawFloat 3s ease-in-out infinite;
+              animation: fawFloat 3.2s cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite;
               transform-origin: bottom center;
             }
             .anim-bob-head {
-              animation: fawBobHead 3s ease-in-out infinite;
+              animation: fawBobHead 3.2s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+              animation-delay: 0.15s; /* Natural secondary action lag */
               transform-origin: 50px 52px;
             }
             .anim-left-arm {
-              animation: fawLeftArmSwing 2.2s ease-in-out infinite alternate;
+              animation: fawLeftArmSwing 2.4s cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite;
               transform-origin: 36px 58px;
             }
             .anim-right-arm {
-              animation: fawRightArmSwing 2.2s ease-in-out infinite alternate-reverse;
+              animation: fawRightArmSwing 2.4s cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite;
+              animation-delay: 0.1s;
               transform-origin: 64px 58px;
             }
             .anim-wave-arm-active {
-              animation: waveArmAction 0.65s ease-in-out infinite;
+              animation: waveArmAction 0.55s ease-in-out infinite;
               transform-origin: 64px 58px;
             }
             .anim-shimmer {
-              animation: glassShimmer 5.5s ease-in-out infinite;
+              animation: glassShimmer 4.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
             }
             .anim-floating-accessory {
-              animation: floatAccessory 2s ease-in-out infinite;
+              animation: floatAccessory 2s cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite;
               transform-origin: center;
             }
             .anim-antenna {
-              animation: antennaTilt 2.2s ease-in-out infinite alternate;
+              animation: antennaTilt 2.5s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+              animation-delay: 0.22s; /* Secondary action delay matching head motion */
               transform-origin: 49px 12px;
+            }
+            .anim-blush-pulse {
+              animation: cheekPulse 2s ease-in-out infinite;
+              transform-origin: center;
+            }
+            .anim-eye-pulse {
+              animation: eyePulse 1.8s ease-in-out infinite;
             }
           `}</style>
 
@@ -543,7 +637,11 @@ export default function RobotCompanion({ activeTab = "home", items = [] }: Robot
               opacity="0.08"
             />
 
-            {/* Glowing cute neon Cyan Face features (Eyes + Smile) */}
+            {/* Adorable rosy glowing blush spots on cheeks (Cute factor +100!) with animated soft pulse */}
+            <circle cx="31" cy="37" r="5" fill="url(#cuteBlush)" className="anim-blush-pulse" style={{ transformOrigin: "31px 37px" }} />
+            <circle cx="69" cy="37" r="5" fill="url(#cuteBlush)" className="anim-blush-pulse" style={{ transformOrigin: "69px 37px" }} />
+
+            {/* Glowing animated eye LED vectors */}
             {renderFace()}
 
             {/* Premium product-level curved reflection highlight on top-edge of visor glass */}

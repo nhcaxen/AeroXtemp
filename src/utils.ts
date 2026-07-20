@@ -1,4 +1,5 @@
 import { GeneratedCard, FakeAddress, TempEmail } from "./types";
+import { ALL_COUNTRIES } from "./countries";
 
 // Luhn Algorithm validation
 export function isValidLuhn(cardNumber: string): boolean {
@@ -273,7 +274,8 @@ export const COUNTRY_DATA: Record<string, {
   ssnFormat: string,
   companyNames: string[],
   jobs: string[],
-  firstNames?: string[],
+  firstNamesMale?: string[],
+  firstNamesFemale?: string[],
   lastNames?: string[]
 }> = {
   US: {
@@ -297,7 +299,8 @@ export const COUNTRY_DATA: Record<string, {
     ssnFormat: "{3}-{2}-{4}",
     companyNames: ["Stark Industries", "Apex Tech Group", "Omni Consumer Products", "CloudGrid Solutions", "Prism Media Corp"],
     jobs: ["Lead Solutions Architect", "Senior Fullstack Engineer", "Product Design Director", "Security Operations Manager", "Financial Analyst"],
-    firstNames: ["James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Emily", "Jacob", "Liam", "Noah"],
+    firstNamesMale: ["James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Jacob", "Liam", "Noah"],
+    firstNamesFemale: ["Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Emily"],
     lastNames: ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Garcia", "Rodriguez", "Wilson", "Martinez", "Anderson", "Taylor", "Thomas", "White"]
   },
   UK: {
@@ -318,7 +321,8 @@ export const COUNTRY_DATA: Record<string, {
     ssnFormat: "{2} {2} {2} {1} [A-D]",
     companyNames: ["Royal Crown Logistics", "Vanguard Financials", "AeroSpace UK", "Britannia Digital Services", "Cotswolds Brewing Co"],
     jobs: ["Investment Broker", "NHS Clinical Registrar", "Chartered Accountant", "SEO Strategy Consultant", "UX Copywriter"],
-    firstNames: ["Oliver", "George", "Harry", "Noah", "Jack", "Leo", "Arthur", "Thomas", "Oscar", "Olivia", "Amelia", "Isla", "Ava", "Mia", "Lily", "Freya", "Emily"],
+    firstNamesMale: ["Oliver", "George", "Harry", "Noah", "Jack", "Leo", "Arthur", "Thomas", "Oscar"],
+    firstNamesFemale: ["Olivia", "Amelia", "Isla", "Ava", "Mia", "Lily", "Freya", "Emily"],
     lastNames: ["Smith", "Jones", "Taylor", "Brown", "Williams", "Wilson", "Davies", "Evans", "Thomas", "Roberts", "Johnson", "Lewis", "Walker", "Green", "Wood"]
   },
   DE: {
@@ -341,7 +345,8 @@ export const COUNTRY_DATA: Record<string, {
     ssnFormat: "{2} {6} [A-Z] {3}",
     companyNames: ["Müller & Söhne GmbH", "Kaiser AutoWerke", "Rheinland Logistik", "Berliner TechLabs", "Hessen Chemie AG"],
     jobs: ["Automotive Engineer", "Senior DevOps Consultant", "Cybersecurity Specialist", "Product Specialist", "Marketingleiter"],
-    firstNames: ["Lukas", "Leon", "Ben", "Jonas", "Maximilian", "Felix", "Noah", "David", "Paul", "Emma", "Mia", "Sofia", "Hannah", "Emilia", "Anna", "Marie", "Luisa", "Klaus", "Dieter", "Wolfgang"],
+    firstNamesMale: ["Lukas", "Leon", "Ben", "Jonas", "Maximilian", "Felix", "Noah", "David", "Paul", "Klaus", "Dieter", "Wolfgang"],
+    firstNamesFemale: ["Emma", "Mia", "Sofia", "Hannah", "Emilia", "Anna", "Marie", "Luisa"],
     lastNames: ["Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein"]
   },
   RU: {
@@ -363,7 +368,8 @@ export const COUNTRY_DATA: Record<string, {
     ssnFormat: "{3}-{3}-{3} {2}",
     companyNames: ["Yandex Solutions", "SberTech", "RosAtom Consulting", "VTB Digital", "Alrosa Mining Group"],
     jobs: ["Lead Game Developer", "Data Scientist", "System Administrator", "Localisation Manager", "Security Officer"],
-    firstNames: ["Dmitry", "Alexander", "Sergey", "Vladimir", "Andrey", "Alexey", "Maxim", "Mikhail", "Ivan", "Ekaterina", "Elena", "Olga", "Tatiana", "Svetlana", "Maria", "Anna", "Irina", "Yulia"],
+    firstNamesMale: ["Dmitry", "Alexander", "Sergey", "Vladimir", "Andrey", "Alexey", "Maxim", "Mikhail", "Ivan"],
+    firstNamesFemale: ["Ekaterina", "Elena", "Olga", "Tatiana", "Svetlana", "Maria", "Anna", "Irina", "Yulia"],
     lastNames: ["Ivanov", "Petrov", "Smirnov", "Kuznetsov", "Popov", "Vasiliev", "Sokolov", "Novikov", "Morozov", "Volkov", "Alekseev", "Semenov", "Egorov", "Pavlov"]
   },
   CA: {
@@ -385,7 +391,8 @@ export const COUNTRY_DATA: Record<string, {
     ssnFormat: "{3}-{3}-{3}",
     companyNames: ["Maple Leaf Tech", "Pacific Timber Co", "Boreal Web Solutions", "Hudson Analytics", "Aurora Media"],
     jobs: ["QA Engineering Lead", "Mobile Developer", "Content Producer", "Growth Marketing Lead", "Cloud Architect"],
-    firstNames: ["Liam", "Noah", "Jackson", "Lucas", "Oliver", "Benjamin", "William", "Olivia", "Emma", "Charlotte", "Amelia", "Aria", "Ava", "Chloe", "Ella", "Sophia", "James", "Justin"],
+    firstNamesMale: ["Liam", "Noah", "Jackson", "Lucas", "Oliver", "Benjamin", "William", "James", "Justin"],
+    firstNamesFemale: ["Olivia", "Emma", "Charlotte", "Amelia", "Aria", "Ava", "Chloe", "Ella", "Sophia"],
     lastNames: ["Smith", "Tremblay", "Li", "Martin", "Roy", "Gagnon", "Wilson", "Macdonald", "Taylor", "Campbell", "Johnston", "Thompson", "Robinson", "Brown", "Bouchard"]
   },
   IN: {
@@ -422,7 +429,8 @@ export const COUNTRY_DATA: Record<string, {
     ssnFormat: "{4} {4} {4}", // Aadhaar Number
     companyNames: ["Infosys Innovations", "Tata Consulting", "Reliance Digital", "Wipro Systems", "Razorpay TechLabs", "HDFC Digital", "Zomato Core Labs", "Paytm Financial Services"],
     jobs: ["Technical Lead", "Software Development Engineer", "Product Manager", "Database Admin", "UI/UX Specialist", "DevOps Engineer", "Data Scientist", "Quality Assurance Engineer"],
-    firstNames: ["Aarav", "Kabir", "Arjun", "Rohan", "Vivaan", "Ishaan", "Aditya", "Rahul", "Amit", "Vikram", "Sanjay", "Priya", "Ananya", "Diya", "Saanvi", "Meera", "Pooja", "Neha", "Sneha", "Rajesh", "Deepak", "Sunil", "Anil", "Dev", "Yash", "Karan", "Riya", "Kriti", "Shreya"],
+    firstNamesMale: ["Aarav", "Kabir", "Arjun", "Rohan", "Vivaan", "Ishaan", "Aditya", "Rahul", "Amit", "Vikram", "Sanjay", "Rajesh", "Deepak", "Sunil", "Anil", "Dev", "Yash", "Karan"],
+    firstNamesFemale: ["Priya", "Ananya", "Diya", "Saanvi", "Meera", "Pooja", "Neha", "Sneha", "Riya", "Kriti", "Shreya"],
     lastNames: ["Sharma", "Patel", "Verma", "Gupta", "Kumar", "Singh", "Rao", "Joshi", "Mehta", "Nair", "Roy", "Chatterjee", "Reddy", "Iyer", "Sen", "Banerjee", "Mishra", "Trivedi", "Choudhury", "Gill", "Mehta", "Malhotra"]
   },
   FR: {
@@ -443,7 +451,8 @@ export const COUNTRY_DATA: Record<string, {
     ssnFormat: "1 {2} {2} {2} {3} {3} {2}", // INSEE code
     companyNames: ["TotalEnergies France", "Capgemini Consulting", "Dassault Tech", "AXA Group Paris", "L'Oréal Digital"],
     jobs: ["Lead DevOps Consultant", "Cyber Defense Engineer", "Finance Manager", "Cloud Architect", "Content Manager"],
-    firstNames: ["Gabriel", "Léo", "Raphaël", "Louis", "Arthur", "Lucas", "Emma", "Jade", "Louise", "Alice", "Chloé", "Lina", "Thomas", "Nicolas", "Alexandre", "Jean", "Pierre", "François"],
+    firstNamesMale: ["Gabriel", "Léo", "Raphaël", "Louis", "Arthur", "Lucas", "Thomas", "Nicolas", "Alexandre", "Jean", "Pierre", "François"],
+    firstNamesFemale: ["Emma", "Jade", "Louise", "Alice", "Chloé", "Lina"],
     lastNames: ["Martin", "Bernard", "Dubois", "Thomas", "Robert", "Richard", "Petit", "Durand", "Leroy", "Moreau", "Simon", "Laurent", "Lefebvre", "Michel", "Garcia"]
   },
   AU: {
@@ -464,7 +473,8 @@ export const COUNTRY_DATA: Record<string, {
     ssnFormat: "{3} {3} {3}", // TFN Tax File Number
     companyNames: ["Atlassian Corp", "Telstra Digital", "BHP Analytics", "Canva Creative Co", "Westpac Banking"],
     jobs: ["Principal SRE", "React Core Engineer", "Strategic Growth Lead", "Visual Designer", "Technical Writer"],
-    firstNames: ["Oliver", "William", "Jack", "Noah", "Thomas", "Leo", "Ethan", "Lucas", "Henry", "Charlotte", "Olivia", "Amelia", "Ava", "Mia", "Isla", "Grace", "Harper", "Chloe"],
+    firstNamesMale: ["Oliver", "William", "Jack", "Noah", "Thomas", "Leo", "Ethan", "Lucas", "Henry"],
+    firstNamesFemale: ["Charlotte", "Olivia", "Amelia", "Ava", "Mia", "Isla", "Grace", "Harper", "Chloe"],
     lastNames: ["Smith", "Jones", "Williams", "Brown", "Wilson", "Taylor", "Morton", "White", "Martin", "Anderson", "Thompson", "Nguyen", "Thomas", "Walker", "Harris"]
   },
   JP: {
@@ -486,7 +496,8 @@ export const COUNTRY_DATA: Record<string, {
     ssnFormat: "{4}-{4}-{4}", // My Number Card
     companyNames: ["Sony TechLabs", "Toyota Autonomous", "Nintendo Creative", "Rakuten Commerce", "SoftBank Robotics"],
     jobs: ["Game Engine Developer", "Embedded Systems Engineer", "AI Researcher", "Web Front-End Lead", "Project Manager"],
-    firstNames: ["Ren", "Haruto", "Yuto", "Sota", "Yuma", "Riku", "Kaito", "Minato", "Himari", "Hina", "Yua", "Sakura", "Ichika", "Akari", "Sara", "Aoi", "Kenji", "Takashi", "Hiroshi"],
+    firstNamesMale: ["Ren", "Haruto", "Yuto", "Sota", "Yuma", "Riku", "Kaito", "Minato", "Kenji", "Takashi", "Hiroshi"],
+    firstNamesFemale: ["Himari", "Hina", "Yua", "Sakura", "Ichika", "Akari", "Sara", "Aoi"],
     lastNames: ["Sato", "Suzuki", "Takahashi", "Tanaka", "Watanabe", "Ito", "Yamamoto", "Nakamura", "Kobayashi", "Kato", "Yoshida", "Yamada", "Sasaki", "Yamaguchi", "Saito"]
   },
   BR: {
@@ -508,7 +519,8 @@ export const COUNTRY_DATA: Record<string, {
     ssnFormat: "{3}.{3}.{3}-{2}", // CPF
     companyNames: ["Petrobras Digital", "Itaú Unibanco Tech", "Embraer Systems", "Nubank Core", "Magazine Luiza Lab"],
     jobs: ["Mobile Architect", "Backend Systems Engineer", "Data Security Specialist", "Scrum Master", "Product Designer"],
-    firstNames: ["Miguel", "Arthur", "Heitor", "Bernardo", "Davi", "Gabriel", "Alice", "Sophia", "Helena", "Valentina", "Laura", "Isabella", "Manuela", "Julia", "Lucas", "Pedro", "João"],
+    firstNamesMale: ["Miguel", "Arthur", "Heitor", "Bernardo", "Davi", "Gabriel", "Lucas", "Pedro", "João"],
+    firstNamesFemale: ["Alice", "Sophia", "Helena", "Valentina", "Laura", "Isabella", "Manuela", "Julia"],
     lastNames: ["Silva", "Santos", "Sousa", "Oliveira", "Pereira", "Lima", "Carvalho", "Ferreira", "Rodrigues", "Almeida", "Costa", "Gomes", "Martins", "Rocha", "Ribeiro"]
   },
   CN: {
@@ -530,7 +542,8 @@ export const COUNTRY_DATA: Record<string, {
     ssnFormat: "{6} {4} {2} {2} {4}", // Resident ID Card
     companyNames: ["Tencent Holdings", "Alibaba Systems", "Xiaomi Corp", "Baidu Brain", "Huawei Technologies"],
     jobs: ["AI Algorithm Engineer", "Hardware Specialist", "WeChat Mini-Program Developer", "Cloud Architect", "Product Specialist"],
-    firstNames: ["Wei", "Hao", "Yu", "Feng", "Lei", "Jin", "Jie", "Bo", "Jun", "Yi", "Ming", "Li", "Fang", "Xiu", "Ying", "Hua", "Lan", "Mei", "Ping", "Ting", "Qian"],
+    firstNamesMale: ["Wei", "Hao", "Yu", "Feng", "Lei", "Jin", "Jie", "Bo", "Jun", "Yi", "Ming"],
+    firstNamesFemale: ["Li", "Fang", "Xiu", "Ying", "Hua", "Lan", "Mei", "Ping", "Ting", "Qian"],
     lastNames: ["Wang", "Li", "Zhang", "Liu", "Chen", "Yang", "Huang", "Zhao", "Wu", "Zhou", "Xu", "Sun", "Ma", "Zhu", "Hu"]
   },
   AE: {
@@ -551,7 +564,8 @@ export const COUNTRY_DATA: Record<string, {
     ssnFormat: "784-{4}-{7}-{1}", // Emirates ID
     companyNames: ["Emaar Properties Digital", "Etisalat Core", "DP World Systems", "Emirates Group Tech", "ADCB Financials"],
     jobs: ["FinTech Solutions Architect", "Cyber Incident Responder", "Infrastructure Engineer", "Service Delivery Lead", "iOS Developer"],
-    firstNames: ["Zayed", "Hamdan", "Mohammed", "Saeed", "Rashid", "Sultan", "Khalifa", "Ahmed", "Fatma", "Maryam", "Shaikha", "Latifa", "Reem", "Sara", "Meera", "Hind", "Aisha"],
+    firstNamesMale: ["Zayed", "Hamdan", "Mohammed", "Saeed", "Rashid", "Sultan", "Khalifa", "Ahmed"],
+    firstNamesFemale: ["Fatma", "Maryam", "Shaikha", "Latifa", "Reem", "Sara", "Meera", "Hind", "Aisha"],
     lastNames: ["Al Maktoum", "Al Nahyan", "Al Qasimi", "Al Shamsi", "Al Blooshi", "Al Hammadi", "Al Mansoori", "Al Ali", "Al Suwaidi", "Al Mazrouei", "Al Ketbi"]
   },
   ES: {
@@ -572,7 +586,8 @@ export const COUNTRY_DATA: Record<string, {
     ssnFormat: "[T/X/Y]-{7}-[A-Z]", // NIE / DNI Number
     companyNames: ["Telefónica Digital", "Inditex Tech", "Banco Santander Labs", "Iberdrola Systems", "Amadeus IT Group"],
     jobs: ["Senior Web Engineer", "Data Analyst", "Security Officer", "Agile Consultant", "Network Administrator"],
-    firstNames: ["Hugo", "Lucas", "Martín", "Daniel", "Alejandro", "Mateo", "Leo", "Álvaro", "Sofia", "Lucia", "Maria", "Martina", "Paula", "Julia", "Valeria", "Alba", "Manuel", "José"],
+    firstNamesMale: ["Hugo", "Lucas", "Martín", "Daniel", "Alejandro", "Mateo", "Leo", "Álvaro", "Manuel", "José"],
+    firstNamesFemale: ["Sofia", "Lucia", "Maria", "Martina", "Paula", "Julia", "Valeria", "Alba"],
     lastNames: ["García", "Rodríguez", "González", "Fernández", "López", "Martínez", "Sánchez", "Pérez", "Gómez", "Martín", "Ruiz", "Hernández", "Díaz", "Alvarez", "Moreno"]
   }
 };
@@ -580,7 +595,50 @@ export const COUNTRY_DATA: Record<string, {
 // Procedural identity builder
 export function generateFakeAddress(countryCode: string): FakeAddress {
   const code = (countryCode || "US").toUpperCase();
-  const data = COUNTRY_DATA[code] || COUNTRY_DATA.US;
+  let data = COUNTRY_DATA[code];
+
+  if (!data) {
+    const registryInfo = ALL_COUNTRIES[code] || { name: code, prefix: "+1", code: code };
+    
+    // Procedural states/regions based on the country name
+    const states = [
+      `${registryInfo.name} Central Region`,
+      `${registryInfo.name} Northern Province`,
+      `${registryInfo.name} Southern Province`,
+      `${registryInfo.name} Eastern State`,
+      `${registryInfo.name} Western State`
+    ];
+
+    // Procedural cities
+    const cities: Record<string, string[]> = {
+      [`${registryInfo.name} Central Region`]: [`New ${registryInfo.name} City`, `${registryInfo.name} Metro`, "Capital Center"],
+      [`${registryInfo.name} Northern Province`]: ["North City", "Northern Port", "Highlands"],
+      [`${registryInfo.name} Southern Province`]: ["South City", "Southern Coast", "Valley View"],
+      [`${registryInfo.name} Eastern State`]: ["East City", "Eastern Bay", "Sunrise Town"],
+      [`${registryInfo.name} Western State`]: ["West City", "Western Ridge", "Sunset Valley"]
+    };
+
+    data = {
+      name: registryInfo.name,
+      code: code,
+      states: states,
+      cities: cities,
+      streets: ["Main Street", "Grand Avenue", "Victoria Road", "Ocean Drive", "Park Street", "Market Road", "High Street"],
+      streetFormats: ["{num} {street}", "{street} Road, Apt {apt}", "{num} {street} St"],
+      postcodes: [
+        Math.floor(Math.random() * 80000 + 10000).toString(),
+        Math.floor(Math.random() * 80000 + 10000).toString()
+      ],
+      phonePrefix: registryInfo.prefix,
+      phoneFormat: "{3}-{3}-{4}",
+      ssnFormat: "{3}-{2}-{4}",
+      companyNames: [`${registryInfo.name} Global Tech`, `${registryInfo.name} National Bank`, "Apex Corp", "Vertex Group"],
+      jobs: ["Solutions Lead", "Systems Analyst", "Operations Manager", "Software Engineer", "Client Specialist"],
+      firstNamesMale: ["James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Jacob", "Liam", "Noah"],
+      firstNamesFemale: ["Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Emily", "Olivia", "Sophia", "Ava"],
+      lastNames: ["Smith", "Jones", "Taylor", "Brown", "Wilson", "Davies", "Evans", "Thomas", "Roberts", "Johnson", "Walker"]
+    };
+  }
   
   // Random state & city
   const state = data.states[Math.floor(Math.random() * data.states.length)];
@@ -602,9 +660,14 @@ export function generateFakeAddress(countryCode: string): FakeAddress {
 
   // Gender & Names
   const gender = Math.random() > 0.5 ? "Male" : "Female";
-  const firstNames = data.firstNames || FIRST_NAMES;
+  const firstNamesMale = data.firstNamesMale || ["John", "Alexander", "James"];
+  const firstNamesFemale = data.firstNamesFemale || ["Sarah", "Emma", "Olivia"];
+  
+  const firstName = gender === "Male"
+    ? firstNamesMale[Math.floor(Math.random() * firstNamesMale.length)]
+    : firstNamesFemale[Math.floor(Math.random() * firstNamesFemale.length)];
+    
   const lastNames = data.lastNames || LAST_NAMES;
-  const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
   const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
 
   // Phone generator
@@ -641,8 +704,8 @@ export function generateFakeAddress(countryCode: string): FakeAddress {
   const username = `${firstName.toLowerCase()}${lastName.toLowerCase()}${Math.floor(Math.random() * 90 + 10)}`;
   const password = Math.random().toString(36).substring(2, 10) + "@" + Math.floor(Math.random() * 900 + 100);
 
-  // Profile avatar using standard UI initials avatar
-  const avatar = `https://api.dicebear.com/7.x/initials/svg?seed=${firstName}%20${lastName}&backgroundColor=7c3aed`;
+  // Profile avatar using beautiful modern vector avataaars style
+  const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${firstName}%20${lastName}`;
 
   const company = data.companyNames[Math.floor(Math.random() * data.companyNames.length)];
   const jobTitle = data.jobs[Math.floor(Math.random() * data.jobs.length)];
@@ -687,16 +750,36 @@ export function getAbsoluteUrl(urlPath: string): string {
     return cleanPath;
   }
 
-  let origin = window.location.origin;
+  const isInvalidOrigin = (org: string | null | undefined): boolean => {
+    if (!org || org === "null" || !org.startsWith("http")) return true;
+    const lower = org.toLowerCase();
+    return (
+      lower.includes("telegram.org") ||
+      lower.includes("telegram.me") ||
+      lower.includes("google.com") ||
+      lower.includes("googleusercontent.com") ||
+      lower.includes("aistudio") ||
+      lower.includes("ai.studio") ||
+      lower.includes("chrome-extension")
+    );
+  };
 
-  // 1. If origin is "null" or invalid, try import.meta.url
-  if (!origin || origin === "null" || !origin.startsWith("http")) {
+  let origin = window.location.origin;
+  if (isInvalidOrigin(origin)) {
+    origin = "";
+  }
+
+  // 1. Try import.meta.url
+  if (!origin) {
     try {
       // @ts-ignore
       const metaUrl = import.meta.url;
       if (metaUrl && metaUrl.startsWith("http")) {
         const parsedMeta = new URL(metaUrl);
-        origin = `${parsedMeta.protocol}//${parsedMeta.host}`;
+        const candidate = `${parsedMeta.protocol}//${parsedMeta.host}`;
+        if (!isInvalidOrigin(candidate)) {
+          origin = candidate;
+        }
       }
     } catch (e) {
       // ignore
@@ -704,13 +787,16 @@ export function getAbsoluteUrl(urlPath: string): string {
   }
 
   // 2. Try document.currentScript
-  if (!origin || origin === "null" || !origin.startsWith("http")) {
+  if (!origin) {
     try {
       if (typeof document !== "undefined" && document.currentScript) {
         const scriptSrc = (document.currentScript as HTMLScriptElement).src;
         if (scriptSrc && scriptSrc.startsWith("http")) {
           const parsedScript = new URL(scriptSrc);
-          origin = `${parsedScript.protocol}//${parsedScript.host}`;
+          const candidate = `${parsedScript.protocol}//${parsedScript.host}`;
+          if (!isInvalidOrigin(candidate)) {
+            origin = candidate;
+          }
         }
       }
     } catch (e) {
@@ -719,7 +805,7 @@ export function getAbsoluteUrl(urlPath: string): string {
   }
 
   // 3. Scan document.scripts for absolute paths
-  if (!origin || origin === "null" || !origin.startsWith("http")) {
+  if (!origin) {
     try {
       if (typeof document !== "undefined") {
         const scripts = document.getElementsByTagName("script");
@@ -727,8 +813,11 @@ export function getAbsoluteUrl(urlPath: string): string {
           const src = scripts[i].src;
           if (src && src.startsWith("http")) {
             const parsedScript = new URL(src);
-            origin = `${parsedScript.protocol}//${parsedScript.host}`;
-            break;
+            const candidate = `${parsedScript.protocol}//${parsedScript.host}`;
+            if (!isInvalidOrigin(candidate)) {
+              origin = candidate;
+              break;
+            }
           }
         }
       }
@@ -738,11 +827,14 @@ export function getAbsoluteUrl(urlPath: string): string {
   }
 
   // 4. Try window.location.href
-  if (!origin || origin === "null" || !origin.startsWith("http")) {
+  if (!origin) {
     try {
       const parsed = new URL(window.location.href);
       if (parsed.protocol.startsWith("http")) {
-        origin = `${parsed.protocol}//${parsed.host}`;
+        const candidate = `${parsed.protocol}//${parsed.host}`;
+        if (!isInvalidOrigin(candidate)) {
+          origin = candidate;
+        }
       }
     } catch (e) {
       // ignore
@@ -750,12 +842,15 @@ export function getAbsoluteUrl(urlPath: string): string {
   }
 
   // 5. Try document.referrer
-  if (!origin || origin === "null" || !origin.startsWith("http")) {
+  if (!origin) {
     try {
       if (typeof document !== "undefined" && document.referrer) {
         const parsedRef = new URL(document.referrer);
         if (parsedRef.protocol.startsWith("http")) {
-          origin = `${parsedRef.protocol}//${parsedRef.host}`;
+          const candidate = `${parsedRef.protocol}//${parsedRef.host}`;
+          if (!isInvalidOrigin(candidate)) {
+            origin = candidate;
+          }
         }
       }
     } catch (e) {
@@ -764,7 +859,7 @@ export function getAbsoluteUrl(urlPath: string): string {
   }
 
   // If we succeeded in resolving a valid origin, prepend it
-  if (origin && origin !== "null" && origin.startsWith("http")) {
+  if (origin && !isInvalidOrigin(origin)) {
     return `${origin}${cleanPath}`;
   }
 

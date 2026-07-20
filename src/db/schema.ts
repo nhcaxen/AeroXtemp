@@ -70,4 +70,101 @@ export const shopPurchases = pgTable("shop_purchases", {
   purchasedAt: timestamp("purchased_at").defaultNow(),
 });
 
+export const sellerApplications = pgTable("seller_applications", {
+  id: serial("id").primaryKey(),
+  telegramId: text("telegram_id").notNull(),
+  username: text("username"),
+  storeName: text("store_name").notNull(),
+  telegramUsername: text("telegram_username").notNull(),
+  storeLogo: text("store_logo"),
+  storeDescription: text("store_description").notNull(),
+  cryptoWallet: text("crypto_wallet").notNull(),
+  productsToSell: text("products_to_sell").notNull(),
+  status: text("status").default("pending"), // "pending" | "approved" | "rejected" | "suspended"
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const sellers = pgTable("sellers", {
+  id: serial("id").primaryKey(),
+  telegramId: text("telegram_id").unique().notNull(),
+  username: text("username"),
+  storeName: text("store_name").notNull(),
+  telegramUsername: text("telegram_username").notNull(),
+  storeLogo: text("store_logo"),
+  storeDescription: text("store_description").notNull(),
+  cryptoWallet: text("crypto_wallet").notNull(),
+  rating: text("rating").default("5.0"),
+  completedOrders: integer("completed_orders").default(0),
+  responseTime: text("response_time").default("~15 mins"),
+  isVerified: integer("is_verified").default(0), // 0 = false, 1 = true
+  status: text("status").default("active"), // "active" | "suspended"
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+export const marketplaceProducts = pgTable("marketplace_products", {
+  id: serial("id").primaryKey(),
+  sellerTelegramId: text("seller_telegram_id").notNull(),
+  category: text("category").notNull(), // "AI" | "VPN" | "OTT" | "Instagram" etc.
+  name: text("name").notNull(),
+  price: integer("price").notNull(),
+  description: text("description"),
+  stockStatus: text("stock_status").default("in_stock"), // "in_stock" | "out_of_stock"
+  logo: text("logo"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const marketplaceOrders = pgTable("marketplace_orders", {
+  id: serial("id").primaryKey(),
+  orderId: text("order_id").unique().notNull(), // AEROX-XXXXX
+  buyerTelegramId: text("buyer_telegram_id").notNull(),
+  buyerUsername: text("buyer_username"),
+  sellerTelegramId: text("seller_telegram_id").notNull(),
+  productId: integer("product_id").notNull(),
+  productName: text("product_name").notNull(),
+  productCategory: text("product_category").notNull(),
+  price: integer("price").notNull(),
+  status: text("status").default("pending"), // "pending" | "seller_accepted" | "waiting_payment" | "payment_verified" | "delivering" | "completed" | "cancelled" | "disputed"
+  dealGroupLink: text("deal_group_link"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const marketplaceRatings = pgTable("marketplace_ratings", {
+  id: serial("id").primaryKey(),
+  orderId: text("order_id").notNull(),
+  buyerTelegramId: text("buyer_telegram_id").notNull(),
+  sellerTelegramId: text("seller_telegram_id").notNull(),
+  rating: integer("rating").notNull(),
+  review: text("review"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const marketplaceFees = pgTable("marketplace_fees", {
+  id: serial("id").primaryKey(),
+  orderId: text("order_id").notNull(),
+  amount: integer("amount").notNull(), // standard price
+  fee: integer("fee").notNull(), // 5% fee
+  sellerReceives: integer("seller_receives").notNull(), // 95%
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const marketplaceNotifications = pgTable("marketplace_notifications", {
+  id: serial("id").primaryKey(),
+  telegramId: text("telegram_id").notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  type: text("type").notNull(), // "order" | "system" | "application"
+  isRead: integer("is_read").default(0), // 0 or 1
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const marketplaceStats = pgTable("marketplace_stats", {
+  id: serial("id").primaryKey(),
+  totalSales: integer("total_sales").default(0),
+  totalVolume: integer("total_volume").default(0),
+  totalCommission: integer("total_commission").default(0),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 
