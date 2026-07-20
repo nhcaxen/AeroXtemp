@@ -704,8 +704,32 @@ export function generateFakeAddress(countryCode: string): FakeAddress {
   const username = `${firstName.toLowerCase()}${lastName.toLowerCase()}${Math.floor(Math.random() * 90 + 10)}`;
   const password = Math.random().toString(36).substring(2, 10) + "@" + Math.floor(Math.random() * 900 + 100);
 
-  // Profile avatar using beautiful modern vector avataaars style
-  const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${firstName}%20${lastName}`;
+  // Profile avatar using beautiful modern vector avataaars style with gender-appropriate top selections, no religious items, and pastel backgrounds
+  const femaleTops = [
+    "bob", "bun", "curly", "curvy", "dreads", "frida", "fro", "froBand",
+    "longButNotTooLong", "miaWallace", "shavedSides", "straight01",
+    "straight02", "straightAndStrand", "bigHair"
+  ];
+
+  const maleTops = [
+    "dreads01", "dreads02", "frizzle", "shaggy", "shaggyMullet",
+    "shortCurly", "shortFlat", "shortRound", "shortWaved", "sides",
+    "theCaesar", "theCaesarAndSidePart"
+  ];
+
+  const selectedTopsArray = gender === "Female" ? femaleTops : maleTops;
+  const selectedTop = selectedTopsArray[Math.floor(Math.random() * selectedTopsArray.length)];
+
+  const eyesList = ["default", "happy", "wink", "hearts", "closed"];
+  const selectedEyes = eyesList[Math.floor(Math.random() * eyesList.length)];
+
+  const mouthList = ["default", "smile", "tongue"];
+  const selectedMouth = mouthList[Math.floor(Math.random() * mouthList.length)];
+
+  const pastelColors = ["b6e3f4", "c0aede", "d1d4f9", "ffd5dc", "ffdfbf", "e2f0d9"];
+  const selectedColor = pastelColors[Math.floor(Math.random() * pastelColors.length)];
+
+  const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(firstName + lastName)}&top=${selectedTop}&facialHairProbability=0&mouth=${selectedMouth}&eyes=${selectedEyes}&backgroundColor=${selectedColor}&backgroundType=solid`;
 
   const company = data.companyNames[Math.floor(Math.random() * data.companyNames.length)];
   const jobTitle = data.jobs[Math.floor(Math.random() * data.jobs.length)];
