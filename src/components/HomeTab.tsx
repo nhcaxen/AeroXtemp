@@ -136,9 +136,9 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
       subtitle: "Instant Premium Shared Accounts",
       description: "Get immediate access to premium shared subscriptions & tools.",
       btnText: "Open Shop",
-      color: "from-[#142d70] via-[#091030] to-[#040612]",
-      borderColor: "border-sky-500/20 hover:border-sky-400/40",
-      textColor: "text-[#5dbcfc]",
+      color: "from-[#2c2c2e] via-[#1c1c1e] to-[#0a0a0a]",
+      borderColor: "border-white/10 hover:border-white/20",
+      textColor: "text-zinc-300",
       graphicType: "shop"
     },
     {
@@ -148,9 +148,9 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
       subtitle: "Instant Free Live Mailbox",
       description: "Receive private validation and OTP confirmation emails live.",
       btnText: "Open Mailbox",
-      color: "from-[#22124a] via-[#0d0a22] to-[#040612]",
-      borderColor: "border-purple-500/20 hover:border-purple-400/40",
-      textColor: "text-purple-400",
+      color: "from-[#242426] via-[#1c1c1e] to-[#0a0a0a]",
+      borderColor: "border-white/10 hover:border-white/20",
+      textColor: "text-zinc-300",
       graphicType: "mail"
     },
     {
@@ -160,9 +160,9 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
       subtitle: "Premium Billing Identity Profiles",
       description: "Deploy highly realistic billing addresses and fake SSN info.",
       btnText: "Generate Now",
-      color: "from-[#062018] via-[#030d0a] to-[#040612]",
-      borderColor: "border-emerald-500/20 hover:border-emerald-400/40",
-      textColor: "text-emerald-400",
+      color: "from-[#1e1e1f] via-[#1c1c1e] to-[#0a0a0a]",
+      borderColor: "border-white/10 hover:border-white/20",
+      textColor: "text-zinc-300",
       graphicType: "identity"
     }
   ];
@@ -180,7 +180,7 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
       {/* SECTION 1: HEADER & GREETING */}
       <div className="flex items-center justify-between mb-4 mt-1 select-none">
         <div className="flex items-center gap-2">
-          <div className="relative w-9 h-9 rounded-full overflow-hidden border border-cyan-500/20 bg-gradient-to-tr from-[#111428] to-[#0c0e18] flex items-center justify-center shrink-0 shadow-md">
+          <div className="relative w-9 h-9 rounded-full overflow-hidden border border-white/10 bg-gradient-to-tr from-[#1c1c1e] to-[#121212] flex items-center justify-center shrink-0 shadow-md">
             {userProfile?.photoUrl ? (
               <img 
                 src={userProfile.photoUrl} 
@@ -189,16 +189,16 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <User className="w-4.5 h-4.5 text-cyan-400" />
+              <User className="w-4.5 h-4.5 text-zinc-300" />
             )}
-            <div className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border border-[#030612]" />
+            <div className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border border-black" />
           </div>
           <div>
             <h2 className="text-[13px] font-extrabold text-white tracking-tight leading-none mb-0.5 truncate max-w-[170px]">
               Hi, {userProfile?.displayName || displayName}
             </h2>
-            <p className="text-[8px] text-[#00e4ff]/70 font-bold uppercase tracking-wider flex items-center gap-0.5">
-              <Zap className="w-2 h-2 text-cyan-400 animate-pulse" />
+            <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-wider flex items-center gap-0.5">
+              <Zap className="w-2 h-2 text-zinc-400 animate-pulse" />
               {userProfile?.role === "owner" ? "Owner Access" : userProfile?.plan === "premium" ? "VIP Premium" : "Free Member"}
             </p>
           </div>
@@ -275,25 +275,25 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
                       initial={{ rotate: 1, scale: 0.94 }}
                       animate={{ rotate: 0, scale: 1 }}
                       transition={{ type: "spring", stiffness: 140, damping: 14 }}
-                      className="w-[95px] h-[58px] bg-[#070a18] border border-sky-500/20 rounded-lg p-2 flex flex-col justify-between shadow-md relative select-none overflow-hidden"
+                      className="w-[95px] h-[58px] bg-[#1c1c1e] border border-white/10 rounded-lg p-2 flex flex-col justify-between shadow-md relative select-none overflow-hidden"
                     >
-                      <div className="absolute -right-4 -bottom-4 w-10 h-10 bg-sky-500/10 rounded-full blur-lg pointer-events-none" />
+                      <div className="absolute -right-4 -bottom-4 w-10 h-10 bg-white/5 rounded-full blur-lg pointer-events-none" />
                       <div className="flex justify-between items-start">
                         {/* Metallic credit chip */}
-                        <div className="w-4 h-3 bg-gradient-to-br from-amber-300 via-amber-400 to-yellow-600 rounded-[2px] relative shadow-sm">
-                          <div className="absolute inset-x-0.5 top-0.5 bottom-0.5 border-y border-amber-950/20" />
-                          <div className="absolute inset-y-0.5 left-0.5 right-0.5 border-x border-amber-950/20" />
+                        <div className="w-4 h-3 bg-gradient-to-br from-zinc-300 via-zinc-400 to-zinc-600 rounded-[2px] relative shadow-sm">
+                          <div className="absolute inset-x-0.5 top-0.5 bottom-0.5 border-y border-zinc-950/20" />
+                          <div className="absolute inset-y-0.5 left-0.5 right-0.5 border-x border-zinc-950/20" />
                         </div>
                         {/* Compact Wi-fi indicator */}
                         <div className="flex gap-[1px] items-end h-2">
-                          <div className="w-[1px] h-1 bg-[#5dbcfc] rounded-full" />
-                          <div className="w-[1px] h-1.5 bg-[#5dbcfc] rounded-full" />
-                          <div className="w-[1px] h-2 bg-[#5dbcfc] rounded-full" />
+                          <div className="w-[1px] h-1 bg-white rounded-full" />
+                          <div className="w-[1px] h-1.5 bg-white rounded-full" />
+                          <div className="w-[1px] h-2 bg-white rounded-full" />
                         </div>
                       </div>
                       <div>
                         <span className="text-[6px] font-bold text-slate-500 tracking-wider block">AeroX Pro</span>
-                        <div className="text-[7.5px] font-mono text-[#5dbcfc] font-bold mt-0.5 tracking-wider">
+                        <div className="text-[7.5px] font-mono text-white font-bold mt-0.5 tracking-wider">
                           •••• •••• 5092
                         </div>
                       </div>
@@ -305,21 +305,21 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
                       initial={{ rotate: -1, scale: 0.94 }}
                       animate={{ rotate: 0, scale: 1 }}
                       transition={{ type: "spring", stiffness: 140, damping: 14 }}
-                      className="w-[95px] h-[58px] bg-[#09071b] border border-purple-500/20 rounded-lg p-2 flex flex-col justify-between shadow-md relative select-none overflow-hidden"
+                      className="w-[95px] h-[58px] bg-[#1c1c1e] border border-white/10 rounded-lg p-2 flex flex-col justify-between shadow-md relative select-none overflow-hidden"
                     >
-                      <div className="absolute -right-4 -bottom-4 w-10 h-10 bg-purple-500/10 rounded-full blur-lg pointer-events-none" />
+                      <div className="absolute -right-4 -bottom-4 w-10 h-10 bg-white/5 rounded-full blur-lg pointer-events-none" />
                       <div className="flex justify-between items-center">
-                        <div className="w-5.5 h-5.5 rounded bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/15">
+                        <div className="w-5.5 h-5.5 rounded bg-white/5 flex items-center justify-center text-white border border-white/10">
                           <Mail className="w-3 h-3" />
                         </div>
-                        <div className="flex items-center gap-0.5 bg-purple-500/15 border border-purple-500/25 px-1 py-0.5 rounded-full">
-                          <span className="w-1 h-1 bg-purple-400 rounded-full animate-pulse" />
-                          <span className="text-[4.5px] font-black uppercase text-purple-300 tracking-wider">LIVE</span>
+                        <div className="flex items-center gap-0.5 bg-white/10 border border-white/20 px-1 py-0.5 rounded-full">
+                          <span className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" />
+                          <span className="text-[4.5px] font-black uppercase text-zinc-300 tracking-wider">LIVE</span>
                         </div>
                       </div>
                       <div>
                         <span className="text-[6px] font-bold text-slate-500 tracking-wider block">Inbox Feed</span>
-                        <div className="text-[7.5px] text-purple-300 font-semibold truncate">
+                        <div className="text-[7.5px] text-zinc-300 font-semibold truncate">
                           support@aerox.vip
                         </div>
                       </div>
@@ -331,22 +331,22 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
                       initial={{ rotate: 1, scale: 0.94 }}
                       animate={{ rotate: 0, scale: 1 }}
                       transition={{ type: "spring", stiffness: 140, damping: 14 }}
-                      className="w-[95px] h-[58px] bg-[#04100d] border border-emerald-500/20 rounded-lg p-2 flex flex-col justify-between shadow-md relative select-none overflow-hidden"
+                      className="w-[95px] h-[58px] bg-[#1c1c1e] border border-white/10 rounded-lg p-2 flex flex-col justify-between shadow-md relative select-none overflow-hidden"
                     >
-                      <div className="absolute -right-4 -bottom-4 w-10 h-10 bg-emerald-500/10 rounded-full blur-lg pointer-events-none" />
+                      <div className="absolute -right-4 -bottom-4 w-10 h-10 bg-white/5 rounded-full blur-lg pointer-events-none" />
                       <div className="flex items-center gap-1.5">
-                        <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/15 shrink-0">
+                        <div className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center text-white border border-white/10 shrink-0">
                           <User className="w-3 h-3" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="h-1 bg-emerald-500/20 rounded w-8 animate-pulse" />
-                          <div className="h-0.5 bg-emerald-500/10 rounded w-5 mt-0.5" />
+                          <div className="h-1 bg-white/20 rounded w-8 animate-pulse" />
+                          <div className="h-0.5 bg-white/10 rounded w-5 mt-0.5" />
                         </div>
                       </div>
-                      <div className="border-t border-emerald-500/15 pt-1">
+                      <div className="border-t border-white/10 pt-1">
                         <div className="flex justify-between items-center text-[5.5px] font-mono text-slate-400">
                           <span>SSN SECURE</span>
-                          <span className="text-emerald-400 font-bold">100%</span>
+                          <span className="text-white font-bold">100%</span>
                         </div>
                       </div>
                     </motion.div>
@@ -366,7 +366,7 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
                   onClick={() => handleIndicatorClick(idx)}
                   className={`transition-all duration-300 cursor-pointer ${
                     isActive 
-                      ? "w-6 h-1 bg-[#00e4ff] rounded-full shadow-[0_0_8px_rgba(0,228,255,0.7)]" 
+                      ? "w-6 h-1 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.7)]" 
                       : "w-1.5 h-1.5 bg-slate-600 hover:bg-slate-500 rounded-full"
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}

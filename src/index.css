@@ -6,29 +6,29 @@
   --font-display: -apple-system, "SF Pro Display", "SF Pro Text", "Inter", "Manrope", sans-serif;
   --font-mono: "Fira Code", monospace;
 
-  /* Premium Apple-inspired Dark UI Theme Palette */
-  --color-cyber-purple: #00b4ff; /* Map to Electric Blue (#00b4ff) as Accent */
-  --color-cosmic-lilac: #00e4ff; /* Map to Cyan/Lilac Glow as Secondary Accent */
-  --color-void-black: #02040c; /* Background: #02040c */
-  --color-dark-surface: rgba(7, 10, 24, 0.85); /* Surface: #070a18 (translucent) */
-  --color-dark-card: rgba(11, 16, 36, 0.9); /* Card: #0b1024 (translucent) */
+  /* Premium Apple-inspired Monochrome Dark UI Theme Palette */
+  --color-cyber-purple: #ffffff; /* Map to Premium White */
+  --color-cosmic-lilac: #f4f4f5; /* Map to Premium Light Gray */
+  --color-void-black: #000000; /* Pure Apple pitch black */
+  --color-dark-surface: rgba(18, 18, 18, 0.8); /* iOS deep gray translucent */
+  --color-dark-card: rgba(28, 28, 30, 0.9); /* iOS secondary background */
   --color-frost-white: #ffffff; /* Text Primary: White */
-  --color-ash-gray: #9ea7c2; /* Text Secondary: #9EA7C2 */
-  --color-hot-pink: #7b5cff; /* Secondary Accent: Purple (#7B5CFF) */
+  --color-ash-gray: #8e8e93; /* Apple systemGray (#8E8E93) */
+  --color-hot-pink: #d1d1d6; /* Apple systemGray4 (#D1D1D6) */
 }
 
 /* Base Body and Background Ambient glow setup */
 html, body, #root {
-  background-color: #02040c !important;
+  background-color: #000000 !important;
   color: #ffffff;
   font-family: var(--font-sans);
   margin: 0;
   padding: 0;
   overflow-x: hidden;
   background-image: 
-    radial-gradient(circle at 50% -10%, rgba(0, 180, 255, 0.06), transparent 60%),
-    radial-gradient(circle at 5% 100%, rgba(0, 228, 255, 0.02), transparent 50%),
-    radial-gradient(circle at 95% 50%, rgba(0, 180, 255, 0.02), transparent 45%);
+    radial-gradient(circle at 50% -10%, rgba(255, 255, 255, 0.03), transparent 60%),
+    radial-gradient(circle at 5% 100%, rgba(255, 255, 255, 0.01), transparent 50%),
+    radial-gradient(circle at 95% 50%, rgba(255, 255, 255, 0.01), transparent 45%);
   background-attachment: fixed;
   transition: background 0.5s ease;
 }
@@ -41,7 +41,7 @@ body::before {
   left: 15%;
   width: 70vw;
   height: 70vw;
-  background: radial-gradient(circle, rgba(79, 125, 255, 0.03), transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.015), transparent 70%);
   z-index: -1;
   pointer-events: none;
   animation: float-slow 35s ease-in-out infinite alternate;
@@ -54,7 +54,7 @@ body::after {
   right: 15%;
   width: 60vw;
   height: 60vw;
-  background: radial-gradient(circle, rgba(123, 92, 255, 0.03), transparent 75%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.01), transparent 75%);
   z-index: -1;
   pointer-events: none;
   animation: float-slow-reverse 45s ease-in-out infinite alternate;
@@ -64,30 +64,24 @@ body::after {
 @keyframes float-slow {
   0% { 
     transform: translate3d(0, 0, 0) scale(1); 
-    filter: hue-rotate(0deg);
   }
   50% {
     transform: translate3d(80px, 60px, 0) scale(1.15);
-    filter: hue-rotate(15deg);
   }
   100% { 
     transform: translate3d(-30px, -40px, 0) scale(0.95); 
-    filter: hue-rotate(-10deg);
   }
 }
 
 @keyframes float-slow-reverse {
   0% { 
     transform: translate3d(0, 0, 0) scale(1); 
-    filter: hue-rotate(0deg);
   }
   50% { 
     transform: translate3d(-70px, -50px, 0) scale(0.9); 
-    filter: hue-rotate(-20deg);
   }
   100% {
     transform: translate3d(40px, 80px, 0) scale(1.1);
-    filter: hue-rotate(10deg);
   }
 }
 
@@ -97,22 +91,22 @@ body::after {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #07090f;
+  background: #000000;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(79, 125, 255, 0.25) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #4f7dff !important;
+  background: rgba(255, 255, 255, 0.3) !important;
 }
 
 /* Animated gradient background mesh override */
 .purple-mesh {
   background: 
-    radial-gradient(circle at 50% -20%, rgba(79, 125, 255, 0.08), transparent 70%),
-    radial-gradient(circle at 10% 80%, rgba(123, 92, 255, 0.04), transparent 50%),
-    radial-gradient(circle at 90% 40%, rgba(79, 125, 255, 0.03), transparent 40%) !important;
+    radial-gradient(circle at 50% -20%, rgba(255, 255, 255, 0.03), transparent 70%),
+    radial-gradient(circle at 10% 80%, rgba(255, 255, 255, 0.01), transparent 50%),
+    radial-gradient(circle at 90% 40%, rgba(255, 255, 255, 0.01), transparent 40%) !important;
 }
 
 /* Premium Typography Rules */
@@ -162,14 +156,14 @@ p, .text-sm, .text-xs:not(.uppercase) {
    PREMIUM GLASSMORPHISM & CARD ANIMATIONS
    ═════════════════════════════════════════════════════════════ */
 .bg-dark-surface, .bg-dark-card {
-  background: rgba(20, 26, 40, 0.72) !important; /* Translucent Card: #141A28 style */
+  background: rgba(28, 28, 30, 0.72) !important; /* Translucent iOS grey card style */
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
-  border-radius: 24px !important; /* iOS rounded 22-28px */
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 20px !important; /* iOS rounded 20px */
   box-shadow: 
-    inset 0 1px 1px rgba(255, 255, 255, 0.03),
-    0 8px 24px rgba(0, 0, 0, 0.4) !important;
+    inset 0 1px 1px rgba(255, 255, 255, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.5) !important;
   transition: 
     border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
     box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
@@ -178,10 +172,10 @@ p, .text-sm, .text-xs:not(.uppercase) {
 
 /* Card hover and micro touch interaction */
 .bg-dark-surface:hover, .bg-dark-card:hover {
-  border-color: rgba(79, 125, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
   box-shadow: 
-    inset 0 1px 1px rgba(255, 255, 255, 0.05),
-    0 12px 28px rgba(0, 0, 0, 0.45) !important;
+    inset 0 1px 1px rgba(255, 255, 255, 0.08),
+    0 12px 28px rgba(0, 0, 0, 0.6) !important;
 }
 
 /* Scale dynamically on press/touch state to feel ultra physical and fluid */
@@ -202,15 +196,16 @@ button:active {
   transform: scale3d(0.96, 0.96, 1) !important;
 }
 
-/* Specialized gradient buttons with soft cyan/indigo glows */
+/* Specialized gradient buttons with soft monochrome shades (Apple-style) */
 button.bg-gradient-to-r,
 #trigger-upgrade-modal-btn,
 #check-proxy-btn,
 .bg-cyber-purple {
-  background: linear-gradient(135deg, #0084ff 0%, #00e4ff 100%) !important;
-  box-shadow: 0 2px 8px rgba(0, 180, 255, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+  background: linear-gradient(135deg, #2c2c2e 0%, #1c1c1e 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
   cursor: pointer !important;
 }
 
@@ -218,29 +213,32 @@ button.bg-gradient-to-r:hover,
 #trigger-upgrade-modal-btn:hover,
 #check-proxy-btn:hover {
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(0, 228, 255, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
-  border-color: rgba(0, 228, 255, 0.2) !important;
+  background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 button.bg-gradient-to-r:active,
 #trigger-upgrade-modal-btn:active,
 #check-proxy-btn:active {
   transform: scale3d(0.96, 0.96, 1) !important;
-  box-shadow: 0 2px 6px rgba(0, 180, 255, 0.15) !important;
+  background: linear-gradient(135deg, #1c1c1e 0%, #111112 100%) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6) !important;
 }
 
 /* ═════════════════════════════════════════════════════════════
    INPUTS & FOCUS ANIMATIONS
    ═════════════════════════════════════════════════════════════ */
 input, select, textarea {
-  background: rgba(7, 10, 24, 0.75) !important;
-  border: 1px solid rgba(0, 180, 255, 0.15) !important;
+  background: rgba(28, 28, 30, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  color: #ffffff !important;
 }
 
 input:focus, select:focus, textarea:focus {
-  border-color: #00e4ff !important;
-  box-shadow: 0 0 0 1px rgba(0, 228, 255, 0.2), 0 4px 8px rgba(0, 228, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(0, 0, 0, 0.3) !important;
   outline: none !important;
   transform: scale3d(1.005, 1.005, 1) !important;
 }
@@ -249,15 +247,15 @@ input:focus, select:focus, textarea:focus {
    ICONS & INTERACTION BREATHING EFFECT
    ═════════════════════════════════════════════════════════════ */
 .text-cyber-purple {
-  color: #00e4ff !important; /* Electric Blue highlight */
-  text-shadow: 0 0 1px rgba(0, 228, 255, 0.1) !important;
+  color: #ffffff !important; /* Premium White highlight */
+  text-shadow: 0 0 1px rgba(255, 255, 255, 0.1) !important;
   transition: all 0.3s ease;
 }
 
 /* Active navigation top bar indicator entry scale */
 span.absolute.inset-x-4.top-0 {
-  background-color: #00e4ff !important;
-  box-shadow: 0 0 2px rgba(0, 228, 255, 0.3) !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.3) !important;
   animation: nav-indicator-glow 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -280,14 +278,14 @@ span.absolute.inset-x-4.top-0 {
     transform: scale3d(1, 1, 1);
   }
   50% {
-    filter: drop-shadow(0 0 1px rgba(0, 228, 255, 0.15));
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.15));
     opacity: 1;
     transform: scale3d(1.01, 1.01, 1);
   }
 }
 
 .text-cyber-purple svg.lucide {
-  color: #4f7dff !important;
+  color: #e5e5ea !important;
   animation: breathe-glow 3s ease-in-out infinite !important;
 }
 

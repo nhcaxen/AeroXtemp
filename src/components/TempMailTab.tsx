@@ -636,7 +636,7 @@ export default function TempMailTab() {
           }}
           className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${
             mode === "active"
-              ? "bg-gradient-to-r from-[#7D2AE8] to-[#00C4CC] text-white shadow-md font-extrabold"
+              ? "bg-white text-black shadow-md font-extrabold"
               : "text-neutral-400 hover:text-neutral-200"
           }`}
         >
@@ -650,7 +650,7 @@ export default function TempMailTab() {
           }}
           className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${
             mode === "recovery"
-              ? "bg-gradient-to-r from-[#7D2AE8] to-[#00C4CC] text-white shadow-md font-extrabold"
+              ? "bg-white text-black shadow-md font-extrabold"
               : "text-neutral-400 hover:text-neutral-200"
           }`}
         >
@@ -695,7 +695,7 @@ export default function TempMailTab() {
             <div className="bg-void-black p-3.5 rounded-xl border border-white/[0.03] flex items-center justify-between gap-2">
               {loadingAddress ? (
                 <div className="h-6 flex items-center gap-1.5">
-                  <div className="w-3.5 h-3.5 border-2 border-[#7D2AE8]/20 border-t-[#7D2AE8] rounded-full animate-spin" />
+                  <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                   <span className="text-xs font-semibold text-neutral-500 italic">Provisioning AEROX Secure Mailbox...</span>
                 </div>
               ) : (
@@ -723,14 +723,14 @@ export default function TempMailTab() {
                 disabled={refreshing || loadingAddress || !emailAddress}
                 className="py-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] active:scale-95 text-xs font-bold text-white border border-white/[0.05] transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-[#9F54FF]" : ""}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-zinc-400" : ""}`} />
                 <span>{refreshing ? "Refreshing..." : "Refresh Inbox"}</span>
               </button>
 
               <button
                 onClick={handleDeleteMailbox}
                 disabled={loadingAddress}
-                className="py-2.5 rounded-xl bg-gradient-to-r from-[#7D2AE8] to-[#00C4CC] hover:brightness-110 active:scale-95 text-xs font-black uppercase text-white shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
+                className="py-2.5 rounded-xl bg-white hover:bg-zinc-200 active:scale-95 text-xs font-black uppercase text-black shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
                 title="Delete current mailbox and register a brand new one"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -750,7 +750,7 @@ export default function TempMailTab() {
                   <button
                     onClick={handleSaveCurrentMailbox}
                     disabled={savingMailbox}
-                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-90 active:scale-95 text-xs font-black uppercase text-white shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
+                    className="w-full py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 active:scale-95 text-xs font-black uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
                   >
                     <span>💾 Save to Recovery {userProfile?.plan === "owner" ? "(Free)" : "(Costs 5 Credits)"}</span>
                   </button>
@@ -828,14 +828,14 @@ export default function TempMailTab() {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between mb-1 px-1">
                   <div className="flex items-center gap-1.5">
-                    <Inbox className="w-4 h-4 text-[#7D2AE8]" />
+                    <Inbox className="w-4 h-4 text-zinc-400" />
                     <h3 className="text-xs font-extrabold text-frost-white uppercase tracking-wider font-display">
                       Inbox List ({messages.length})
                     </h3>
                   </div>
 
                   {messages.some(m => !m.seen) && (
-                    <span className="text-[9px] text-[#FF499E] font-bold bg-[#FF499E]/10 px-2 py-0.5 rounded-full animate-pulse border border-[#FF499E]/20">
+                    <span className="text-[9px] text-white font-bold bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
                       {messages.filter(m => !m.seen).length} UNREAD
                     </span>
                   )}
@@ -843,12 +843,12 @@ export default function TempMailTab() {
 
                 {loadingContent ? (
                   <div className="py-12 flex flex-col items-center justify-center gap-2.5">
-                    <div className="w-7 h-7 border-2 border-[#7D2AE8]/20 border-t-[#7D2AE8] rounded-full animate-spin" />
+                    <div className="w-7 h-7 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                     <span className="text-[10px] text-neutral-400 font-extrabold animate-pulse uppercase">Fetching message body...</span>
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="bg-void-black/80 py-12 px-6 rounded-xl border border-white/[0.02] text-center select-none">
-                    <div className="w-10 h-10 rounded-full bg-[#7D2AE8]/5 flex items-center justify-center text-[#7D2AE8]/40 mx-auto mb-3 border border-[#7D2AE8]/10">
+                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 mx-auto mb-3 border border-white/10">
                       <Mail className="w-5 h-5 animate-pulse" />
                     </div>
                     <span className="text-xs font-bold text-neutral-400 block uppercase tracking-wider">
@@ -867,10 +867,10 @@ export default function TempMailTab() {
                         className={`p-3 rounded-xl border transition-all flex items-center justify-between cursor-pointer text-left select-none relative overflow-hidden group ${
                           msg.seen 
                             ? "bg-void-black border-white/[0.02] opacity-80" 
-                            : "bg-[#7D2AE8]/[0.02] border-[#7D2AE8]/20 hover:border-[#7D2AE8]/40"
+                            : "bg-white/[0.01] border-white/10 hover:border-white/20"
                         }`}
                       >
-                        <div className="absolute top-0 left-0 w-1 h-full bg-[#7D2AE8]/50 rounded-r opacity-0 group-hover:opacity-100 transition-all" />
+                        <div className="absolute top-0 left-0 w-1 h-full bg-white/40 rounded-r opacity-0 group-hover:opacity-100 transition-all" />
                         
                         <div className="flex flex-col gap-1 max-w-[80%]">
                           <div className="flex items-center gap-2">
@@ -878,10 +878,10 @@ export default function TempMailTab() {
                               FROM: {msg.from.name || msg.from.address}
                             </span>
                             {!msg.seen && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#7D2AE8] animate-pulse shadow-[0_0_8px_rgba(125,42,232,0.8)]" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
                             )}
                           </div>
-                          <span className={`text-xs font-bold transition-all truncate ${msg.seen ? "text-white" : "text-[#9F54FF]"}`}>
+                          <span className={`text-xs font-bold transition-all truncate ${msg.seen ? "text-white" : "text-zinc-200 font-extrabold"}`}>
                             {msg.subject || "(No Subject)"}
                           </span>
                           <span className="text-[8px] text-neutral-500 font-bold uppercase block mt-0.5">
@@ -889,7 +889,7 @@ export default function TempMailTab() {
                           </span>
                         </div>
 
-                        <div className="shrink-0 p-1.5 rounded-lg bg-[#7D2AE8]/10 text-[#a855f7] hover:text-white transition-colors">
+                        <div className="shrink-0 p-1.5 rounded-lg bg-white/5 text-zinc-300 hover:text-white transition-colors">
                           <Eye className="w-4 h-4" />
                         </div>
                       </div>
@@ -1028,14 +1028,14 @@ export default function TempMailTab() {
 
                   <div className="flex items-center justify-between mb-1 px-1 mt-2">
                     <div className="flex items-center gap-1.5">
-                      <Inbox className="w-4 h-4 text-[#7D2AE8]" />
+                      <Inbox className="w-4 h-4 text-zinc-400" />
                       <h3 className="text-xs font-extrabold text-frost-white uppercase tracking-wider font-display">
                         Inbox List ({recoveredMessages.length})
                       </h3>
                     </div>
 
                     {recoveredMessages.some(m => !m.seen) && (
-                      <span className="text-[9px] text-[#FF499E] font-bold bg-[#FF499E]/10 px-2 py-0.5 rounded-full animate-pulse border border-[#FF499E]/20">
+                      <span className="text-[9px] text-white font-bold bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
                         {recoveredMessages.filter(m => !m.seen).length} UNREAD
                       </span>
                     )}
@@ -1044,12 +1044,12 @@ export default function TempMailTab() {
                   {loadingRecoveredMessages ? (
                     /* SKELETON LOADER FOR MESSAGES */
                     <div className="py-12 flex flex-col items-center justify-center gap-2.5">
-                      <div className="w-7 h-7 border-2 border-[#7D2AE8]/20 border-t-[#7D2AE8] rounded-full animate-spin" />
+                      <div className="w-7 h-7 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                       <span className="text-[10px] text-neutral-400 font-extrabold animate-pulse uppercase">Fetching messages...</span>
                     </div>
                   ) : recoveredMessages.length === 0 ? (
                     <div className="bg-void-black/80 py-12 px-6 rounded-xl border border-white/[0.02] text-center select-none">
-                      <div className="w-10 h-10 rounded-full bg-[#7D2AE8]/5 flex items-center justify-center text-[#7D2AE8]/40 mx-auto mb-3 border border-[#7D2AE8]/10">
+                      <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 mx-auto mb-3 border border-white/10">
                         <Mail className="w-5 h-5" />
                       </div>
                       <span className="text-xs font-bold text-neutral-400 block uppercase tracking-wider">
@@ -1068,10 +1068,10 @@ export default function TempMailTab() {
                           className={`p-3 rounded-xl border transition-all flex items-center justify-between cursor-pointer text-left select-none relative overflow-hidden group ${
                             msg.seen 
                               ? "bg-void-black border-white/[0.02] opacity-80" 
-                              : "bg-[#7D2AE8]/[0.02] border-[#7D2AE8]/20 hover:border-[#7D2AE8]/40"
+                              : "bg-white/[0.01] border-white/10 hover:border-white/20"
                           }`}
                         >
-                          <div className="absolute top-0 left-0 w-1 h-full bg-[#7D2AE8]/50 rounded-r opacity-0 group-hover:opacity-100 transition-all" />
+                          <div className="absolute top-0 left-0 w-1 h-full bg-white/40 rounded-r opacity-0 group-hover:opacity-100 transition-all" />
                           
                           <div className="flex flex-col gap-1 max-w-[80%]">
                             <div className="flex items-center gap-2">
@@ -1079,10 +1079,10 @@ export default function TempMailTab() {
                                 FROM: {msg.from.name || msg.from.address}
                               </span>
                               {!msg.seen && (
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#7D2AE8] animate-pulse shadow-[0_0_8px_rgba(125,42,232,0.8)]" />
+                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
                               )}
                             </div>
-                            <span className={`text-xs font-bold transition-all truncate ${msg.seen ? "text-white" : "text-[#9F54FF]"}`}>
+                            <span className={`text-xs font-bold transition-all truncate ${msg.seen ? "text-white" : "text-zinc-200 font-extrabold"}`}>
                               {msg.subject || "(No Subject)"}
                             </span>
                             <span className="text-[8px] text-neutral-500 font-bold uppercase block mt-0.5">
@@ -1090,7 +1090,7 @@ export default function TempMailTab() {
                             </span>
                           </div>
 
-                          <div className="shrink-0 p-1.5 rounded-lg bg-[#7D2AE8]/10 text-[#a855f7] hover:text-white transition-colors">
+                          <div className="shrink-0 p-1.5 rounded-lg bg-white/5 text-zinc-300 hover:text-white transition-colors">
                             <Eye className="w-4 h-4" />
                           </div>
                         </div>
@@ -1112,13 +1112,13 @@ export default function TempMailTab() {
                     placeholder="Search email..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-void-black border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-[#7D2AE8] transition-all"
+                    className="w-full bg-void-black border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-white/30 transition-all"
                   />
                 </div>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as "newest" | "oldest")}
-                  className="bg-void-black border border-white/10 rounded-xl px-3 py-2 text-xs text-white cursor-pointer focus:outline-none focus:border-[#7D2AE8] transition-all"
+                  className="bg-void-black border border-white/10 rounded-xl px-3 py-2 text-xs text-white cursor-pointer focus:outline-none focus:border-white/30 transition-all"
                 >
                   <option value="newest">Newest</option>
                   <option value="oldest">Oldest</option>
@@ -1129,13 +1129,13 @@ export default function TempMailTab() {
               {loadingMailboxes ? (
                 /* SKELETON LOADER */
                 <div className="py-12 flex flex-col items-center justify-center gap-2.5">
-                  <div className="w-7 h-7 border-2 border-[#7D2AE8]/20 border-t-[#7D2AE8] rounded-full animate-spin" />
+                  <div className="w-7 h-7 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                   <span className="text-[10px] text-neutral-400 font-extrabold animate-pulse uppercase">Querying active list...</span>
                 </div>
               ) : mailboxes.length === 0 ? (
                 /* EMPTY STATE */
                 <div className="bg-dark-surface py-12 px-6 rounded-2xl border border-white/[0.04] text-center select-none flex flex-col items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-[#7D2AE8]/5 flex items-center justify-center text-[#7D2AE8]/40 border border-[#7D2AE8]/10">
+                  <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 border border-white/10">
                     <Mail className="w-6 h-6 animate-pulse" />
                   </div>
                   <div>
@@ -1148,7 +1148,7 @@ export default function TempMailTab() {
                   </div>
                   <button
                     onClick={() => setMode("active")}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#7D2AE8] to-[#00C4CC] text-white text-xs font-bold uppercase cursor-pointer hover:scale-105 active:scale-95 transition-all"
+                    className="px-4 py-2 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-bold uppercase cursor-pointer hover:scale-105 active:scale-95 transition-all"
                   >
                     Create Temp Mail
                   </button>
@@ -1230,7 +1230,7 @@ export default function TempMailTab() {
                             <button
                               onClick={() => handleRecoverMailbox(box)}
                               disabled={box.status === "expired" || activatingBoxId !== null}
-                              className="py-2 rounded-lg bg-[#7D2AE8] hover:bg-opacity-90 active:scale-95 text-[10px] font-extrabold uppercase text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+                              className="py-2 rounded-lg bg-white hover:bg-zinc-200 active:scale-95 text-[10px] font-extrabold uppercase text-black transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1"
                             >
                               {activatingBoxId === box.id ? (
                                 <>
@@ -1286,7 +1286,7 @@ export default function TempMailTab() {
       {/* ---------------------------------------------------- */}
       {showActivationSuccess && activatedBox && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-void-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-sm bg-dark-surface border border-[#7D2AE8]/20 p-6 rounded-3xl shadow-2xl text-center flex flex-col items-center gap-4 relative animate-scale-up">
+          <div className="w-full max-w-sm bg-dark-surface border border-white/10 p-6 rounded-3xl shadow-2xl text-center flex flex-col items-center gap-4 relative animate-scale-up">
             {/* Close button */}
             <button
               onClick={() => setShowActivationSuccess(false)}
@@ -1316,7 +1316,7 @@ export default function TempMailTab() {
             {/* Core Action Button */}
             <button
               onClick={() => handleOpenRecoveredInbox(activatedBox)}
-              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#7D2AE8] to-[#00C4CC] text-white text-xs font-black uppercase tracking-wider cursor-pointer hover:brightness-110 active:scale-95 transition-all mt-2"
+              className="w-full py-3 px-4 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-black uppercase tracking-wider cursor-pointer active:scale-95 transition-all mt-2"
             >
               Open Inbox
             </button>

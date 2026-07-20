@@ -297,9 +297,9 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
       price: "$1.99",
       duration: "7 Days",
       features: ["300 Credits Total Pool", "Temporary Mailbox Generation", "VIP Priority Recovery", "Premium Badge Indicator"],
-      color: "from-blue-600/20 to-cyan-500/10",
-      borderColor: "border-cyan-500/20",
-      accentColor: "text-cyan-400"
+      color: "from-zinc-900 to-zinc-950",
+      borderColor: "border-white/[0.04]",
+      accentColor: "text-zinc-400"
     },
     {
       id: "prime",
@@ -308,9 +308,9 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
       price: "$3.99",
       duration: "14 Days",
       features: ["600 Credits Total Pool", "Priority High-Speed Mailbox", "Unlimited Thread Processing", "Premium Badge Indicator"],
-      color: "from-purple-600/20 to-pink-500/10",
-      borderColor: "border-purple-500/30",
-      accentColor: "text-purple-400",
+      color: "from-zinc-800 to-zinc-900",
+      borderColor: "border-white/[0.08]",
+      accentColor: "text-white",
       popular: true
     },
     {
@@ -320,9 +320,9 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
       price: "$7.99",
       duration: "30 Days",
       features: ["1200 Credits Total Pool", "Ultimate Concurrent Spawning", "VIP Support & Free Recovery", "Premium Badge Indicator"],
-      color: "from-amber-600/20 to-orange-500/10",
-      borderColor: "border-amber-500/20",
-      accentColor: "text-amber-400"
+      color: "from-zinc-900 to-zinc-950",
+      borderColor: "border-white/[0.04]",
+      accentColor: "text-zinc-400"
     }
   ];
 
@@ -331,8 +331,8 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
       {/* Header section */}
       <div className="flex items-center justify-between select-none">
         <div className="flex items-center gap-2">
-          <div className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-tr from-cyber-purple to-indigo-600 border border-white/[0.08] shadow-[0_4px_12px_rgba(124,58,237,0.3)]">
-            <span className="text-white font-extrabold text-base font-display italic tracking-tight">AX</span>
+          <div className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-white/[0.08] shadow-[0_4px_12px_rgba(255,255,255,0.1)]">
+            <span className="text-black font-extrabold text-base font-display italic tracking-tight">AX</span>
           </div>
           <div>
             <span className="text-xs font-black tracking-widest text-white uppercase block">AeroX MEMBER HUB</span>
@@ -348,8 +348,8 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
           UNIFIED CYBERPUNK TELEGRAM PROFILE HUB (Master Card)
           ═════════════════════════════════════════════════════════════ */}
       <div id="profile-master-card" className="relative rounded-2xl p-5 border border-white/[0.05] bg-dark-surface overflow-hidden shadow-2xl flex flex-col gap-4 text-left">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-cyber-purple/10 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-cosmic-lilac/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/[0.02] rounded-full blur-2xl pointer-events-none" />
 
         <div className="flex flex-col gap-4">
           {/* Upper Info Row */}
@@ -369,13 +369,13 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
                 />
               ) : (
                 <>
-                  <div className="absolute inset-0 bg-gradient-to-tr from-cyber-purple/30 to-cosmic-lilac/20" />
+                  <div className="absolute inset-0 bg-gradient-to-tr from-zinc-800 to-zinc-900" />
                   <span className="text-xl font-black text-white font-display">
                     {displayName ? displayName.charAt(0).toUpperCase() : "U"}
                   </span>
                 </>
               )}
-              <div className="absolute inset-0 border border-cyber-purple/40 animate-pulse rounded-2xl" />
+              <div className="absolute inset-0 border border-white/20 animate-pulse rounded-2xl" />
             </div>
 
             {/* Identity Details */}
@@ -383,7 +383,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
               <h3 className="text-sm font-black text-white truncate uppercase tracking-wide">
                 {displayName}
               </h3>
-              <span className="text-[10px] text-cosmic-lilac font-semibold block truncate">
+              <span className="text-[10px] text-zinc-400 font-semibold block truncate">
                 @{username}
               </span>
 
@@ -392,7 +392,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
                 onClick={handleCopyId}
                 className="mt-1.5 px-2.5 py-1 rounded bg-void-black border border-white/[0.03] text-[9px] text-neutral-400 font-mono hover:text-white transition-all inline-flex items-center gap-1 active:scale-95"
               >
-                <Hash className="w-2.5 h-2.5 text-cyber-purple" />
+                <Hash className="w-2.5 h-2.5 text-zinc-400" />
                 <span>ID: {telegramId}</span>
                 <span className="text-[7px] text-neutral-500">•</span>
                 <span className="text-[8px] text-neutral-400 font-sans uppercase">
@@ -424,13 +424,13 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
 
             {/* Membership Plan */}
             <div className="bg-[#0c0c14]/50 border border-white/[0.04] p-3 rounded-xl flex flex-col gap-1.5 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-8 h-8 bg-pink-500/5 rounded-full blur-md pointer-events-none" />
+              <div className="absolute top-0 right-0 w-8 h-8 bg-white/[0.02] rounded-full blur-md pointer-events-none" />
               <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-widest block">Membership Plan</span>
               <span className={`text-[10px] font-black uppercase tracking-wide block mt-0.5 bg-gradient-to-r ${
                 userProfile?.plan === "owner"
                   ? "from-amber-400 via-yellow-300 to-orange-400 bg-clip-text text-transparent drop-shadow-[0_0_6px_rgba(250,204,21,0.3)]"
                   : ["core", "prime", "elite"].includes(userProfile?.plan || "")
-                    ? "from-cyan-400 via-sky-300 to-indigo-400 bg-clip-text text-transparent"
+                    ? "from-neutral-100 to-neutral-400 bg-clip-text text-transparent"
                     : "from-neutral-300 to-neutral-400 bg-clip-text text-transparent"
               }`}>
                 {userProfile?.plan === "owner" 
@@ -461,7 +461,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
             {/* Credits Balance */}
             <div className="bg-[#0c0c14]/50 border border-white/[0.04] p-3 rounded-xl flex flex-col gap-1.5 relative overflow-hidden">
               <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-widest block">Credits Balance</span>
-              <span className={`text-[11px] font-mono font-black mt-0.5 ${userProfile?.plan === "owner" ? "text-[#38bdf8] drop-shadow-[0_0_6px_rgba(56,189,248,0.3)]" : "text-cosmic-lilac"}`}>
+              <span className={`text-[11px] font-mono font-black mt-0.5 ${userProfile?.plan === "owner" ? "text-[#38bdf8] drop-shadow-[0_0_6px_rgba(56,189,248,0.3)]" : "text-white"}`}>
                 {userProfile?.plan === "owner" 
                   ? "∞ UNLIMITED" 
                   : userProfile?.plan === "free"
@@ -514,17 +514,17 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
                 <button
                   id="trigger-upgrade-modal-btn"
                   onClick={() => setIsUpgradeModalOpen(true)}
-                  className="py-2.5 rounded-xl bg-slate-950/65 border border-[#c084fc]/20 text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 font-display"
+                  className="py-2.5 rounded-xl bg-slate-950/65 border border-white/10 text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 font-display"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-[#c084fc]" />
+                  <Sparkles className="w-3.5 h-3.5 text-white" />
                   <span>Subscriptions</span>
                 </button>
                 <button
                   id="go-to-admin-btn"
                   onClick={() => onTabChange && onTabChange("admin")}
-                  className="py-2.5 rounded-xl bg-slate-950/65 border border-[#38bdf8]/20 text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 font-display"
+                  className="py-2.5 rounded-xl bg-slate-950/65 border border-white/10 text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 font-display"
                 >
-                  <Shield className="w-3.5 h-3.5 text-[#38bdf8]" />
+                  <Shield className="w-3.5 h-3.5 text-white" />
                   <span>Admin Panel</span>
                 </button>
               </div>
@@ -532,9 +532,9 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
               <button
                 id="trigger-upgrade-modal-btn"
                 onClick={() => setIsUpgradeModalOpen(true)}
-                className="w-full py-2.5 rounded-xl bg-slate-950/65 border border-[#c084fc]/20 text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 font-display"
+                className="w-full py-2.5 rounded-xl bg-slate-950/65 border border-white/10 text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-900/80 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 font-display"
               >
-                <Sparkles className="w-3.5 h-3.5 text-[#c084fc]" />
+                <Sparkles className="w-3.5 h-3.5 text-white" />
                 {userProfile?.plan === "free" ? (
                   <span>Upgrade to AeroX Premium</span>
                 ) : (
@@ -550,10 +550,10 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
               <div className="bg-dark-surface border border-white/[0.04] p-4 rounded-xl shadow-md flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-white font-black uppercase tracking-widest flex items-center gap-1.5">
-                    <Ticket className="w-3.5 h-3.5 text-cyber-purple animate-pulse" />
-                    <span className="bg-gradient-to-r from-cyan-400 to-cyber-purple bg-clip-text text-transparent">Redeem System Promo Code</span>
+                    <Ticket className="w-3.5 h-3.5 text-white animate-pulse" />
+                    <span className="bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">Redeem System Promo Code</span>
                   </span>
-                  <span className="text-[7.5px] bg-cyber-purple/20 text-cyber-purple px-1.5 py-0.5 rounded font-black tracking-wide uppercase">VOUCHER SECURE</span>
+                  <span className="text-[7.5px] bg-white/10 text-white px-1.5 py-0.5 rounded font-black tracking-wide uppercase">VOUCHER SECURE</span>
                 </div>
 
                 <p className="text-[8.5px] text-neutral-400 leading-normal -mt-1">
@@ -567,7 +567,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
                     value={redeemCodeInput} 
                     onChange={(e) => setRedeemCodeInput(e.target.value.toUpperCase())}
                     placeholder="AEROX-XXXX-XXXX"
-                    className="flex-1 bg-void-black border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono tracking-wider placeholder-neutral-600 focus:outline-none focus:border-cyber-purple focus:ring-1 focus:ring-cyber-purple/50 shadow-inner"
+                    className="flex-1 bg-void-black border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono tracking-wider placeholder-neutral-600 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 shadow-inner"
                   />
                   <button 
                     id="submit-redeem-code-btn"
@@ -600,7 +600,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
           {/* Referral Program Section */}
           <div className="pt-3 border-t border-white/[0.05] flex flex-col gap-2">
             <span className="text-[10px] text-neutral-400 font-black uppercase tracking-wider flex items-center gap-1">
-              <Users className="w-3.5 h-3.5 text-cosmic-lilac" />
+              <Users className="w-3.5 h-3.5 text-zinc-400" />
               <span>AEROX Referral Link Program</span>
             </span>
             <div className="flex bg-void-black p-2 rounded-lg border border-white/[0.03] items-center justify-between gap-2">
@@ -614,7 +614,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
                   setCopiedRefLink(true);
                   setTimeout(() => setCopiedRefLink(false), 2000);
                 }}
-                className="px-3 py-1 rounded bg-cyber-purple hover:bg-opacity-90 text-white text-[9px] font-black uppercase tracking-wider cursor-pointer active:scale-95 transition-all shrink-0"
+                className="px-3 py-1 rounded bg-white hover:bg-zinc-200 text-black text-[9px] font-black uppercase tracking-wider cursor-pointer active:scale-95 transition-all shrink-0"
               >
                 {copiedRefLink ? "Copied" : "Copy Link"}
               </button>
@@ -632,12 +632,12 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
       <div id="telemetry-console-section" className="flex flex-col gap-2.5 text-left animate-fade-in mt-2">
         <div className="flex items-center gap-1.5 px-1 justify-between select-none">
           <div className="flex items-center gap-1.5">
-            <TrendingUp className="w-4 h-4 text-cyber-purple" />
+            <TrendingUp className="w-4 h-4 text-white" />
             <h2 className="text-[10px] font-extrabold tracking-widest uppercase text-neutral-400 font-display">
               AEROX ENGINE SYSTEM TELEMETRY
             </h2>
           </div>
-          <span className="text-[8px] bg-cyber-purple/20 text-cyber-purple border border-cyber-purple/30 px-1.5 py-0.5 rounded font-black tracking-wide uppercase">LIVE FEED</span>
+          <span className="text-[8px] bg-white/10 text-white border border-white/20 px-1.5 py-0.5 rounded font-black tracking-wide uppercase">LIVE FEED</span>
         </div>
 
         <div className="grid grid-cols-2 gap-3 text-left">
@@ -656,7 +656,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
           <div className="p-3.5 rounded-xl bg-dark-surface border border-white/[0.05] flex flex-col gap-1.5">
             <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-wider block">YOUR RECOVERIES</span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-bold font-display text-cyber-purple leading-none">
+              <span className="text-2xl font-bold font-display text-white leading-none">
                 {userProfile?.totalRecoveries ?? 0}
               </span>
               <span className="text-[8px] text-neutral-500 font-semibold uppercase tracking-wider">LOGS</span>
@@ -708,13 +708,13 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
           ═════════════════════════════════════════════════════════════ */}
       {isUpgradeModalOpen && (
         <div id="subscription-plans-modal" className="fixed inset-0 bg-void-black/90 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in overflow-y-auto">
-          <div className="bg-dark-surface border border-white/10 rounded-2xl p-5 w-full max-w-sm flex flex-col gap-4 shadow-[0_0_50px_rgba(124,58,237,0.2)] my-auto max-h-[90vh] overflow-y-auto scrollbar-none relative">
+          <div className="bg-dark-surface border border-white/10 rounded-2xl p-5 w-full max-w-sm flex flex-col gap-4 shadow-[0_0_50px_rgba(255,255,255,0.05)] my-auto max-h-[90vh] overflow-y-auto scrollbar-none relative">
             
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-white/[0.05] pb-3 select-none">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-cyber-purple/20 border border-cyber-purple/30 flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-cyber-purple" />
+                <div className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-white" />
                 </div>
                 <h3 className="text-xs font-black text-white uppercase tracking-wider font-display">
                   AEROX MEMBERSHIP PLANS
@@ -752,12 +752,12 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
                     id={`plan-card-${p.id}`}
                     className={`p-4 rounded-xl border relative transition-all flex flex-col gap-2.5 text-left bg-gradient-to-tr ${p.color} ${
                       isCurrent 
-                        ? "border-cyber-purple ring-1 ring-cyber-purple/50" 
+                        ? "border-white ring-1 ring-white/50" 
                         : "border-white/[0.06] hover:border-white/15"
                     }`}
                   >
                     {p.popular && (
-                      <span className="absolute -top-2 right-4 px-2 py-0.5 text-[7px] font-black uppercase tracking-widest text-white bg-gradient-to-r from-cosmic-lilac to-cyber-purple rounded-full border border-cosmic-lilac/30">
+                      <span className="absolute -top-2 right-4 px-2 py-0.5 text-[7px] font-black uppercase tracking-widest text-black bg-white rounded-full border border-white/30">
                         🔥 Popular
                       </span>
                     )}
@@ -779,7 +779,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
 
                     {/* Features list */}
                     <div className="flex flex-col gap-1 border-t border-white/[0.05] pt-2">
-                      <div className="text-[9px] font-mono font-black text-cyber-purple uppercase tracking-wider mb-1">
+                      <div className="text-[9px] font-mono font-black text-white uppercase tracking-wider mb-1">
                         🚀 Limit: {p.credits}
                       </div>
                       <div className="grid grid-cols-2 gap-1">
@@ -795,7 +795,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
                     {/* CTA Actions */}
                     <div className="mt-1 flex items-center justify-between gap-2.5">
                       {isCurrent ? (
-                        <span className="w-full text-center py-2 rounded-lg bg-cyber-purple/20 text-cyber-purple font-black uppercase text-[9px] border border-cyber-purple/30">
+                        <span className="w-full text-center py-2 rounded-lg bg-white/10 text-white font-black uppercase text-[9px] border border-white/20">
                           Active Membership
                         </span>
                       ) : (
@@ -804,7 +804,7 @@ export default function ProfileTab({ onTabChange }: ProfileTabProps) {
                           href={telegramRedirectionUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full text-center py-2 rounded-lg bg-cyber-purple hover:bg-opacity-95 text-white font-black uppercase text-[9px] cursor-pointer transition-all active:scale-[0.98] shadow-md flex items-center justify-center gap-1"
+                          className="w-full text-center py-2 rounded-lg bg-white hover:bg-zinc-200 text-black font-black uppercase text-[9px] cursor-pointer transition-all active:scale-[0.98] shadow-md flex items-center justify-center gap-1"
                         >
                           <span>Purchase Plan (${p.price})</span>
                         </a>

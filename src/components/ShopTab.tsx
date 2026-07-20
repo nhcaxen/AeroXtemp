@@ -256,7 +256,7 @@ const PRODUCTS: Product[] = [
   }
 ];
 
-export default function ShopTab() {
+export default function ShopTab({ userRole: initialUserRole }: { userRole?: string } = {}) {
   const [activeTab, setActiveTab] = useState<"explore" | "vault" | "marketplace">("marketplace");
   const [credits, setCredits] = useState<number>(0);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -291,7 +291,7 @@ export default function ShopTab() {
   // ==========================================
   //          AEROX MARKETPLACE STATES
   // ==========================================
-  const [userRole, setUserRole] = useState<string>("free");
+  const [userRole, setUserRole] = useState<string>(initialUserRole || "free");
   const [username, setUsername] = useState<string>("Anonymous_User");
   const [marketSubTab, setMarketSubTab] = useState<"buyer" | "seller" | "admin">("buyer");
 
@@ -356,7 +356,9 @@ export default function ShopTab() {
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
 
   const isAdminRole = (role: string) => {
-    return role === "owner" || telegramId === "5834920194" || telegramId === "1817159548";
+    const storedTgId = localStorage.getItem("aerox_tg_id");
+    if (!storedTgId) return role === "owner";
+    return role === "owner" || storedTgId === "5834920194" || storedTgId === "1817159548";
   };
 
   // Fetch user credit balance & role details
@@ -551,7 +553,7 @@ export default function ShopTab() {
   // Seller Apply handler
   const handleApplyAsSeller = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!appStoreName || !appTelegramUsername || !appStoreDescription || !appCryptoWallet || !appProductsToSell) {
+    if (!appStoreName || !appTelegramUsername || !appStoreDescription || !appProductsToSell) {
       setErrorMsg("Please fill in all application fields");
       return;
     }
@@ -569,7 +571,7 @@ export default function ShopTab() {
           telegramUsername: appTelegramUsername,
           storeLogo: appStoreLogo,
           storeDescription: appStoreDescription,
-          cryptoWallet: appCryptoWallet,
+          cryptoWallet: "N/A",
           productsToSell: appProductsToSell
         })
       });
@@ -951,6 +953,12 @@ export default function ShopTab() {
     }
   }, [activeTab, userRole]);
 
+  useEffect(() => {
+    if (initialUserRole) {
+      setUserRole(initialUserRole);
+    }
+  }, [initialUserRole]);
+
   const handleBuyProduct = async (product: Product) => {
     setErrorMsg(null);
     setBuyingProductId(product.id);
@@ -1124,46 +1132,54 @@ export default function ShopTab() {
     return (
       <div className="flex flex-col gap-4 pb-24 font-sans select-none text-left">
         
-        {/* Marketplace Sub Tab Selector */}
-        <div className="flex items-center justify-between pb-1 border-b border-white/[0.04] mt-1">
-          <div className="flex gap-2">
-            <button
-              onClick={() => { setMarketSubTab("buyer"); setErrorMsg(null); }}
-              className={`pb-1.5 text-[11px] font-black tracking-wider uppercase transition-all cursor-pointer border-b-2 ${
-                marketSubTab === "buyer"
-                  ? "border-[#00e4ff] text-white"
-                  : "border-transparent text-neutral-500 hover:text-neutral-300"
-              }`}
-            >
-              🛍️ Market
-            </button>
-
-            {userRole === "seller" && (
+        {/* Marketplace Sub Tab Selector (Pill switcher style like Mail Tab) */}
+        <div className="flex items-center justify-between gap-3 mb-2 mt-1">
+          {/* Render the Mail-style Pill Container only if they have multiple subtabs, else show clean title */}
+          {(userRole === "seller" || isAdminRole(userRole)) ? (
+            <div className="flex bg-[#030612]/80 p-1 rounded-xl border border-white/[0.04] shrink-0 gap-1">
               <button
-                onClick={() => { setMarketSubTab("seller"); setErrorMsg(null); }}
-                className={`pb-1.5 text-[11px] font-black tracking-wider uppercase transition-all cursor-pointer border-b-2 ${
-                  marketSubTab === "seller"
-                    ? "border-[#00e4ff] text-white"
-                    : "border-transparent text-neutral-500 hover:text-neutral-300"
+                onClick={() => { setMarketSubTab("buyer"); setErrorMsg(null); }}
+                className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer text-center ${
+                  marketSubTab === "buyer"
+                    ? "bg-white text-black shadow-md font-extrabold"
+                    : "text-neutral-500 hover:text-neutral-300"
                 }`}
               >
-                🏪 Seller Panel
+                🛍️ Market
               </button>
-            )}
 
-            {isAdminRole(userRole) && (
-              <button
-                onClick={() => { setMarketSubTab("admin"); setErrorMsg(null); }}
-                className={`pb-1.5 text-[11px] font-black tracking-wider uppercase transition-all cursor-pointer border-b-2 ${
-                  marketSubTab === "admin"
-                    ? "border-purple-500 text-purple-400"
-                    : "border-transparent text-neutral-500 hover:text-neutral-300"
-                }`}
-              >
-                👑 Admin
-              </button>
-            )}
-          </div>
+              {userRole === "seller" && (
+                <button
+                  onClick={() => { setMarketSubTab("seller"); setErrorMsg(null); }}
+                  className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer text-center ${
+                    marketSubTab === "seller"
+                      ? "bg-white text-black shadow-md font-extrabold"
+                      : "text-neutral-500 hover:text-neutral-300"
+                  }`}
+                >
+                  🏪 Seller
+                </button>
+              )}
+
+              {isAdminRole(userRole) && (
+                <button
+                  onClick={() => { setMarketSubTab("admin"); setErrorMsg(null); }}
+                  className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer text-center ${
+                    marketSubTab === "admin"
+                      ? "bg-white text-black shadow-md font-extrabold"
+                      : "text-neutral-500 hover:text-neutral-300"
+                  }`}
+                >
+                  👑 Admin
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-1">
+              <span className="text-base">🛍️</span>
+              <span className="text-xs font-black tracking-widest text-white uppercase font-sans">AeroX Market</span>
+            </div>
+          )}
 
           {/* Notifications Trigger */}
           <div className="relative">
@@ -1179,7 +1195,7 @@ export default function ShopTab() {
             >
               <Bell className="w-3.5 h-3.5" />
               {unreadNotificationsCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#00e4ff] rounded-full border border-dark-card text-[7px] font-black flex items-center justify-center text-black">
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-white rounded-full border border-dark-card text-[7px] font-black flex items-center justify-center text-black">
                   {unreadNotificationsCount}
                 </span>
               )}
@@ -1197,7 +1213,7 @@ export default function ShopTab() {
             className="p-4 bg-slate-950/90 border border-white/10 rounded-2xl flex flex-col gap-3"
           >
             <div className="flex justify-between items-center pb-2 border-b border-white/[0.05]">
-              <span className="text-[10px] font-black tracking-widest text-[#00e4ff] uppercase font-mono">
+              <span className="text-[10px] font-black tracking-widest text-white uppercase font-mono">
                 MARKETPLACE ALERTS
               </span>
               <button 
@@ -1236,11 +1252,13 @@ export default function ShopTab() {
           <div className="flex flex-col gap-4">
             
             {/* Inner Toggle: Shop vs Active Deals */}
-            <div className="grid grid-cols-2 gap-1 bg-[#02040c]/50 p-1 rounded-xl border border-white/[0.02]">
+            <div className="grid grid-cols-2 gap-1 bg-zinc-900/70 p-1 rounded-xl border border-white/[0.03]">
               <button
                 onClick={() => { setSelectedMarketProduct(null); setCheckoutOffering(null); setSelectedOrder(null); }}
-                className={`py-1.5 rounded-lg text-[9px] font-black tracking-wider uppercase transition-all cursor-pointer ${
-                  !selectedOrder ? "bg-white/5 text-white" : "text-neutral-500 hover:text-neutral-300"
+                className={`py-2 rounded-lg text-[9px] font-black tracking-wider uppercase transition-all cursor-pointer text-center ${
+                  !selectedOrder
+                    ? "bg-white/10 border border-white/20 text-white font-extrabold shadow-sm"
+                    : "border border-transparent text-neutral-500 hover:text-neutral-300"
                 }`}
               >
                 🛍️ Browse Products
@@ -1255,8 +1273,10 @@ export default function ShopTab() {
                     setErrorMsg("You have no active or historical orders placed.");
                   }
                 }}
-                className={`py-1.5 rounded-lg text-[9px] font-black tracking-wider uppercase transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  selectedOrder ? "bg-white/5 text-white" : "text-neutral-500 hover:text-neutral-300"
+                className={`py-2 rounded-lg text-[9px] font-black tracking-wider uppercase transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  selectedOrder
+                    ? "bg-white/10 border border-white/20 text-white font-extrabold shadow-sm"
+                    : "border border-transparent text-neutral-500 hover:text-neutral-300"
                 }`}
               >
                 📦 My Deals ({buyerOrders.length})
@@ -1279,7 +1299,7 @@ export default function ShopTab() {
                   </div>
                   <div className="flex flex-col items-end">
                     {getStatusBadge(selectedOrder.status)}
-                    <span className="text-[9px] font-black text-[#00e4ff] mt-1 font-mono">
+                    <span className="text-[9px] font-black text-white mt-1 font-mono">
                       ₹{selectedOrder.productPrice}
                     </span>
                   </div>
@@ -1294,7 +1314,7 @@ export default function ShopTab() {
                   </div>
                   <div className="text-right">
                     <span className="text-[8px] text-neutral-500 uppercase tracking-widest font-mono block">Seller</span>
-                    <span className="text-xs font-bold text-[#00e4ff] block mt-0.5">@{selectedOrder.sellerUsername || "Anonymous"}</span>
+                    <span className="text-xs font-bold text-zinc-300 block mt-0.5">@{selectedOrder.sellerUsername || "Anonymous"}</span>
                   </div>
                 </div>
 
@@ -1381,7 +1401,7 @@ export default function ShopTab() {
                         </div>
                       ) : (
                         <form onSubmit={(e) => handleRateDeal(e, selectedOrder.id)} className="flex flex-col gap-2.5">
-                          <span className="text-[9px] text-[#00e4ff] font-black tracking-widest uppercase font-mono">
+                          <span className="text-[9px] text-white font-black tracking-widest uppercase font-mono">
                             ⭐ Rate this Peer Deal
                           </span>
                           <div className="flex gap-1.5 items-center">
@@ -1401,7 +1421,7 @@ export default function ShopTab() {
                             value={rateReview}
                             onChange={(e) => setRateReview(e.target.value)}
                             placeholder="Add store feedback (e.g. fast response, friendly seller)..."
-                            className="w-full px-3 py-2 bg-slate-950/50 border border-white/[0.04] rounded-xl text-[10px] text-white focus:outline-none focus:border-[#00e4ff]/35 font-mono"
+                            className="w-full px-3 py-2 bg-slate-950/50 border border-white/[0.04] rounded-xl text-[10px] text-white focus:outline-none focus:border-white/30 font-mono"
                           />
                           <button
                             type="submit"
@@ -1435,7 +1455,7 @@ export default function ShopTab() {
                     value={marketSearchQuery}
                     onChange={(e) => setMarketSearchQuery(e.target.value)}
                     placeholder="Search peer marketplace products..."
-                    className="w-full pl-10 pr-12 py-2.5 bg-[#070a18]/50 border border-white/[0.04] rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-[#00e4ff]/35 transition-all font-sans"
+                    className="w-full pl-10 pr-12 py-2.5 bg-zinc-900/50 border border-white/[0.06] rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-white/30 transition-all font-sans"
                   />
                   {marketSearchQuery && (
                     <button
@@ -1447,30 +1467,58 @@ export default function ShopTab() {
                   )}
                 </div>
 
-                {/* Seller Application Promo banner */}
-                {userRole !== "seller" && !isAdminRole(userRole) && (
-                  <div className="p-3 bg-[#00e4ff]/5 border border-[#00e4ff]/10 rounded-xl flex justify-between items-center text-[10px] gap-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm shrink-0">🏪</span>
-                      <div>
-                        <span className="font-bold text-white block">Earn by selling premium subscriptions?</span>
-                        <span className="text-neutral-400 font-mono text-[9px] block mt-0.5">Apply for a verified AeroX seller store.</span>
+                {/* Premium Redesigned Seller Application Promo Banner */}
+                {userRole !== "seller" && (
+                  <div className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-[#1c1c1e] via-[#121212] to-[#0a0a0a] border border-white/[0.05] shadow-[0_12px_30px_rgba(0,0,0,0.5)]">
+                    {/* Glowing Accent Blur */}
+                    <div className="absolute -top-16 -right-16 w-32 h-32 bg-white/[0.02] rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute -bottom-16 -left-16 w-32 h-32 bg-white/[0.01] rounded-full blur-2xl pointer-events-none" />
+
+                    {/* Left vertical sleek colored accent line */}
+                    <div className="absolute left-0 top-4 bottom-4 w-[3px] bg-white/20 rounded-r-md" />
+
+                    <div className="flex flex-col gap-4 pl-2 relative z-10">
+                      <div className="flex gap-3 items-center">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-zinc-700/10 to-zinc-800/10 border border-white/10 flex items-center justify-center text-lg shrink-0 shadow-inner">
+                          🏪
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[8px] text-white font-black tracking-widest uppercase font-mono bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                              VERIFIED SELLER
+                            </span>
+                          </div>
+                          <h4 className="font-sans font-black text-xs text-white tracking-wide mt-1 uppercase">
+                            Become an AeroX Verified Seller
+                          </h4>
+                        </div>
+                      </div>
+
+                      <p className="text-[10px] text-neutral-400 font-medium leading-relaxed max-w-[340px]">
+                        List your premium accounts & digital assets, automate deliverability with instant keys, and withdraw your earned credits securely.
+                      </p>
+
+                      <div className="flex items-center justify-between pt-1 border-t border-white/[0.04]">
+                        <div className="flex gap-4 text-neutral-500 font-mono text-[8px] uppercase tracking-wider font-bold">
+                          <span>📈 0% FEE</span>
+                          <span>🔒 ESCROW SECURED</span>
+                        </div>
+                        <button
+                          onClick={() => { setMarketSubTab("seller"); setErrorMsg(null); }}
+                          className="px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black font-black text-[9px] uppercase tracking-wider active:scale-95 transition-all cursor-pointer shadow-md shrink-0 font-mono"
+                        >
+                          {sellerApp ? "View Status" : "Apply Now"}
+                        </button>
                       </div>
                     </div>
-                    <button
-                      onClick={() => { setMarketSubTab("seller"); setErrorMsg(null); }}
-                      className="px-2.5 py-1 rounded-lg bg-[#00e4ff]/10 hover:bg-[#00e4ff]/20 text-[#00e4ff] text-[9px] font-black uppercase font-mono cursor-pointer transition-all border border-[#00e4ff]/20 shrink-0"
-                    >
-                      {sellerApp ? "View Status" : "Apply Now"}
-                    </button>
                   </div>
                 )}
 
                 {selectedMarketProduct ? (
                   /* Offerings panel for specific product */
                   <div className="flex flex-col gap-4">
-                    <div className="p-4 bg-[#070a18]/80 border border-white/[0.06] rounded-2xl">
-                      <span className="text-[8px] text-[#00e4ff] font-black tracking-widest uppercase font-mono block">Product Category: {selectedMarketProduct.productCategory}</span>
+                    <div className="p-4 bg-[#1c1c1e] border border-white/[0.06] rounded-2xl">
+                      <span className="text-[8px] text-zinc-400 font-black tracking-widest uppercase font-mono block">Product Category: {selectedMarketProduct.productCategory}</span>
                       <h4 className="text-sm font-black text-white mt-1 uppercase">{selectedMarketProduct.productName}</h4>
                       <p className="text-[10px] text-neutral-400 mt-2 leading-relaxed">{selectedMarketProduct.productDescription || "Premium high-quality accounts listed by vetted sellers with escrow support."}</p>
                     </div>
@@ -1479,7 +1527,7 @@ export default function ShopTab() {
                       <span className="text-[9px] text-neutral-500 font-black uppercase tracking-wider font-mono">SELLER OFFERINGS (CHEAPEST FIRST)</span>
                       <button 
                         onClick={() => setSelectedMarketProduct(null)}
-                        className="text-[9px] text-[#00e4ff] hover:underline font-mono uppercase font-black"
+                        className="text-[9px] text-zinc-400 hover:text-white transition-colors font-mono uppercase font-black"
                       >
                         ← Back to browse
                       </button>
@@ -1490,41 +1538,44 @@ export default function ShopTab() {
                         selectedMarketProduct.sellers.map((offering: any) => (
                           <div 
                             key={offering.productId}
-                            className="p-4 rounded-xl bg-slate-950/50 border border-white/[0.04] flex flex-col gap-3"
+                            className="relative p-5 rounded-2xl bg-gradient-to-br from-[#1c1c1e] via-[#121212] to-[#0a0a0a] border border-white/[0.06] hover:border-white/15 shadow-lg flex flex-col gap-4 overflow-hidden"
                           >
+                            {/* Accent Glow on Hover */}
+                            <div className="absolute -top-12 -right-12 w-24 h-24 bg-white/[0.02] rounded-full blur-2xl pointer-events-none" />
+
                             {/* Seller Meta info */}
-                            <div className="flex justify-between items-start">
-                              <div className="flex gap-2.5 items-center">
-                                <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-black text-xs text-[#00e4ff]">
-                                  {offering.storeName ? offering.storeName.substring(0, 1).toUpperCase() : "S"}
+                            <div className="flex justify-between items-start gap-4">
+                              <div className="flex gap-3 items-center min-w-0">
+                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-zinc-700/10 to-zinc-800/10 border border-white/10 flex items-center justify-center font-black text-xs text-white shrink-0 shadow-inner uppercase">
+                                  {offering.storeName ? offering.storeName.substring(0, 1) : "S"}
                                 </div>
-                                <div>
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-xs font-black text-white">{offering.storeName}</span>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-xs font-black text-white truncate">{offering.storeName}</span>
                                     {offering.isVerified === 1 && (
-                                      <span className="w-3.5 h-3.5 bg-sky-500 text-white rounded-full text-[7px] font-black flex items-center justify-center" title="Verified AeroX Seller">✓</span>
+                                      <span className="w-3.5 h-3.5 bg-gradient-to-r from-zinc-400 to-zinc-600 text-white rounded-full text-[8px] font-black flex items-center justify-center shadow-md shrink-0" title="Verified AeroX Seller">✓</span>
                                     )}
                                   </div>
                                   <span className="text-[8px] text-neutral-400 font-bold block uppercase tracking-wider font-mono mt-0.5">
-                                    ⭐ {offering.rating ? offering.rating.toFixed(1) : "5.0"} ({offering.completedDeals || 0} deals) • Res: ~15 mins
+                                    ⭐ {offering.rating ? offering.rating.toFixed(1) : "5.0"} ({offering.completedDeals || 0} deals) • Delivery: ~15m
                                   </span>
                                 </div>
                               </div>
-                              <div className="text-right">
-                                <span className="text-[11px] font-black text-[#00e4ff] font-mono block">₹{offering.price}</span>
-                                <span className="text-[8px] text-emerald-400 font-bold block uppercase tracking-widest font-mono mt-0.5">In Stock</span>
+                              <div className="text-right shrink-0">
+                                <span className="text-[13px] font-black text-white font-mono block">₹{offering.price}</span>
+                                <span className="text-[8px] text-emerald-400 font-black tracking-widest block uppercase font-mono mt-1">In Stock</span>
                               </div>
                             </div>
 
                             {/* Offering specific description */}
-                            <p className="text-[10px] text-neutral-400 font-mono leading-relaxed bg-black/40 p-2.5 rounded-lg border border-white/[0.02]">
-                              {offering.description || "Shared 30-day premium account. Lifetime guarantee, active mediation."}
+                            <p className="text-[10px] text-neutral-300 font-mono leading-relaxed bg-[#020408]/60 p-3 rounded-xl border border-white/[0.03]">
+                              {offering.description || "Shared premium access. Guaranteed active support with escrow mediation."}
                             </p>
 
                             {/* Buy offering button */}
                             <button
                               onClick={() => setCheckoutOffering(offering)}
-                              className="py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-[9px] font-black tracking-widest uppercase transition-all text-center cursor-pointer shadow-lg"
+                              className="py-3 rounded-xl bg-white hover:bg-zinc-200 text-black text-[9px] font-black tracking-widest uppercase transition-all text-center cursor-pointer shadow-md active:scale-[0.98]"
                             >
                               🛒 Request Escrow Deal
                             </button>
@@ -1543,7 +1594,7 @@ export default function ShopTab() {
                         <motion.div
                           initial={{ scale: 0.95, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          className="w-full max-w-sm bg-dark-card border border-[#00e4ff]/30 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 text-left"
+                          className="w-full max-w-sm bg-dark-card border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 text-left"
                         >
                           <div className="flex justify-between items-start pb-2 border-b border-white/[0.04]">
                             <div>
@@ -1567,7 +1618,7 @@ export default function ShopTab() {
                             </div>
                             <div className="text-right">
                               <span className="text-neutral-500 block uppercase">TOTAL AMOUNT</span>
-                              <span className="text-[#00e4ff] font-extrabold block mt-0.5">₹{checkoutOffering.price} INR</span>
+                              <span className="text-white font-extrabold block mt-0.5">₹{checkoutOffering.price} INR</span>
                             </div>
                           </div>
 
@@ -1581,7 +1632,7 @@ export default function ShopTab() {
                             <button
                               onClick={() => handleBuyMarketplaceProduct(checkoutOffering)}
                               disabled={orderActionLoading}
-                              className="flex-1 py-2.5 rounded-xl bg-[#00e4ff] text-black text-[10px] font-black tracking-widest uppercase transition-all text-center cursor-pointer disabled:opacity-50"
+                              className="flex-1 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-[10px] font-black tracking-widest uppercase transition-all text-center cursor-pointer disabled:opacity-50"
                             >
                               {orderActionLoading ? "CREATING DEAL..." : "AUTHORIZE DEAL"}
                             </button>
@@ -1598,23 +1649,44 @@ export default function ShopTab() {
                       <div className="grid grid-cols-1 gap-2.5">
                         {marketProducts
                           .filter((p) => p.productName.toLowerCase().includes(marketSearchQuery.toLowerCase()))
-                          .map((p) => (
-                            <button
-                              key={p.productName}
-                              onClick={() => setSelectedMarketProduct(p)}
-                              className="p-4 rounded-xl bg-slate-950/30 hover:bg-slate-950/60 border border-white/[0.04] hover:border-[#00e4ff]/25 transition-all text-left flex justify-between items-center group cursor-pointer"
-                            >
-                              <div className="min-w-0 flex-1 pr-4">
-                                <span className="text-[8px] text-[#00e4ff] font-black uppercase tracking-widest font-mono block">{p.productCategory}</span>
-                                <h4 className="text-xs font-black text-white mt-0.5 uppercase block truncate group-hover:text-[#00e4ff] transition-colors">{p.productName}</h4>
-                                <span className="text-[9px] text-neutral-400 block font-mono mt-0.5">{p.sellers?.length || 1} available offerings • Vetted sellers</span>
-                              </div>
-                              <div className="text-right shrink-0">
-                                <span className="text-[8px] text-neutral-500 uppercase tracking-wider block font-mono">FROM</span>
-                                <span className="text-[11px] font-black text-[#00e4ff] font-mono block mt-0.5">₹{p.lowestPrice}</span>
-                              </div>
-                            </button>
-                          ))}
+                          .map((p) => {
+                            const staticProduct = PRODUCTS.find(sp => sp.title.toLowerCase() === p.productName.toLowerCase() || p.productName.toLowerCase().includes(sp.title.toLowerCase()));
+                            const iconId = staticProduct?.id || "Sparkles";
+                            
+                            return (
+                              <button
+                                key={p.productName}
+                                onClick={() => setSelectedMarketProduct(p)}
+                                className="relative p-4 rounded-2xl bg-gradient-to-r from-slate-950/40 to-slate-950/20 hover:from-slate-950/80 hover:to-slate-950/60 border border-white/[0.04] hover:border-white/15 transition-all text-left flex justify-between items-center group cursor-pointer overflow-hidden shadow-md"
+                              >
+                                {/* Left Edge subtle accent */}
+                                <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-transparent group-hover:bg-white/40 transition-all" />
+                                
+                                <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-4">
+                                  <div className="shrink-0 scale-90 group-hover:scale-95 transition-transform">
+                                    {getIcon(iconId, false, "w-10 h-10")}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <span className="text-[8px] text-white font-extrabold uppercase tracking-widest font-mono bg-white/5 px-1.5 py-0.5 rounded border border-white/10">
+                                      {p.productCategory}
+                                    </span>
+                                    <h4 className="text-[11px] font-black text-white mt-1.5 uppercase block truncate group-hover:text-zinc-300 transition-colors">
+                                      {p.productName}
+                                    </h4>
+                                    <span className="text-[9px] text-neutral-400 block font-mono mt-0.5">
+                                      {p.sellers?.length || 1} available offerings • Vetted sellers
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="text-right shrink-0 flex flex-col items-end">
+                                  <span className="text-[7px] text-neutral-500 uppercase tracking-widest font-mono block">From</span>
+                                  <span className="text-xs font-black text-white font-mono block mt-1">
+                                    ₹{p.lowestPrice}
+                                  </span>
+                                </div>
+                              </button>
+                            );
+                          })}
                       </div>
                     ) : (
                       <div className="text-center py-16 border border-dashed border-white/[0.04] rounded-2xl bg-slate-950/20">
@@ -1637,17 +1709,16 @@ export default function ShopTab() {
           <div className="flex flex-col gap-4">
             
             {/* If Not a Seller, render Apply Page/Status */}
-            {userRole !== "seller" && !isAdminRole(userRole) ? (
+            {userRole !== "seller" ? (
               <div className="flex flex-col gap-4">
-                
                 {/* Check Application Status */}
                 {sellerApp ? (
                   <div className="p-5 rounded-2xl bg-slate-950/40 border border-white/[0.05] flex flex-col gap-4">
                     <div className="text-center flex flex-col items-center gap-2">
-                      <div className="p-3 bg-white/5 rounded-full border border-white/10 text-amber-400">
+                      <div className="p-3 bg-white/5 rounded-full border border-white/10 text-neutral-400">
                         <Clock className="w-8 h-8 animate-spin" />
                       </div>
-                      <span className="text-xs font-black tracking-widest uppercase font-mono text-[#00e4ff] mt-1">Application Received</span>
+                      <span className="text-xs font-black tracking-widest uppercase font-mono text-white mt-1">Application Received</span>
                       <span className="text-sm font-black text-neutral-200 block">{sellerApp.storeName}</span>
                     </div>
 
@@ -1681,7 +1752,7 @@ export default function ShopTab() {
                           onClick={() => {
                             setSellerApp(null); // Clears application to let them resubmit
                           }}
-                          className="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-black tracking-widest uppercase transition-all text-center cursor-pointer"
+                          className="w-full py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-black tracking-widest uppercase transition-all text-center cursor-pointer"
                         >
                           ✏️ Modify & Re-Apply
                         </button>
@@ -1706,7 +1777,7 @@ export default function ShopTab() {
                   /* Render Seller Application Form */
                   <form onSubmit={handleApplyAsSeller} className="p-5 rounded-2xl bg-slate-950/40 border border-white/[0.05] flex flex-col gap-4">
                     <div>
-                      <span className="text-[8px] text-[#00e4ff] font-black tracking-widest uppercase font-mono block">VETTING PROCESS</span>
+                      <span className="text-[8px] text-zinc-400 font-black tracking-widest uppercase font-mono block">VETTING PROCESS</span>
                       <h3 className="text-sm font-black text-white uppercase mt-0.5">Apply as AeroX Seller</h3>
                       <p className="text-[10px] text-neutral-400 mt-1.5 leading-relaxed font-mono">We do not allow instant sellers to prevent scams. Submit your store profile below. Admin reviews applications manually within 12 hours.</p>
                     </div>
@@ -1719,7 +1790,7 @@ export default function ShopTab() {
                           value={appStoreName}
                           onChange={(e) => setAppStoreName(e.target.value)}
                           placeholder="e.g. AeroX premium shop"
-                          className="px-3.5 py-2 bg-slate-950/60 border border-white/[0.04] rounded-xl text-xs text-white focus:outline-none focus:border-[#00e4ff]/35 transition-all font-mono"
+                          className="px-3.5 py-2 bg-slate-950/60 border border-white/[0.04] rounded-xl text-xs text-white focus:outline-none focus:border-white/30 transition-all font-mono"
                         />
                       </div>
 
@@ -1730,7 +1801,7 @@ export default function ShopTab() {
                           value={appTelegramUsername}
                           onChange={(e) => setAppTelegramUsername(e.target.value)}
                           placeholder="e.g. @yourname_seller"
-                          className="px-3.5 py-2 bg-slate-950/60 border border-white/[0.04] rounded-xl text-xs text-white focus:outline-none focus:border-[#00e4ff]/35 transition-all font-mono"
+                          className="px-3.5 py-2 bg-slate-950/60 border border-white/[0.04] rounded-xl text-xs text-white focus:outline-none focus:border-white/30 transition-all font-mono"
                         />
                       </div>
 
@@ -1741,7 +1812,7 @@ export default function ShopTab() {
                           value={appStoreLogo}
                           onChange={(e) => setAppStoreLogo(e.target.value)}
                           placeholder="https://example.com/logo.png"
-                          className="px-3.5 py-2 bg-slate-950/60 border border-white/[0.04] rounded-xl text-xs text-white focus:outline-none focus:border-[#00e4ff]/35 transition-all font-mono"
+                          className="px-3.5 py-2 bg-slate-950/60 border border-white/[0.04] rounded-xl text-xs text-white focus:outline-none focus:border-white/30 transition-all font-mono"
                         />
                       </div>
 
@@ -1752,18 +1823,7 @@ export default function ShopTab() {
                           value={appStoreDescription}
                           onChange={(e) => setAppStoreDescription(e.target.value)}
                           placeholder="What makes your store unique?"
-                          className="px-3.5 py-2 bg-slate-950/60 border border-white/[0.04] rounded-xl text-xs text-white focus:outline-none focus:border-[#00e4ff]/35 transition-all font-mono resize-none"
-                        />
-                      </div>
-
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">USDT TRC20/BEP20 Wallet Address *</label>
-                        <input
-                          type="text"
-                          value={appCryptoWallet}
-                          onChange={(e) => setAppCryptoWallet(e.target.value)}
-                          placeholder="For receive payout escrow"
-                          className="px-3.5 py-2 bg-slate-950/60 border border-white/[0.04] rounded-xl text-xs text-white focus:outline-none focus:border-[#00e4ff]/35 transition-all font-mono"
+                          className="px-3.5 py-2 bg-slate-950/60 border border-white/[0.04] rounded-xl text-xs text-white focus:outline-none focus:border-white/30 transition-all font-mono resize-none"
                         />
                       </div>
 
@@ -1774,7 +1834,7 @@ export default function ShopTab() {
                           value={appProductsToSell}
                           onChange={(e) => setAppProductsToSell(e.target.value)}
                           placeholder="e.g. Netflix, ChatGPT, vpn, canva"
-                          className="px-3.5 py-2 bg-slate-950/60 border border-white/[0.04] rounded-xl text-xs text-white focus:outline-none focus:border-[#00e4ff]/35 transition-all font-mono"
+                          className="px-3.5 py-2 bg-slate-950/60 border border-white/[0.04] rounded-xl text-xs text-white focus:outline-none focus:border-white/30 transition-all font-mono"
                         />
                       </div>
                     </div>
@@ -1782,7 +1842,7 @@ export default function ShopTab() {
                     <button
                       type="submit"
                       disabled={submittingApp}
-                      className="mt-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 text-white text-xs font-black tracking-widest uppercase transition-all text-center cursor-pointer shadow-lg disabled:opacity-50"
+                      className="mt-2 w-full py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-black tracking-widest uppercase transition-all text-center cursor-pointer shadow-lg disabled:opacity-50"
                     >
                       {submittingApp ? "SUBMITTING PROPOSAL..." : "SUBMIT APPLICATION"}
                     </button>
@@ -1815,7 +1875,7 @@ export default function ShopTab() {
                         )}
                       </div>
                       <span className="text-[8px] text-neutral-400 font-bold block uppercase tracking-wider font-mono mt-0.5">
-                        Wallet: {sellerProfile?.cryptoWallet ? `${sellerProfile.cryptoWallet.substring(0, 6)}...${sellerProfile.cryptoWallet.substring(sellerProfile.cryptoWallet.length - 4)}` : "None"}
+                        Telegram: {sellerProfile?.telegramUsername ? `@${sellerProfile.telegramUsername.replace("@", "")}` : "Not Set"}
                       </span>
                     </div>
                   </div>
@@ -1838,7 +1898,7 @@ export default function ShopTab() {
                   </div>
                   <div className="p-3 bg-[#02040c]/40 border border-white/[0.03] rounded-xl flex flex-col font-mono text-[9px]">
                     <span className="text-neutral-500 uppercase font-black">Net Volume (95%)</span>
-                    <span className="text-[12px] font-black text-[#00e4ff] mt-1">₹{sellerStats?.netEarnings ?? 0} INR</span>
+                    <span className="text-[12px] font-black text-white mt-1">₹{sellerStats?.netEarnings ?? 0} INR</span>
                   </div>
                 </div>
 
@@ -1846,7 +1906,7 @@ export default function ShopTab() {
                   /* Store Settings edit form */
                   <form onSubmit={handleUpdateSellerProfile} className="p-4 bg-slate-950/40 border border-white/[0.04] rounded-2xl flex flex-col gap-4">
                     <div className="flex justify-between items-center pb-1.5 border-b border-white/[0.04]">
-                      <span className="text-[9px] text-[#00e4ff] font-black uppercase tracking-widest font-mono">Store Profile Settings</span>
+                      <span className="text-[9px] text-white font-black uppercase tracking-widest font-mono">Store Profile Settings</span>
                       <button type="button" onClick={() => setShowSellerSettings(false)} className="text-[9px] text-neutral-400 font-mono">Cancel</button>
                     </div>
 
@@ -1857,7 +1917,7 @@ export default function ShopTab() {
                           type="text"
                           value={settStoreName}
                           onChange={(e) => setSettStoreName(e.target.value)}
-                          className="px-3 py-1.5 bg-slate-950/60 border border-white/[0.04] rounded-lg text-xs text-white focus:outline-none focus:border-[#00e4ff]/35 font-mono"
+                          className="px-3 py-1.5 bg-slate-950/60 border border-white/[0.04] rounded-lg text-xs text-white focus:outline-none focus:border-white/30 font-mono"
                         />
                       </div>
                       <div className="flex flex-col gap-1">
@@ -1866,24 +1926,16 @@ export default function ShopTab() {
                           rows={2}
                           value={settStoreDesc}
                           onChange={(e) => setSettStoreDesc(e.target.value)}
-                          className="px-3 py-1.5 bg-slate-950/60 border border-white/[0.04] rounded-lg text-xs text-white focus:outline-none focus:border-[#00e4ff]/35 font-mono resize-none"
+                          className="px-3 py-1.5 bg-slate-950/60 border border-white/[0.04] rounded-lg text-xs text-white focus:outline-none focus:border-white/30 font-mono resize-none"
                         />
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[8px] text-neutral-400 font-bold uppercase font-mono">USDT Payout Wallet</label>
-                        <input
-                          type="text"
-                          value={settWallet}
-                          onChange={(e) => setSettWallet(e.target.value)}
-                          className="px-3 py-1.5 bg-slate-950/60 border border-white/[0.04] rounded-lg text-xs text-white focus:outline-none focus:border-[#00e4ff]/35 font-mono"
-                        />
-                      </div>
+
                     </div>
 
                     <button
                       type="submit"
                       disabled={savingSettings}
-                      className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black tracking-widest uppercase rounded-xl transition-all cursor-pointer"
+                      className="w-full py-2 bg-white hover:bg-zinc-200 text-black text-[10px] font-black tracking-widest uppercase rounded-xl transition-all cursor-pointer"
                     >
                       {savingSettings ? "SAVING..." : "SAVE STORE SETTINGS"}
                     </button>
@@ -1906,7 +1958,7 @@ export default function ShopTab() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-neutral-500">PRODUCT:</span>
-                        <span className="text-[#00e4ff] font-bold">{selectedOrder.productName}</span>
+                        <span className="text-white font-bold">{selectedOrder.productName}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-neutral-500">PAYOUT EARNINGS (95%):</span>
@@ -2025,7 +2077,7 @@ export default function ShopTab() {
                             setProdStockStatus("in_stock");
                             setShowAddProductModal(true);
                           }}
-                          className="py-1 px-2.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-[#00e4ff] text-[9px] font-black uppercase font-mono flex items-center gap-1 cursor-pointer"
+                          className="py-1 px-2.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[9px] font-black uppercase font-mono flex items-center gap-1 cursor-pointer"
                         >
                           <Plus className="w-3 h-3" />
                           Add Listing
@@ -2037,7 +2089,7 @@ export default function ShopTab() {
                           sellerProducts.map((p) => (
                             <div key={p.id} className="p-3.5 rounded-xl bg-slate-950/50 border border-white/[0.04] flex justify-between items-center gap-4">
                               <div className="min-w-0 flex-1">
-                                <span className="text-[8px] text-[#00e4ff] font-bold block uppercase tracking-widest font-mono">{p.category}</span>
+                                <span className="text-[8px] text-zinc-400 font-bold block uppercase tracking-widest font-mono">{p.category}</span>
                                 <span className="text-xs font-bold text-white block mt-0.5 truncate">{p.name}</span>
                                 <span className="text-[9px] text-neutral-400 block font-mono mt-0.5">
                                   Price: ₹{p.price} • {p.stockStatus === "in_stock" ? "✅ In Stock" : "❌ Out of Stock"}
@@ -2167,7 +2219,7 @@ export default function ShopTab() {
                               <button
                                 type="submit"
                                 disabled={submittingProduct}
-                                className="flex-1 py-2 rounded-xl bg-[#00e4ff] text-black text-[10px] font-black uppercase"
+                                className="flex-1 py-2 rounded-xl bg-white hover:bg-zinc-200 text-black text-[10px] font-black uppercase"
                               >
                                 {submittingProduct ? "LISTING..." : "LIST DEPLOY"}
                               </button>
@@ -2263,7 +2315,7 @@ export default function ShopTab() {
                               <button
                                 type="submit"
                                 disabled={submittingProduct}
-                                className="flex-1 py-2 rounded-xl bg-[#00e4ff] text-black text-[10px] font-black uppercase"
+                                className="flex-1 py-2 rounded-xl bg-white hover:bg-zinc-200 text-black text-[10px] font-black uppercase"
                               >
                                 {submittingProduct ? "SAVING..." : "SAVE UPDATE"}
                               </button>
@@ -2289,13 +2341,13 @@ export default function ShopTab() {
             <div className="grid grid-cols-4 gap-0.5 bg-slate-950 p-1 rounded-xl border border-white/[0.03]">
               <button 
                 onClick={() => { setProdCategory("apps"); setSelectedOrder(null); }} 
-                className={`py-1 rounded text-[8px] font-black uppercase font-mono ${prodCategory === "apps" ? "bg-purple-950/40 border border-purple-500/20 text-purple-300" : "text-neutral-500"}`}
+                className={`py-1 rounded text-[8px] font-black uppercase font-mono ${prodCategory === "apps" ? "bg-white/10 border border-white/20 text-white" : "text-neutral-500"}`}
               >
                 Apps ({adminApps.length})
               </button>
               <button 
                 onClick={() => { setProdCategory("sellers"); setSelectedOrder(null); }} 
-                className={`py-1 rounded text-[8px] font-black uppercase font-mono ${prodCategory === "sellers" ? "bg-purple-950/40 border border-purple-500/20 text-purple-300" : "text-neutral-500"}`}
+                className={`py-1 rounded text-[8px] font-black uppercase font-mono ${prodCategory === "sellers" ? "bg-white/10 border border-white/20 text-white" : "text-neutral-500"}`}
               >
                 Sellers ({adminSellers.length})
               </button>
@@ -2309,13 +2361,13 @@ export default function ShopTab() {
                   }
                   setProdCategory("orders"); 
                 }} 
-                className={`py-1 rounded text-[8px] font-black uppercase font-mono ${prodCategory === "orders" ? "bg-purple-950/40 border border-purple-500/20 text-purple-300" : "text-neutral-500"}`}
+                className={`py-1 rounded text-[8px] font-black uppercase font-mono ${prodCategory === "orders" ? "bg-white/10 border border-white/20 text-white" : "text-neutral-500"}`}
               >
                 Deals ({adminOrders.length})
               </button>
               <button 
                 onClick={() => { setProdCategory("stats"); setSelectedOrder(null); }} 
-                className={`py-1 rounded text-[8px] font-black uppercase font-mono ${prodCategory === "stats" ? "bg-purple-950/40 border border-purple-500/20 text-purple-300" : "text-neutral-500"}`}
+                className={`py-1 rounded text-[8px] font-black uppercase font-mono ${prodCategory === "stats" ? "bg-white/10 border border-white/20 text-white" : "text-neutral-500"}`}
               >
                 Stats
               </button>
@@ -2324,7 +2376,7 @@ export default function ShopTab() {
             {/* Case A: Seller Applications */}
             {prodCategory === "apps" && (
               <div className="flex flex-col gap-3">
-                <span className="text-[9px] text-purple-400 font-bold uppercase tracking-wider font-mono">Pending Seller requests</span>
+                <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider font-mono">Pending Seller requests</span>
                 {adminApps.length > 0 ? (
                   adminApps.map((app) => (
                     <div key={app.id} className="p-4 bg-slate-950/50 border border-white/[0.04] rounded-xl flex flex-col gap-3 text-[10px]">
@@ -2335,7 +2387,7 @@ export default function ShopTab() {
                       <div className="flex flex-col gap-1 leading-relaxed text-neutral-300">
                         <p><span className="text-neutral-500 font-bold">Desc:</span> {app.storeDescription}</p>
                         <p><span className="text-neutral-500 font-bold">Products:</span> {app.productsToSell}</p>
-                        <p className="font-mono text-[9px] text-[#00e4ff]"><span className="text-neutral-500">Wallet:</span> {app.cryptoWallet}</p>
+                        <p className="font-mono text-[9px] text-white"><span className="text-neutral-500">Wallet:</span> {app.cryptoWallet}</p>
                       </div>
                       <div className="flex gap-2 pt-1">
                         <button
@@ -2369,7 +2421,7 @@ export default function ShopTab() {
             {/* Case B: Active Sellers Directory */}
             {prodCategory === "sellers" && (
               <div className="flex flex-col gap-3">
-                <span className="text-[9px] text-purple-400 font-bold uppercase tracking-wider font-mono">Sellers directory manager</span>
+                <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider font-mono">Sellers directory manager</span>
                 {adminSellers.length > 0 ? (
                   adminSellers.map((s) => (
                     <div key={s.id} className="p-4 bg-slate-950/50 border border-white/[0.04] rounded-xl flex flex-col gap-3 text-[10px]">
@@ -2421,7 +2473,7 @@ export default function ShopTab() {
               <div className="p-4 bg-slate-950/40 border border-white/[0.04] rounded-2xl flex flex-col gap-4 text-[10px] text-neutral-300">
                 <div className="flex justify-between items-center pb-2 border-b border-white/[0.04]">
                   <div>
-                    <span className="text-[8px] text-purple-400 font-bold uppercase tracking-wider font-mono">ESCROW ESCORT MEDIATION</span>
+                    <span className="text-[8px] text-zinc-400 font-bold uppercase tracking-wider font-mono">ESCROW ESCORT MEDIATION</span>
                     <span className="text-xs font-black text-white mt-0.5 block">ID: {selectedOrder.id}</span>
                   </div>
                   {getStatusBadge(selectedOrder.status)}
@@ -2459,7 +2511,7 @@ export default function ShopTab() {
                       id="admin-deal-link"
                       defaultValue={selectedOrder.dealGroupLink || ""}
                       placeholder="https://t.me/c/123456/78"
-                      className="flex-1 px-3 py-1.5 bg-slate-950 border border-white/[0.05] rounded-lg text-xs text-white focus:outline-none focus:border-purple-500/50 font-mono"
+                      className="flex-1 px-3 py-1.5 bg-slate-950 border border-white/[0.05] rounded-lg text-xs text-white focus:outline-none focus:border-white/30 font-mono"
                     />
                     <button
                       onClick={() => {
@@ -2469,7 +2521,7 @@ export default function ShopTab() {
                           alert("Telegram Deal Group link updated inside DB & alerts dispatched!");
                         }
                       }}
-                      className="px-3 py-1.5 rounded bg-purple-600 hover:bg-purple-500 text-white font-black uppercase text-[8px] tracking-wider cursor-pointer font-mono"
+                      className="px-3 py-1.5 rounded bg-white hover:bg-zinc-200 text-black font-black uppercase text-[8px] tracking-wider cursor-pointer font-mono"
                     >
                       Save Group
                     </button>
@@ -2538,7 +2590,7 @@ export default function ShopTab() {
                 </div>
                 <div className="p-4 bg-[#02040c]/40 border border-white/[0.03] rounded-xl flex flex-col font-mono text-[9px]">
                   <span className="text-neutral-500 uppercase">Platform Commissions (5%)</span>
-                  <span className="text-[14px] font-black text-purple-400 mt-1">₹{adminStats?.totalCommissionFees ?? 0} INR</span>
+                  <span className="text-[14px] font-black text-white mt-1">₹{adminStats?.totalCommissionFees ?? 0} INR</span>
                 </div>
                 <div className="p-4 bg-[#02040c]/40 border border-white/[0.03] rounded-xl flex flex-col font-mono text-[9px]">
                   <span className="text-neutral-500 uppercase">Approved Sellers</span>
@@ -2546,7 +2598,7 @@ export default function ShopTab() {
                 </div>
                 <div className="p-4 bg-[#02040c]/40 border border-white/[0.03] rounded-xl flex flex-col font-mono text-[9px]">
                   <span className="text-neutral-500 uppercase">Listed Products</span>
-                  <span className="text-[14px] font-black text-[#00e4ff] mt-1">{adminStats?.totalProductsCount ?? 0} Items</span>
+                  <span className="text-[14px] font-black text-white mt-1">{adminStats?.totalProductsCount ?? 0} Items</span>
                 </div>
               </div>
             )}
@@ -2571,7 +2623,7 @@ export default function ShopTab() {
       {/* Premium Header */}
       <div id="shop-header" className="flex items-center justify-between pb-2 border-b border-white/[0.04]">
         <div>
-          <span className="font-sans font-black tracking-widest text-base bg-clip-text text-transparent bg-gradient-to-r from-[#00b4ff] via-[#00d0ff] to-[#00e4ff] block uppercase">
+          <span className="font-sans font-black tracking-widest text-base bg-clip-text text-transparent bg-gradient-to-r from-zinc-100 via-zinc-300 to-zinc-500 block uppercase">
             AeroX Peer-to-Peer Market
           </span>
           <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block font-mono mt-0.5">
@@ -2580,8 +2632,8 @@ export default function ShopTab() {
         </div>
         {/* Dynamic Credits Display */}
         <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10">
-          <Coins className="w-3.5 h-3.5 text-[#00e4ff] animate-pulse" />
-          <span className="text-[10px] font-black tracking-wider text-[#00e4ff] font-mono">
+          <Coins className="w-3.5 h-3.5 text-zinc-300 animate-pulse" />
+          <span className="text-[10px] font-black tracking-wider text-white font-mono">
             {credits} CR
           </span>
         </div>
@@ -2611,7 +2663,7 @@ export default function ShopTab() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search premium services..."
-              className="w-full pl-10 pr-12 py-2.5 bg-[#070a18]/50 border border-white/[0.04] rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-[#00e4ff]/35 transition-all font-sans"
+              className="w-full pl-10 pr-12 py-2.5 bg-zinc-900/50 border border-white/[0.06] rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-white/30 transition-all font-sans"
             />
             {searchQuery && (
               <button
@@ -2639,8 +2691,8 @@ export default function ShopTab() {
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider whitespace-nowrap transition-all duration-300 border cursor-pointer ${
                     isSelected
-                      ? "bg-[#00b4ff]/10 border-[#00b4ff]/20 text-[#00e4ff]"
-                      : "bg-[#070a18]/45 border-white/[0.03] text-slate-400 hover:text-white"
+                      ? "bg-white/10 border-white/20 text-white"
+                      : "bg-[#1c1c1e]/50 border-white/[0.05] text-zinc-400 hover:text-white"
                   }`}
                 >
                   <IconComp className="w-3 h-3" />
@@ -2660,11 +2712,11 @@ export default function ShopTab() {
                   onClick={() => setActiveDetailProduct(p)}
                   className={`p-3.5 rounded-2xl bg-dark-card/40 border transition-all duration-300 flex flex-col justify-between cursor-pointer group relative overflow-hidden ${
                     isSelected
-                      ? "border-[#00e4ff]/30 bg-[#0c1229]/60"
-                      : "border-white/[0.03] hover:border-white/[0.08] hover:bg-[#080c18]/50"
+                      ? "border-white/25 bg-zinc-900/60"
+                      : "border-white/[0.05] hover:border-white/15 hover:bg-zinc-900/50"
                   }`}
                 >
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-[#00b4ff]/2 rounded-full blur-2xl pointer-events-none group-hover:bg-[#00b4ff]/4 transition-colors" />
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-white/[0.01] rounded-full blur-2xl pointer-events-none group-hover:bg-white/[0.03] transition-colors" />
 
                   <div className="flex flex-col gap-2">
                     <div className="flex items-start justify-between gap-1.5">
@@ -2673,14 +2725,14 @@ export default function ShopTab() {
                       </div>
                       
                       {p.badge && (
-                        <span className="text-[7px] font-black tracking-wider text-[#00e4ff] bg-[#00e4ff]/5 px-2 py-0.5 rounded-full uppercase border border-[#00e4ff]/10 max-w-[90px] truncate">
+                        <span className="text-[7px] font-black tracking-wider text-white bg-white/5 px-2 py-0.5 rounded-full uppercase border border-white/10 max-w-[90px] truncate">
                           {p.badge}
                         </span>
                       )}
                     </div>
 
                     <div>
-                      <span className="text-[11px] font-bold text-white block group-hover:text-[#00e4ff] transition-colors leading-snug">
+                      <span className="text-[11px] font-bold text-white block group-hover:text-zinc-200 transition-colors leading-snug">
                         {p.title}
                       </span>
                       <p className="text-[10px] text-slate-400 mt-1 leading-normal line-clamp-2">
@@ -2692,16 +2744,16 @@ export default function ShopTab() {
                   <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/[0.03]">
                     <div className="flex flex-col">
                       <span className="text-[7px] text-neutral-500 font-extrabold tracking-widest uppercase font-mono">VALUATION</span>
-                      <span className="text-[10px] font-black text-[#00b4ff] font-mono flex items-center gap-0.5 mt-0.5">
-                        <Coins className="w-2.5 h-2.5 text-[#00b4ff] shrink-0" />
+                      <span className="text-[10px] font-black text-white font-mono flex items-center gap-0.5 mt-0.5">
+                        <Coins className="w-2.5 h-2.5 text-zinc-400 shrink-0" />
                         {p.price} CR
                       </span>
                     </div>
 
                     <div className={`p-1.5 rounded-lg border transition-all duration-300 ${
                       isSelected 
-                        ? "bg-[#00b4ff] border-transparent text-black" 
-                        : "bg-white/5 border-white/[0.03] text-neutral-400 group-hover:text-white"
+                        ? "bg-white border-transparent text-black" 
+                        : "bg-white/5 border-white/[0.05] text-neutral-400 group-hover:text-white hover:bg-white/10"
                     }`}>
                       <ArrowUpRight className="w-3 h-3" />
                     </div>
@@ -2732,7 +2784,7 @@ export default function ShopTab() {
                   animate={{ y: 0 }}
                   exit={{ y: "100%" }}
                   transition={{ type: "spring", damping: 28, stiffness: 350 }}
-                  className="w-full max-w-[480px] bg-[#070a18] border-t border-white/[0.08] rounded-t-[2rem] p-6 shadow-2xl flex flex-col gap-5 text-left relative z-50 pb-8"
+                  className="w-full max-w-[480px] bg-[#1c1c1e] border-t border-white/[0.08] rounded-t-[2rem] p-6 shadow-2xl flex flex-col gap-5 text-left relative z-50 pb-8"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Drag Indicator Bar */}
@@ -2741,11 +2793,11 @@ export default function ShopTab() {
                   {/* Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-1 bg-[#02040c] rounded-2xl border border-white/[0.05]">
+                      <div className="p-1 bg-black rounded-2xl border border-white/[0.05]">
                         {getIcon(activeDetailProduct.id, true, "w-11 h-11")}
                       </div>
                       <div>
-                        <span className="text-[8px] font-black tracking-widest text-[#00b4ff] uppercase font-mono block">
+                        <span className="text-[8px] font-black tracking-widest text-zinc-400 uppercase font-mono block">
                           Secure Vault Licensing
                         </span>
                         <span className="text-xs font-black text-white block mt-0.5 leading-snug">
@@ -2754,25 +2806,25 @@ export default function ShopTab() {
                       </div>
                     </div>
 
-                    <span className="text-[8px] font-bold tracking-widest text-[#00e4ff] bg-[#00e4ff]/8 px-2.5 py-1 rounded-full uppercase border border-[#00e4ff]/10 font-mono">
+                    <span className="text-[8px] font-bold tracking-widest text-white bg-white/5 px-2.5 py-1 rounded-full uppercase border border-white/10 font-mono">
                       {activeDetailProduct.stock}
                     </span>
                   </div>
 
                   {/* Description & Specs block */}
                   <div className="flex flex-col gap-3">
-                    <div className="p-4 bg-[#02040c]/60 rounded-2xl border border-white/[0.03] text-xs text-slate-400 leading-relaxed font-sans">
+                    <div className="p-4 bg-black/60 rounded-2xl border border-white/[0.03] text-xs text-slate-400 leading-relaxed font-sans">
                       {activeDetailProduct.desc}
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="p-3 bg-[#02040c]/40 border border-white/[0.03] rounded-xl flex flex-col">
+                      <div className="p-3 bg-black/40 border border-white/[0.03] rounded-xl flex flex-col">
                         <span className="text-[7.5px] text-neutral-500 font-bold uppercase tracking-wider font-mono">Dispatch Speed</span>
                         <span className="text-[10px] text-white font-extrabold mt-0.5 uppercase tracking-wide">Instant Delivery</span>
                       </div>
-                      <div className="p-3 bg-[#02040c]/40 border border-[#00b4ff]/10 rounded-xl flex flex-col">
-                        <span className="text-[7.5px] text-[#00e4ff]/60 font-bold uppercase tracking-wider font-mono">Account Type</span>
-                        <span className="text-[10px] text-[#00e4ff] font-extrabold mt-0.5 uppercase tracking-wide">Fully Secured</span>
+                      <div className="p-3 bg-black/40 border border-white/10 rounded-xl flex flex-col">
+                        <span className="text-[7.5px] text-zinc-400 font-bold uppercase tracking-wider font-mono">Account Type</span>
+                        <span className="text-[10px] text-zinc-200 font-extrabold mt-0.5 uppercase tracking-wide">Fully Secured</span>
                       </div>
                     </div>
                   </div>
@@ -2781,8 +2833,8 @@ export default function ShopTab() {
                   <div className="flex items-center justify-between pt-4 border-t border-white/[0.04] mt-2">
                     <div className="flex flex-col">
                       <span className="text-[7.5px] text-neutral-500 uppercase tracking-widest font-black font-mono">Authoritative Price</span>
-                      <span className="text-sm font-black text-[#00b4ff] font-mono flex items-center gap-1 mt-0.5">
-                        <Coins className="w-4 h-4 text-[#00b4ff]" />
+                      <span className="text-sm font-black text-white font-mono flex items-center gap-1 mt-0.5">
+                        <Coins className="w-4 h-4 text-zinc-300" />
                         {activeDetailProduct.price} CR
                       </span>
                     </div>
@@ -2800,7 +2852,7 @@ export default function ShopTab() {
                           setActiveDetailProduct(null);
                         }}
                         disabled={buyingProductId !== null}
-                        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#007aff] to-[#00e4ff] text-black text-[10px] font-black tracking-widest uppercase transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-95 shadow-[0_4px_12px_rgba(0,228,255,0.15)] hover:shadow-[0_4px_20px_rgba(0,228,255,0.25)]"
+                        className="px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-[10px] font-black tracking-widest uppercase transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-95 shadow-[0_4px_12px_rgba(255,255,255,0.1)] hover:shadow-[0_4px_20px_rgba(255,255,255,0.25)]"
                       >
                         Deploy Slot
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -2817,7 +2869,7 @@ export default function ShopTab() {
         /* My Vault Tab */
         <div className="flex flex-col gap-4 pb-20">
           <div className="flex items-center gap-2">
-            <Lock className="w-4 h-4 text-purple-400" />
+            <Lock className="w-4 h-4 text-white" />
             <span className="text-xs text-neutral-300 font-black tracking-widest uppercase font-mono">
               Secured Purchases Archive
             </span>
@@ -2825,7 +2877,7 @@ export default function ShopTab() {
 
           {loadingPurchases ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <RefreshCw className="w-5 h-5 text-purple-500 animate-spin" />
+              <RefreshCw className="w-5 h-5 text-neutral-400 animate-spin" />
               <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
                 Unlocking Vault Archives...
               </span>
@@ -2835,7 +2887,7 @@ export default function ShopTab() {
               {purchases.map((pur) => (
                 <div 
                   key={pur.id}
-                  className="p-4 rounded-xl bg-slate-950/50 border border-white/[0.04] hover:border-purple-500/20 transition-all duration-200 flex flex-col gap-3"
+                  className="p-4 rounded-xl bg-slate-950/50 border border-white/[0.04] hover:border-white/10 transition-all duration-200 flex flex-col gap-3"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -2855,7 +2907,7 @@ export default function ShopTab() {
 
                     <div className="flex flex-col items-end">
                       <span className="text-[8px] text-neutral-500 uppercase tracking-widest font-mono">Cost Paid</span>
-                      <span className="text-xs font-black text-purple-300 font-mono mt-0.5">
+                      <span className="text-xs font-black text-white font-mono mt-0.5">
                         {pur.productPrice} CR
                       </span>
                     </div>
@@ -2887,7 +2939,7 @@ export default function ShopTab() {
 
                       <button
                         onClick={() => setViewingCredentials(pur)}
-                        className="px-2.5 py-1.5 rounded bg-purple-900/30 border border-purple-500/20 text-purple-300 hover:bg-purple-900/50 transition-all text-[8px] font-black tracking-wider uppercase cursor-pointer"
+                        className="px-2.5 py-1.5 rounded bg-white/[0.03] border border-white/[0.05] text-white hover:bg-white/[0.08] transition-all text-[8px] font-black tracking-wider uppercase cursor-pointer"
                       >
                         Open Keys
                       </button>
@@ -2926,7 +2978,7 @@ export default function ShopTab() {
             >
               <div className="flex justify-between items-start pb-2 border-b border-white/[0.03]">
                 <div>
-                  <span className="text-[9px] text-purple-400 font-black tracking-widest uppercase font-mono block">
+                  <span className="text-[9px] text-zinc-400 font-black tracking-widest uppercase font-mono block">
                     Secured Purchase Authorization
                   </span>
                   <span className="text-sm font-black text-neutral-100 block mt-0.5">
@@ -2948,7 +3000,7 @@ export default function ShopTab() {
               <div className="flex items-center justify-between bg-slate-950/80 p-3 rounded-xl border border-white/[0.03] font-mono">
                 <div className="flex flex-col">
                   <span className="text-[8px] text-neutral-500 uppercase tracking-widest">PRODUCT PRICE</span>
-                  <span className="text-xs font-black text-purple-300">
+                  <span className="text-xs font-black text-white">
                     {showConfirmModal.price} Credits
                   </span>
                 </div>
@@ -3117,7 +3169,7 @@ export default function ShopTab() {
                 {/* Header */}
                 <div className="flex justify-between items-center pb-2 border-b border-white/[0.03]">
                   <div>
-                    <span className="text-[9px] text-purple-400 font-black tracking-widest uppercase font-mono block">
+                    <span className="text-[9px] text-zinc-400 font-black tracking-widest uppercase font-mono block">
                       Explore All Options
                     </span>
                     <span className="text-sm font-black text-white block mt-0.5">
@@ -3143,7 +3195,7 @@ export default function ShopTab() {
                     value={modalSearchQuery}
                     onChange={(e) => setModalSearchQuery(e.target.value)}
                     placeholder={`Search ${cat}...`}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-white/[0.06] rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-purple-500/50 transition-all font-mono"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-white/[0.06] rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-white/30 transition-all font-mono"
                   />
                   {modalSearchQuery && (
                     <button
@@ -3166,7 +3218,7 @@ export default function ShopTab() {
                         cat === "OTT" ? selectedOTT.id === p.id :
                         selectedIG.id === p.id;
 
-                      return (
+                       return (
                         <button
                           key={p.id}
                           onClick={() => {
@@ -3188,7 +3240,7 @@ export default function ShopTab() {
                           <div className="flex items-center gap-3 min-w-0">
                             {getIcon(p.id, isSelected, "w-11 h-11")}
                             <div className="min-w-0">
-                              <span className="text-xs font-bold text-neutral-100 block truncate group-hover:text-purple-300 transition-colors">
+                              <span className="text-xs font-bold text-neutral-100 block truncate group-hover:text-white transition-colors">
                                 {p.title}
                               </span>
                               <span className="text-[9px] text-neutral-400 block truncate font-mono mt-0.5">
@@ -3199,7 +3251,7 @@ export default function ShopTab() {
 
                           <div className="flex flex-col items-end shrink-0">
                             <span className="text-[8px] text-neutral-500 uppercase tracking-widest font-mono">Price</span>
-                            <span className="text-[11px] font-black text-purple-300 font-mono">
+                            <span className="text-[11px] font-black text-white font-mono">
                               {p.price} CR
                             </span>
                           </div>

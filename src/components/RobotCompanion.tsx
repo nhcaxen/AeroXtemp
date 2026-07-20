@@ -107,164 +107,165 @@ export default function RobotCompanion({ activeTab = "home", items = [] }: Robot
   };
 
   // Render the animated, extremely cute glowing cyan LED eyes & mouth inside the visor
+  // Render the animated, extremely cute glowing white LED eyes & mouth inside the visor
   const renderFace = () => {
     switch (emotion) {
       case "blink":
         return (
           <g filter="url(#cyanGlow)">
             {/* Sleeping flat line eyes with tiny cute end flicks */}
-            <rect x="28" y="32" width="13" height="3.5" rx="1.7" fill="#00e4ff" />
-            <rect x="59" y="32" width="13" height="3.5" rx="1.7" fill="#00e4ff" />
+            <rect x="28" y="32" width="13" height="3.5" rx="1.7" fill="#ffffff" />
+            <rect x="59" y="32" width="13" height="3.5" rx="1.7" fill="#ffffff" />
             {/* Symmetrical cute little smile */}
-            <path d="M 45 38.5 Q 50 41.5 55 38.5" stroke="#00e4ff" strokeWidth="2.8" strokeLinecap="round" fill="none" />
+            <path d="M 45 38.5 Q 50 41.5 55 38.5" stroke="#ffffff" strokeWidth="2.8" strokeLinecap="round" fill="none" />
           </g>
         );
       case "happy":
         return (
           <g filter="url(#cyanGlow)">
             {/* Thick vertical capsule eyes just like Faw but with high-end inner shine */}
-            <rect x="30" y="24" width="10" height="15" rx="5" fill="#00e4ff" className="anim-eye-pulse" />
-            <rect x="60" y="24" width="10" height="15" rx="5" fill="#00e4ff" className="anim-eye-pulse" />
+            <rect x="30" y="24" width="10" height="15" rx="5" fill="#ffffff" className="anim-eye-pulse" />
+            <rect x="60" y="24" width="10" height="15" rx="5" fill="#ffffff" className="anim-eye-pulse" />
             
             {/* Super cute highlight stars inside happy capsules */}
-            <circle cx="33" cy="28" r="1.8" fill="#ffffff" />
-            <circle cx="63" cy="28" r="1.8" fill="#ffffff" />
+            <circle cx="33" cy="28" r="1.8" fill="#a1a1aa" />
+            <circle cx="63" cy="28" r="1.8" fill="#a1a1aa" />
 
             {/* Cute semi-circular open smiling mouth with tongue detail */}
-            <path d="M 44 38 A 6 6 0 0 0 56 38 Z" fill="#00e4ff" />
+            <path d="M 44 38 A 6 6 0 0 0 56 38 Z" fill="#ffffff" />
           </g>
         );
       case "curious":
         return (
           <g filter="url(#cyanGlow)">
             {/* Adorable tilted expression with a tiny floating curiosity sparkle */}
-            <rect x="29" y="25" width="9" height="13" rx="4.5" fill="#00e4ff" transform="rotate(-6 33.5 31.5)" />
-            <circle cx="32" cy="29" r="1.5" fill="#ffffff" />
+            <rect x="29" y="25" width="9" height="13" rx="4.5" fill="#ffffff" transform="rotate(-6 33.5 31.5)" />
+            <circle cx="32" cy="29" r="1.5" fill="#a1a1aa" />
 
-            <rect x="61" y="22" width="11" height="16" rx="5.5" fill="#00e4ff" transform="rotate(8 66.5 30)" />
-            <circle cx="64" cy="26" r="2" fill="#ffffff" />
+            <rect x="61" y="22" width="11" height="16" rx="5.5" fill="#ffffff" transform="rotate(8 66.5 30)" />
+            <circle cx="64" cy="26" r="2" fill="#a1a1aa" />
             
             {/* Curved questioning tiny mouth */}
-            <circle cx="50" cy="38" r="2.8" fill="#00e4ff" />
-            <path d="M 28 17 L 38 19" stroke="#00e4ff" strokeWidth="2.5" strokeLinecap="round" />
+            <circle cx="50" cy="38" r="2.8" fill="#ffffff" />
+            <path d="M 28 17 L 38 19" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" />
 
             {/* Glowing cute question symbol */}
-            <path d="M 50 18 Q 52 14 54 16 T 50 20" stroke="#00e4ff" strokeWidth="1.2" strokeLinecap="round" fill="none" className="animate-pulse" />
-            <circle cx="50" cy="22" r="0.6" fill="#00e4ff" />
+            <path d="M 50 18 Q 52 14 54 16 T 50 20" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" fill="none" className="animate-pulse" />
+            <circle cx="50" cy="22" r="0.6" fill="#ffffff" />
           </g>
         );
       case "thinking":
         return (
           <g filter="url(#cyanGlow)">
             {/* Eyes looking slightly up and in with tiny moving thought sparkles */}
-            <rect x="32" y="22" width="9" height="14" rx="4.5" fill="#00e4ff" />
-            <circle cx="34" cy="25" r="1.5" fill="#ffffff" />
+            <rect x="32" y="22" width="9" height="14" rx="4.5" fill="#ffffff" />
+            <circle cx="34" cy="25" r="1.5" fill="#a1a1aa" />
 
-            <rect x="59" y="22" width="9" height="14" rx="4.5" fill="#00e4ff" />
-            <circle cx="61" cy="25" r="1.5" fill="#ffffff" />
+            <rect x="59" y="22" width="9" height="14" rx="4.5" fill="#ffffff" />
+            <circle cx="61" cy="25" r="1.5" fill="#a1a1aa" />
 
             {/* Cute tiny straight line mouth */}
-            <rect x="46" y="37.5" width="8" height="2.5" rx="1.2" fill="#00e4ff" />
+            <rect x="46" y="37.5" width="8" height="2.5" rx="1.2" fill="#ffffff" />
             
             {/* Micro cute light thought bubbles rising */}
-            <circle cx="49" cy="18" r="1.2" fill="#00e4ff" className="animate-ping" style={{ animationDuration: "1.5s" }} />
-            <circle cx="53" cy="15" r="0.8" fill="#ffd700" className="animate-pulse" />
+            <circle cx="49" cy="18" r="1.2" fill="#ffffff" className="animate-ping" style={{ animationDuration: "1.5s" }} />
+            <circle cx="53" cy="15" r="0.8" fill="#ffffff" className="animate-pulse" />
           </g>
         );
       case "looking_left":
         return (
           <g filter="url(#cyanGlow)">
-            <rect x="26" y="24" width="10" height="15" rx="5" fill="#00e4ff" />
-            <circle cx="29" cy="28" r="1.5" fill="#ffffff" />
+            <rect x="26" y="24" width="10" height="15" rx="5" fill="#ffffff" />
+            <circle cx="29" cy="28" r="1.5" fill="#a1a1aa" />
 
-            <rect x="56" y="24" width="10" height="15" rx="5" fill="#00e4ff" />
-            <circle cx="59" cy="28" r="1.5" fill="#ffffff" />
+            <rect x="56" y="24" width="10" height="15" rx="5" fill="#ffffff" />
+            <circle cx="59" cy="28" r="1.5" fill="#a1a1aa" />
 
-            <path d="M 41 38 A 4 4 0 0 0 49 38 Z" fill="#00e4ff" />
+            <path d="M 41 38 A 4 4 0 0 0 49 38 Z" fill="#ffffff" />
           </g>
         );
       case "looking_right":
         return (
           <g filter="url(#cyanGlow)">
-            <rect x="34" y="24" width="10" height="15" rx="5" fill="#00e4ff" />
-            <circle cx="37" cy="28" r="1.5" fill="#ffffff" />
+            <rect x="34" y="24" width="10" height="15" rx="5" fill="#ffffff" />
+            <circle cx="37" cy="28" r="1.5" fill="#a1a1aa" />
 
-            <rect x="64" y="24" width="10" height="15" rx="5" fill="#00e4ff" />
-            <circle cx="67" cy="28" r="1.5" fill="#ffffff" />
+            <rect x="64" y="24" width="10" height="15" rx="5" fill="#ffffff" />
+            <circle cx="67" cy="28" r="1.5" fill="#a1a1aa" />
 
-            <path d="M 51 38 A 4 4 0 0 0 59 38 Z" fill="#00e4ff" />
+            <path d="M 51 38 A 4 4 0 0 0 59 38 Z" fill="#ffffff" />
           </g>
         );
       case "sleep":
         return (
           <g filter="url(#cyanGlow)">
             {/* Sleepy curved arches */}
-            <path d="M 29 30 Q 35 37 41 30" stroke="#007aff" strokeWidth="4.2" strokeLinecap="round" fill="none" />
-            <path d="M 59 30 Q 65 37 71 30" stroke="#007aff" strokeWidth="4.2" strokeLinecap="round" fill="none" />
+            <path d="M 29 30 Q 35 37 41 30" stroke="#ffffff" strokeWidth="4.2" strokeLinecap="round" fill="none" />
+            <path d="M 59 30 Q 65 37 71 30" stroke="#ffffff" strokeWidth="4.2" strokeLinecap="round" fill="none" />
             {/* Tiny sleeping bubble mouth */}
-            <circle cx="50" cy="38" r="2" fill="#007aff" />
+            <circle cx="50" cy="38" r="2" fill="#ffffff" />
             {/* Rising "Zzz" lettering effect done elegantly */}
-            <path d="M 72 20 L 76 20 L 72 24 L 76 24" stroke="#007aff" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" fill="none" className="animate-[bounce_2s_infinite]" />
+            <path d="M 72 20 L 76 20 L 72 24 L 76 24" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" fill="none" className="animate-[bounce_2s_infinite]" />
           </g>
         );
       case "loading":
         return (
           <g className="animate-spin" style={{ transformOrigin: "50px 32px" }}>
-            <circle cx="50" cy="32" r="11" stroke="#00e4ff" strokeWidth="3.5" strokeDasharray="14,12" fill="none" strokeLinecap="round" />
+            <circle cx="50" cy="32" r="11" stroke="#ffffff" strokeWidth="3.5" strokeDasharray="14,12" fill="none" strokeLinecap="round" />
           </g>
         );
       case "wink":
         return (
           <g filter="url(#cyanGlow)">
             {/* Smiling arch left, happy thick capsule right with high-end spark */}
-            <path d="M 28 32 Q 34 23 40 32" stroke="#00e4ff" strokeWidth="5.5" strokeLinecap="round" fill="none" />
-            <rect x="60" y="24" width="10" height="15" rx="5" fill="#00e4ff" />
-            <circle cx="63" cy="28" r="2" fill="#ffffff" />
+            <path d="M 28 32 Q 34 23 40 32" stroke="#ffffff" strokeWidth="5.5" strokeLinecap="round" fill="none" />
+            <rect x="60" y="24" width="10" height="15" rx="5" fill="#ffffff" />
+            <circle cx="63" cy="28" r="2" fill="#a1a1aa" />
             
             {/* Floating tiny heart next to the wink for extra premium cuteness */}
-            <path d="M 74 25 C 74 24, 72 23, 71 24 C 70 25, 70 27, 72 29 L 74 31 L 76 29 C 78 27, 78 25, 77 24 C 76 23, 74 24, 74 25 Z" fill="#ff4688" className="animate-pulse" />
+            <path d="M 74 25 C 74 24, 72 23, 71 24 C 70 25, 70 27, 72 29 L 74 31 L 76 29 C 78 27, 78 25, 77 24 C 76 23, 74 24, 74 25 Z" fill="#ffffff" className="animate-pulse" />
 
             {/* Big happy open mouth */}
-            <path d="M 44 37 A 6 6 0 0 0 56 37 Z" fill="#00e4ff" />
+            <path d="M 44 37 A 6 6 0 0 0 56 37 Z" fill="#ffffff" />
           </g>
         );
       case "excited":
         return (
           <g filter="url(#cyanGlow)">
             {/* Squinting closed eyes (> <) */}
-            <path d="M 28 27 L 37 32 L 28 37" stroke="#00e4ff" strokeWidth="5.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-            <path d="M 72 27 L 63 32 L 72 37" stroke="#00e4ff" strokeWidth="5.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <path d="M 28 27 L 37 32 L 28 37" stroke="#ffffff" strokeWidth="5.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <path d="M 72 27 L 63 32 L 72 37" stroke="#ffffff" strokeWidth="5.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
             {/* Super happy wide smile */}
-            <path d="M 43 36 A 7 7 0 0 0 57 36 Z" fill="#00e4ff" />
+            <path d="M 43 36 A 7 7 0 0 0 57 36 Z" fill="#ffffff" />
             {/* Double cheek glow */}
-            <circle cx="31" cy="38" r="1.5" fill="#ffffff" opacity="0.8" />
-            <circle cx="69" cy="38" r="1.5" fill="#ffffff" opacity="0.8" />
+            <circle cx="31" cy="38" r="1.5" fill="#a1a1aa" opacity="0.8" />
+            <circle cx="69" cy="38" r="1.5" fill="#a1a1aa" opacity="0.8" />
           </g>
         );
       case "surprise":
         return (
           <g filter="url(#cyanGlow)">
             {/* Giant cute wide open circular eyes with tiny shock reflections */}
-            <circle cx="34" cy="30" r="8.5" stroke="#00e4ff" strokeWidth="4" fill="none" />
-            <circle cx="34" cy="30" r="3" fill="#00e4ff" />
-            <circle cx="32.5" cy="28.5" r="1" fill="#ffffff" />
+            <circle cx="34" cy="30" r="8.5" stroke="#ffffff" strokeWidth="4" fill="none" />
+            <circle cx="34" cy="30" r="3" fill="#ffffff" />
+            <circle cx="32.5" cy="28.5" r="1" fill="#a1a1aa" />
 
-            <circle cx="66" cy="30" r="8.5" stroke="#00e4ff" strokeWidth="4" fill="none" />
-            <circle cx="66" cy="30" r="3" fill="#00e4ff" />
-            <circle cx="64.5" cy="28.5" r="1" fill="#ffffff" />
+            <circle cx="66" cy="30" r="8.5" stroke="#ffffff" strokeWidth="4" fill="none" />
+            <circle cx="66" cy="30" r="3" fill="#ffffff" />
+            <circle cx="64.5" cy="28.5" r="1" fill="#a1a1aa" />
             
-            <circle cx="50" cy="39" r="4.5" fill="#00e4ff" />
+            <circle cx="50" cy="39" r="4.5" fill="#ffffff" />
           </g>
         );
       default:
         return (
           <g filter="url(#cyanGlow)">
             {/* Default signature Faw Face: Two capsule eyes + happy glowing semi-circle smile */}
-            <rect x="30" y="24" width="10" height="15" rx="5" fill="#00e4ff" />
-            <rect x="60" y="24" width="10" height="15" rx="5" fill="#00e4ff" />
-            <circle cx="33" cy="28" r="1.8" fill="#ffffff" />
-            <circle cx="63" cy="28" r="1.8" fill="#ffffff" />
-            <path d="M 44 38 A 6 6 0 0 0 56 38 Z" fill="#00e4ff" />
+            <rect x="30" y="24" width="10" height="15" rx="5" fill="#ffffff" />
+            <rect x="60" y="24" width="10" height="15" rx="5" fill="#ffffff" />
+            <circle cx="33" cy="28" r="1.8" fill="#a1a1aa" />
+            <circle cx="63" cy="28" r="1.8" fill="#a1a1aa" />
+            <path d="M 44 38 A 6 6 0 0 0 56 38 Z" fill="#ffffff" />
           </g>
         );
     }
@@ -276,31 +277,31 @@ export default function RobotCompanion({ activeTab = "home", items = [] }: Robot
       case "cardgen":
         return (
           <g transform="translate(73, 56) rotate(-4)" className="animate-pulse">
-            <rect x="0" y="0" width="16" height="10" rx="2" fill="url(#holoAccessory)" stroke="#00e4ff" strokeWidth="0.6" opacity="0.9" />
-            <line x1="0" y1="2.8" x2="16" y2="2.8" stroke="#007aff" strokeWidth="1" />
-            <rect x="2.5" y="5.5" width="3" height="2.2" rx="0.4" fill="#ffffff" opacity="0.8" />
-            <circle cx="12" cy="6.5" r="1.2" fill="#ffd700" />
+            <rect x="0" y="0" width="16" height="10" rx="2" fill="url(#holoAccessory)" stroke="#ffffff" strokeWidth="0.6" opacity="0.9" />
+            <line x1="0" y1="2.8" x2="16" y2="2.8" stroke="#ffffff" strokeWidth="1" />
+            <rect x="2.5" y="5.5" width="3" height="2.2" rx="0.4" fill="#a1a1aa" opacity="0.8" />
+            <circle cx="12" cy="6.5" r="1.2" fill="#ffffff" />
           </g>
         );
       case "tempmail":
         return (
           <g transform="translate(72, 55) rotate(10)" className="anim-floating-accessory">
-            <path d="M 0 0 L 15 0 L 15 10 L 0 10 Z" fill="url(#holoAccessory)" stroke="#00e4ff" strokeWidth="0.6" opacity="0.9" />
-            <path d="M 0 0 L 7.5 5.5 L 15 0 M 0 10 L 5.5 6 M 15 10 L 9.5 6" stroke="#00e4ff" strokeWidth="0.5" />
+            <path d="M 0 0 L 15 0 L 15 10 L 0 10 Z" fill="url(#holoAccessory)" stroke="#ffffff" strokeWidth="0.6" opacity="0.9" />
+            <path d="M 0 0 L 7.5 5.5 L 15 0 M 0 10 L 5.5 6 M 15 10 L 9.5 6" stroke="#ffffff" strokeWidth="0.5" />
           </g>
         );
       case "addressgen":
         return (
           <g transform="translate(71, 54) rotate(-6)" className="anim-floating-accessory">
-            <path d="M 0 0 L 5 3 L 10 -1 L 15 2 L 15 11 L 10 8 L 5 12 L 0 9 Z" fill="url(#holoAccessory)" stroke="#00e4ff" strokeWidth="0.6" opacity="0.85" />
-            <line x1="5" y1="3" x2="5" y2="12" stroke="#007aff" strokeWidth="0.5" />
-            <line x1="10" y1="-1" x2="10" y2="8" stroke="#007aff" strokeWidth="0.5" />
+            <path d="M 0 0 L 5 3 L 10 -1 L 15 2 L 15 11 L 10 8 L 5 12 L 0 9 Z" fill="url(#holoAccessory)" stroke="#ffffff" strokeWidth="0.6" opacity="0.85" />
+            <line x1="5" y1="3" x2="5" y2="12" stroke="#ffffff" strokeWidth="0.5" />
+            <line x1="10" y1="-1" x2="10" y2="8" stroke="#ffffff" strokeWidth="0.5" />
           </g>
         );
       case "admin":
         return (
           <g transform="translate(73, 54)" className="animate-pulse">
-            <path d="M 0 0 L 11 0 C 11 6.5 5.5 10.5 5.5 10.5 C 5.5 10.5 0 6.5 0 0 Z" fill="url(#holoAccessory)" stroke="#00e4ff" strokeWidth="0.6" />
+            <path d="M 0 0 L 11 0 C 11 6.5 5.5 10.5 5.5 10.5 C 5.5 10.5 0 6.5 0 0 Z" fill="url(#holoAccessory)" stroke="#ffffff" strokeWidth="0.6" />
             <path d="M 3 5 L 4.8 6.8 L 8 3" stroke="#ffffff" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round" fill="none" />
           </g>
         );
@@ -326,7 +327,7 @@ export default function RobotCompanion({ activeTab = "home", items = [] }: Robot
       {/* Sparks when active profile / celebratory */}
       {activeTab === "profile" && (
         <div className="absolute inset-0 pointer-events-none">
-          <span className="absolute left-[3px] top-[7px] w-2 h-2 bg-[#00e4ff] rounded-full animate-ping opacity-60" />
+          <span className="absolute left-[3px] top-[7px] w-2 h-2 bg-white rounded-full animate-ping opacity-60" />
           <span className="absolute right-[3px] top-[1px] w-1.5 h-1.5 bg-yellow-300 rounded-full animate-ping opacity-80" />
         </div>
       )}
@@ -342,7 +343,7 @@ export default function RobotCompanion({ activeTab = "home", items = [] }: Robot
       >
         <svg
           viewBox="0 0 100 100"
-          className="w-full h-full drop-shadow-[0_4px_16px_rgba(0,180,255,0.22)]"
+          className="w-full h-full drop-shadow-[0_4px_16px_rgba(255,255,255,0.12)]"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
@@ -380,8 +381,8 @@ export default function RobotCompanion({ activeTab = "home", items = [] }: Robot
 
             {/* Holographic held assets */}
             <linearGradient id="holoAccessory" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#00e4ff" />
-              <stop offset="100%" stopColor="rgba(0, 122, 255, 0.45)" />
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="100%" stopColor="rgba(255, 255, 255, 0.45)" />
             </linearGradient>
 
             {/* Smooth glass highlight sweep */}
@@ -465,8 +466,8 @@ export default function RobotCompanion({ activeTab = "home", items = [] }: Robot
               50% { opacity: 0.95; transform: scale(1.1); }
             }
             @keyframes eyePulse {
-              0%, 100% { filter: drop-shadow(0 0 1px rgba(0,228,255,0.4)); }
-              50% { filter: drop-shadow(0 0 3.5px rgba(0,228,255,0.85)); }
+              0%, 100% { filter: drop-shadow(0 0 1px rgba(255,255,255,0.4)); }
+              50% { filter: drop-shadow(0 0 3.5px rgba(255,255,255,0.85)); }
             }
             .anim-premium-float {
               animation: fawFloat 3.2s cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite;

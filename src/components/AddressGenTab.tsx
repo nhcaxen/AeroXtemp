@@ -135,7 +135,7 @@ Title: ${identity.jobTitle}
                   }}
                   onFocus={() => setShowDropdown(true)}
                   placeholder="Search country (e.g. us, uk, india, pakistan, afghanistan)..."
-                  className="pl-9 pr-8 py-2 w-full bg-void-black border border-white/[0.08] rounded-xl text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-cyber-purple transition-all"
+                  className="pl-9 pr-8 py-2 w-full bg-void-black border border-white/[0.08] rounded-xl text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-white/30 transition-all"
                 />
                 {searchQuery && (
                   <button
@@ -191,7 +191,7 @@ Title: ${identity.jobTitle}
                         }}
                         className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all border cursor-pointer ${
                           isSelected
-                            ? "bg-cyber-purple border-cyber-purple text-white shadow-md shadow-cyber-purple/20"
+                            ? "bg-white border-white text-black shadow-md shadow-white/5"
                             : "bg-void-black border-white/[0.05] text-neutral-400 hover:text-white hover:border-white/10"
                         }`}
                       >
@@ -220,7 +220,7 @@ Title: ${identity.jobTitle}
           <button
             onClick={() => handleGenerate()}
             disabled={generating}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-cyber-purple to-indigo-600 text-white text-xs font-black uppercase tracking-widest shadow-lg hover:from-purple-600 hover:to-indigo-500 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="flex-1 py-3 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${generating ? "animate-spin" : ""}`} />
             <span>{generating ? "Randomizing..." : "Generate Identity"}</span>
@@ -242,13 +242,13 @@ Title: ${identity.jobTitle}
         <div className="flex flex-col gap-3 animate-fade-in">
           {/* Identity Header Card */}
           <div className="p-4 rounded-2xl bg-dark-card border border-white/[0.05] flex items-center gap-4 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-tr from-transparent to-cyber-purple/10 rounded-full blur-xl" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-tr from-transparent to-white/5 rounded-full blur-xl" />
             
             {/* Avatar seeds initials */}
             <img
               src={identity.avatar}
               alt="Avatar"
-              className="w-14 h-14 rounded-2xl bg-cyber-purple border border-white/10 shadow-md"
+              className="w-14 h-14 rounded-2xl bg-zinc-800 border border-white/10 shadow-md"
               referrerPolicy="no-referrer"
             />
 
@@ -261,7 +261,7 @@ Title: ${identity.jobTitle}
                   {identity.gender}
                 </span>
               </div>
-              <span className="text-[10px] text-cosmic-lilac font-mono font-medium block">
+              <span className="text-[10px] text-zinc-400 font-mono font-medium block">
                 DOB: {identity.dob} ({new Date().getFullYear() - parseInt(identity.dob.split("-")[0])} Y/O)
               </span>
             </div>
@@ -270,7 +270,7 @@ Title: ${identity.jobTitle}
           {/* Grouped Core Identity & Address Matrix */}
           <div className="p-4 rounded-2xl bg-dark-surface border border-white/[0.04] flex flex-col gap-2.5">
             <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1 border-b border-white/[0.04] pb-1">
-              <MapPin className="w-3.5 h-3.5 text-cyber-purple" />
+              <MapPin className="w-3.5 h-3.5 text-white" />
               <span>Identity & Address Matrix</span>
             </div>
 
@@ -278,7 +278,7 @@ Title: ${identity.jobTitle}
             <div className="flex justify-between items-center py-1 border-b border-white/[0.02]">
               <div className="flex flex-col">
                 <span className="text-[9px] text-neutral-500 font-bold uppercase">Street</span>
-                <span className="text-xs font-mono font-bold text-white selection:bg-cyber-purple/40">{identity.street}</span>
+                <span className="text-xs font-mono font-bold text-white selection:bg-white/10">{identity.street}</span>
               </div>
               <button
                 onClick={() => copyToClipboard(identity.street, "street")}
@@ -292,7 +292,7 @@ Title: ${identity.jobTitle}
             <div className="flex justify-between items-center py-1 border-b border-white/[0.02]">
               <div className="flex flex-col">
                 <span className="text-[9px] text-neutral-500 font-bold uppercase">City</span>
-                <span className="text-xs font-mono font-bold text-white selection:bg-cyber-purple/40">{identity.city}</span>
+                <span className="text-xs font-mono font-bold text-white selection:bg-white/10">{identity.city}</span>
               </div>
               <button
                 onClick={() => copyToClipboard(identity.city, "city")}
@@ -306,7 +306,7 @@ Title: ${identity.jobTitle}
             <div className="flex justify-between items-center py-1 border-b border-white/[0.02]">
               <div className="flex flex-col">
                 <span className="text-[9px] text-neutral-500 font-bold uppercase">State / Region</span>
-                <span className="text-xs font-mono font-bold text-white selection:bg-cyber-purple/40">{identity.state}</span>
+                <span className="text-xs font-mono font-bold text-white selection:bg-white/10">{identity.state}</span>
               </div>
               <button
                 onClick={() => copyToClipboard(identity.state, "state")}
@@ -320,7 +320,7 @@ Title: ${identity.jobTitle}
             <div className="flex justify-between items-center py-1 border-b border-white/[0.02]">
               <div className="flex flex-col">
                 <span className="text-[9px] text-neutral-500 font-bold uppercase">Postcode / Zip</span>
-                <span className="text-xs font-mono font-bold text-white selection:bg-cyber-purple/40">{identity.zip}</span>
+                <span className="text-xs font-mono font-bold text-white selection:bg-white/10">{identity.zip}</span>
               </div>
               <button
                 onClick={() => copyToClipboard(identity.zip, "zip")}
@@ -334,7 +334,7 @@ Title: ${identity.jobTitle}
             <div className="flex justify-between items-center py-1 border-b border-white/[0.02]">
               <div className="flex flex-col">
                 <span className="text-[9px] text-neutral-500 font-bold uppercase">Number</span>
-                <span className="text-xs font-mono font-bold text-white selection:bg-cyber-purple/40">{identity.phone}</span>
+                <span className="text-xs font-mono font-bold text-white selection:bg-white/10">{identity.phone}</span>
               </div>
               <button
                 onClick={() => copyToClipboard(identity.phone, "phone")}
@@ -348,7 +348,7 @@ Title: ${identity.jobTitle}
             <div className="flex justify-between items-center py-1">
               <div className="flex flex-col">
                 <span className="text-[9px] text-neutral-500 font-bold uppercase">SSN Code</span>
-                <span className="text-xs font-mono font-bold text-white selection:bg-cyber-purple/40">{identity.ssn}</span>
+                <span className="text-xs font-mono font-bold text-white selection:bg-white/10">{identity.ssn}</span>
               </div>
               <button
                 onClick={() => copyToClipboard(identity.ssn, "ssn")}
@@ -362,7 +362,7 @@ Title: ${identity.jobTitle}
           {/* Group 2: Online Credentials */}
           <div className="p-4 rounded-2xl bg-dark-surface border border-white/[0.04] flex flex-col gap-2.5">
             <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1 border-b border-white/[0.04] pb-1">
-              <Globe className="w-3.5 h-3.5 text-indigo-400" />
+              <Globe className="w-3.5 h-3.5 text-white" />
               <span>Online Profile Credentials</span>
             </div>
 
@@ -370,7 +370,7 @@ Title: ${identity.jobTitle}
             <div className="flex justify-between items-center py-1 border-b border-white/[0.02]">
               <div className="flex flex-col">
                 <span className="text-[9px] text-neutral-500 font-bold uppercase">Generated Username</span>
-                <span className="text-xs font-mono font-bold text-white selection:bg-cyber-purple/40">{identity.username}</span>
+                <span className="text-xs font-mono font-bold text-white selection:bg-white/10">{identity.username}</span>
               </div>
               <button
                 onClick={() => copyToClipboard(identity.username, "username")}
@@ -384,7 +384,7 @@ Title: ${identity.jobTitle}
             <div className="flex justify-between items-center py-1">
               <div className="flex flex-col">
                 <span className="text-[9px] text-neutral-500 font-bold uppercase">Random secure Password</span>
-                <span className="text-xs font-mono font-bold text-white selection:bg-cyber-purple/40">{identity.password}</span>
+                <span className="text-xs font-mono font-bold text-white selection:bg-white/10">{identity.password}</span>
               </div>
               <button
                 onClick={() => copyToClipboard(identity.password, "password")}
@@ -398,7 +398,7 @@ Title: ${identity.jobTitle}
           {/* Group 3: Employment Details */}
           <div className="p-4 rounded-2xl bg-dark-surface border border-white/[0.04] flex flex-col gap-2.5">
             <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1 border-b border-white/[0.04] pb-1">
-              <Briefcase className="w-3.5 h-3.5 text-teal-400" />
+              <Briefcase className="w-3.5 h-3.5 text-white" />
               <span>Occupation & Company</span>
             </div>
 
@@ -406,7 +406,7 @@ Title: ${identity.jobTitle}
             <div className="flex justify-between items-center py-1 border-b border-white/[0.02]">
               <div className="flex flex-col">
                 <span className="text-[9px] text-neutral-500 font-bold uppercase">Employer Company</span>
-                <span className="text-xs font-mono font-bold text-white selection:bg-cyber-purple/40">{identity.company}</span>
+                <span className="text-xs font-mono font-bold text-white selection:bg-white/10">{identity.company}</span>
               </div>
               <button
                 onClick={() => copyToClipboard(identity.company, "company")}
@@ -420,7 +420,7 @@ Title: ${identity.jobTitle}
             <div className="flex justify-between items-center py-1">
               <div className="flex flex-col">
                 <span className="text-[9px] text-neutral-500 font-bold uppercase">Occupation Role</span>
-                <span className="text-xs font-mono font-bold text-white selection:bg-cyber-purple/40">{identity.jobTitle}</span>
+                <span className="text-xs font-mono font-bold text-white selection:bg-white/10">{identity.jobTitle}</span>
               </div>
               <button
                 onClick={() => copyToClipboard(identity.jobTitle, "jobTitle")}

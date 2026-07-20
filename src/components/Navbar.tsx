@@ -29,12 +29,12 @@ export default function Navbar({ activeTab, onTabChange, isOwner }: NavbarProps)
   const mascotLeft = items.length > 0 ? ((activeIndex + 0.5) / items.length) * 100 : 50;
 
   return (
-    <div className="absolute bottom-4 left-4 right-4 h-[74px] rounded-[24px] bg-[#030612]/80 border border-white/[0.09] backdrop-blur-[24px] flex items-center justify-around px-2 z-40 select-none shadow-[0_12px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(0,180,255,0.15),inset_0_1px_1px_rgba(255,255,255,0.15)]">
-      {/* Liquid edge neon reflex line */}
-      <div className="absolute top-0 inset-x-6 h-[1.2px] bg-gradient-to-r from-transparent via-[#00e4ff]/60 to-transparent shadow-[0_1px_12px_rgba(0,228,255,0.6)] pointer-events-none" />
+    <div className="absolute bottom-4 left-4 right-4 h-[74px] rounded-[24px] bg-[#121212]/90 border border-white/[0.08] backdrop-blur-[24px] flex items-center justify-around px-2 z-40 select-none shadow-[0_12px_40px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.12)]">
+      {/* Liquid edge premium silver reflection line */}
+      <div className="absolute top-0 inset-x-6 h-[1.2px] bg-gradient-to-r from-transparent via-white/30 to-transparent shadow-[0_1px_8px_rgba(255,255,255,0.2)] pointer-events-none" />
       
       {/* Glossy top reflection layer resembling an iOS curved glass sheet */}
-      <div className="absolute inset-x-0 top-0 bottom-1/2 rounded-t-[24px] bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 bottom-1/2 rounded-t-[24px] bg-gradient-to-b from-white/[0.05] to-transparent pointer-events-none" />
 
       {/* Redesigned Premium Floating Mascot centered precisely above the active tab button with high-end physics spring */}
       <motion.div
@@ -50,12 +50,12 @@ export default function Navbar({ activeTab, onTabChange, isOwner }: NavbarProps)
         <RobotCompanion activeTab={activeTab} items={items} />
       </motion.div>
 
-      {/* SVG Definitions for the premium neon gradient fill/stroke */}
+      {/* SVG Definitions for the premium monochrome silver gradient fill/stroke */}
       <svg className="absolute w-0 h-0" width="0" height="0">
         <defs>
           <linearGradient id="activeTabGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#00e4ff" />
-            <stop offset="100%" stopColor="#007aff" />
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="100%" stopColor="#a1a1aa" />
           </linearGradient>
         </defs>
       </svg>
@@ -80,7 +80,7 @@ export default function Navbar({ activeTab, onTabChange, isOwner }: NavbarProps)
                   stiffness: 380,
                   damping: 30
                 }}
-                className="absolute inset-x-1 inset-y-1.5 rounded-[18px] bg-white/5 border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] -z-10"
+                className="absolute inset-x-1 inset-y-1.5 rounded-[18px] bg-white/5 border border-white/8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] -z-10"
               />
             )}
 
@@ -103,7 +103,7 @@ export default function Navbar({ activeTab, onTabChange, isOwner }: NavbarProps)
             <span
               className={`text-[8px] font-black uppercase tracking-widest mt-0.5 transition-all duration-300 ${
                 isActive 
-                  ? "text-[#00e4ff]" 
+                  ? "text-white" 
                   : "text-slate-500 group-hover:text-slate-400"
               }`}
             >

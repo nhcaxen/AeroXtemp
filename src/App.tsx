@@ -50,6 +50,11 @@ export default function App() {
       initialDisplay = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") || "Telegram Member";
       initialPhotoUrl = tgUser.photo_url || "";
       
+      // Save to localStorage immediately so other tabs read the correct TG ID
+      localStorage.setItem("aerox_tg_id", initialId);
+      localStorage.setItem("aerox_tg_user", initialUser);
+      localStorage.setItem("aerox_tg_display", initialDisplay);
+
       const startParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
       if (startParam) {
         referrerId = startParam;
@@ -88,7 +93,7 @@ export default function App() {
           />
         );
       case "cardgen":
-        return <ShopTab />;
+        return <ShopTab userRole={userProfile?.role} />;
       case "tempmail":
         return <TempMailTab />;
       case "addressgen":
