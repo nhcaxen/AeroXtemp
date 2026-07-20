@@ -131,26 +131,28 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
   const mainCards = [
     {
       id: "cardgen" as TabId, // Shop Tab ID (aliased back to original routing)
-      tag: "PREMIUM STORE",
-      title: "AeroX Premium Shop",
+      tag: "PREMIUM MARKET",
+      title: "AeroX Market",
       subtitle: "Instant Premium Shared Accounts",
       description: "Get immediate access to premium shared subscriptions & tools.",
-      btnText: "Open Shop",
-      color: "from-[#2c2c2e] via-[#1c1c1e] to-[#0a0a0a]",
-      borderColor: "border-white/10 hover:border-white/20",
-      textColor: "text-zinc-300",
+      btnText: "Open Market",
+      color: "from-rose-500/25 via-rose-950/20 to-[#0a0304]",
+      borderColor: "border-rose-500/20 hover:border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.08)]",
+      textColor: "text-rose-300",
+      tagColor: "text-rose-400",
       graphicType: "shop"
     },
     {
       id: "tempmail" as TabId, // Temp Mail Tab ID
       tag: "DISPOSABLE INBOX",
-      title: "Temp Mail Sandbox",
+      title: "Temp Mail",
       subtitle: "Instant Free Live Mailbox",
       description: "Receive private validation and OTP confirmation emails live.",
       btnText: "Open Mailbox",
-      color: "from-[#242426] via-[#1c1c1e] to-[#0a0a0a]",
-      borderColor: "border-white/10 hover:border-white/20",
-      textColor: "text-zinc-300",
+      color: "from-amber-500/20 via-amber-950/10 to-[#0a0805]",
+      borderColor: "border-amber-500/20 hover:border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.08)]",
+      textColor: "text-amber-300",
+      tagColor: "text-amber-400",
       graphicType: "mail"
     },
     {
@@ -160,9 +162,10 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
       subtitle: "Premium Billing Identity Profiles",
       description: "Deploy highly realistic billing addresses and fake SSN info.",
       btnText: "Generate Now",
-      color: "from-[#1e1e1f] via-[#1c1c1e] to-[#0a0a0a]",
-      borderColor: "border-white/10 hover:border-white/20",
-      textColor: "text-zinc-300",
+      color: "from-purple-500/20 via-purple-950/20 to-[#06040a]",
+      borderColor: "border-purple-500/20 hover:border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.08)]",
+      textColor: "text-purple-300",
+      tagColor: "text-purple-400",
       graphicType: "identity"
     }
   ];
@@ -236,7 +239,7 @@ export default function HomeTab({ onTabChange }: HomeTabProps) {
                 <div className="flex-1 flex flex-col justify-between h-full min-w-0 py-0.5">
                   <div>
                     {/* Tiny Tag */}
-                    <span className="text-[7px] font-black tracking-widest uppercase text-slate-400 mb-1.5 block">
+                    <span className={`text-[7px] font-black tracking-widest uppercase mb-1.5 block ${activeSlide.tagColor || "text-slate-400"}`}>
                       {activeSlide.tag}
                     </span>
                     

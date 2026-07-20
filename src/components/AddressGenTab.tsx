@@ -191,7 +191,7 @@ Title: ${identity.jobTitle}
                         }}
                         className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all border cursor-pointer ${
                           isSelected
-                            ? "bg-white border-white text-black shadow-md shadow-white/5"
+                            ? "bg-gradient-to-r from-rose-500 to-rose-600 border-rose-500/40 text-white shadow-md shadow-rose-500/10"
                             : "bg-void-black border-white/[0.05] text-neutral-400 hover:text-white hover:border-white/10"
                         }`}
                       >
@@ -220,7 +220,7 @@ Title: ${identity.jobTitle}
           <button
             onClick={() => handleGenerate()}
             disabled={generating}
-            className="flex-1 py-3 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white text-xs font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 border border-rose-500/20 shadow-rose-500/10"
           >
             <RefreshCw className={`w-4 h-4 ${generating ? "animate-spin" : ""}`} />
             <span>{generating ? "Randomizing..." : "Generate Identity"}</span>

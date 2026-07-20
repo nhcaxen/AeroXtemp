@@ -69,113 +69,125 @@ async function startServer() {
 
     // Auto-create new marketplace tables if they don't exist
     try {
-      console.log("[DB] Auto-creating/verifying marketplace tables...");
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS "seller_applications" (
-          "id" SERIAL PRIMARY KEY,
-          "telegram_id" TEXT NOT NULL,
-          "username" TEXT,
-          "store_name" TEXT NOT NULL,
-          "telegram_username" TEXT NOT NULL,
-          "store_logo" TEXT,
-          "store_description" TEXT NOT NULL,
-          "crypto_wallet" TEXT NOT NULL,
-          "products_to_sell" TEXT NOT NULL,
-          "status" TEXT DEFAULT 'pending',
-          "created_at" TIMESTAMP DEFAULT NOW(),
-          "updated_at" TIMESTAMP DEFAULT NOW()
-        );
-      `);
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS "sellers" (
-          "id" SERIAL PRIMARY KEY,
-          "telegram_id" TEXT UNIQUE NOT NULL,
-          "username" TEXT,
-          "store_name" TEXT NOT NULL,
-          "telegram_username" TEXT NOT NULL,
-          "store_logo" TEXT,
-          "store_description" TEXT NOT NULL,
-          "crypto_wallet" TEXT NOT NULL,
-          "rating" TEXT DEFAULT '5.0',
-          "completed_orders" INTEGER DEFAULT 0,
-          "response_time" TEXT DEFAULT '~15 mins',
-          "is_verified" INTEGER DEFAULT 0,
-          "status" TEXT DEFAULT 'active',
-          "joined_at" TIMESTAMP DEFAULT NOW()
-        );
-      `);
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS "marketplace_products" (
-          "id" SERIAL PRIMARY KEY,
-          "seller_telegram_id" TEXT NOT NULL,
-          "category" TEXT NOT NULL,
-          "name" TEXT NOT NULL,
-          "price" INTEGER NOT NULL,
-          "description" TEXT,
-          "stock_status" TEXT DEFAULT 'in_stock',
-          "logo" TEXT,
-          "created_at" TIMESTAMP DEFAULT NOW()
-        );
-      `);
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS "marketplace_orders" (
-          "id" SERIAL PRIMARY KEY,
-          "order_id" TEXT UNIQUE NOT NULL,
-          "buyer_telegram_id" TEXT NOT NULL,
-          "buyer_username" TEXT,
-          "seller_telegram_id" TEXT NOT NULL,
-          "product_id" INTEGER NOT NULL,
-          "product_name" TEXT NOT NULL,
-          "product_category" TEXT NOT NULL,
-          "price" INTEGER NOT NULL,
-          "status" TEXT DEFAULT 'pending',
-          "deal_group_link" TEXT,
-          "created_at" TIMESTAMP DEFAULT NOW(),
-          "updated_at" TIMESTAMP DEFAULT NOW()
-        );
-      `);
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS "marketplace_ratings" (
-          "id" SERIAL PRIMARY KEY,
-          "order_id" TEXT NOT NULL,
-          "buyer_telegram_id" TEXT NOT NULL,
-          "seller_telegram_id" TEXT NOT NULL,
-          "rating" INTEGER NOT NULL,
-          "review" TEXT,
-          "created_at" TIMESTAMP DEFAULT NOW()
-        );
-      `);
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS "marketplace_fees" (
-          "id" SERIAL PRIMARY KEY,
-          "order_id" TEXT NOT NULL,
-          "amount" INTEGER NOT NULL,
-          "fee" INTEGER NOT NULL,
-          "seller_receives" INTEGER NOT NULL,
-          "created_at" TIMESTAMP DEFAULT NOW()
-        );
-      `);
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS "marketplace_notifications" (
-          "id" SERIAL PRIMARY KEY,
-          "telegram_id" TEXT NOT NULL,
-          "title" TEXT NOT NULL,
-          "message" TEXT NOT NULL,
-          "type" TEXT NOT NULL,
-          "is_read" INTEGER DEFAULT 0,
-          "created_at" TIMESTAMP DEFAULT NOW()
-        );
-      `);
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS "marketplace_stats" (
-          "id" SERIAL PRIMARY KEY,
-          "total_sales" INTEGER DEFAULT 0,
-          "total_volume" INTEGER DEFAULT 0,
-          "total_commission" INTEGER DEFAULT 0,
-          "updated_at" TIMESTAMP DEFAULT NOW()
-        );
-      `);
-      console.log("[DB] Marketplace tables verified/created successfully.");
+      let tablesExist = false;
+      try {
+        await db.execute(sql`SELECT 1 FROM "seller_applications" LIMIT 1;`);
+        tablesExist = true;
+      } catch (e) {
+        // Tables do not exist yet
+      }
+
+      if (!tablesExist) {
+        console.log("[DB] Auto-creating/verifying marketplace tables...");
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS "seller_applications" (
+            "id" SERIAL PRIMARY KEY,
+            "telegram_id" TEXT NOT NULL,
+            "username" TEXT,
+            "store_name" TEXT NOT NULL,
+            "telegram_username" TEXT NOT NULL,
+            "store_logo" TEXT,
+            "store_description" TEXT NOT NULL,
+            "crypto_wallet" TEXT NOT NULL,
+            "products_to_sell" TEXT NOT NULL,
+            "status" TEXT DEFAULT 'pending',
+            "created_at" TIMESTAMP DEFAULT NOW(),
+            "updated_at" TIMESTAMP DEFAULT NOW()
+          );
+        `);
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS "sellers" (
+            "id" SERIAL PRIMARY KEY,
+            "telegram_id" TEXT UNIQUE NOT NULL,
+            "username" TEXT,
+            "store_name" TEXT NOT NULL,
+            "telegram_username" TEXT NOT NULL,
+            "store_logo" TEXT,
+            "store_description" TEXT NOT NULL,
+            "crypto_wallet" TEXT NOT NULL,
+            "rating" TEXT DEFAULT '5.0',
+            "completed_orders" INTEGER DEFAULT 0,
+            "response_time" TEXT DEFAULT '~15 mins',
+            "is_verified" INTEGER DEFAULT 0,
+            "status" TEXT DEFAULT 'active',
+            "joined_at" TIMESTAMP DEFAULT NOW()
+          );
+        `);
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS "marketplace_products" (
+            "id" SERIAL PRIMARY KEY,
+            "seller_telegram_id" TEXT NOT NULL,
+            "category" TEXT NOT NULL,
+            "name" TEXT NOT NULL,
+            "price" INTEGER NOT NULL,
+            "description" TEXT,
+            "stock_status" TEXT DEFAULT 'in_stock',
+            "logo" TEXT,
+            "created_at" TIMESTAMP DEFAULT NOW()
+          );
+        `);
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS "marketplace_orders" (
+            "id" SERIAL PRIMARY KEY,
+            "order_id" TEXT UNIQUE NOT NULL,
+            "buyer_telegram_id" TEXT NOT NULL,
+            "buyer_username" TEXT,
+            "seller_telegram_id" TEXT NOT NULL,
+            "product_id" INTEGER NOT NULL,
+            "product_name" TEXT NOT NULL,
+            "product_category" TEXT NOT NULL,
+            "price" INTEGER NOT NULL,
+            "status" TEXT DEFAULT 'pending',
+            "deal_group_link" TEXT,
+            "created_at" TIMESTAMP DEFAULT NOW(),
+            "updated_at" TIMESTAMP DEFAULT NOW()
+          );
+        `);
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS "marketplace_ratings" (
+            "id" SERIAL PRIMARY KEY,
+            "order_id" TEXT NOT NULL,
+            "buyer_telegram_id" TEXT NOT NULL,
+            "seller_telegram_id" TEXT NOT NULL,
+            "rating" INTEGER NOT NULL,
+            "review" TEXT,
+            "created_at" TIMESTAMP DEFAULT NOW()
+          );
+        `);
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS "marketplace_fees" (
+            "id" SERIAL PRIMARY KEY,
+            "order_id" TEXT NOT NULL,
+            "amount" INTEGER NOT NULL,
+            "fee" INTEGER NOT NULL,
+            "seller_receives" INTEGER NOT NULL,
+            "created_at" TIMESTAMP DEFAULT NOW()
+          );
+        `);
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS "marketplace_notifications" (
+            "id" SERIAL PRIMARY KEY,
+            "telegram_id" TEXT NOT NULL,
+            "title" TEXT NOT NULL,
+            "message" TEXT NOT NULL,
+            "type" TEXT NOT NULL,
+            "is_read" INTEGER DEFAULT 0,
+            "created_at" TIMESTAMP DEFAULT NOW()
+          );
+        `);
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS "marketplace_stats" (
+            "id" SERIAL PRIMARY KEY,
+            "total_sales" INTEGER DEFAULT 0,
+            "total_volume" INTEGER DEFAULT 0,
+            "total_commission" INTEGER DEFAULT 0,
+            "updated_at" TIMESTAMP DEFAULT NOW()
+          );
+        `);
+        console.log("[DB] Marketplace tables verified/created successfully.");
+      } else {
+        console.log("[DB] Marketplace tables already exist. Skipping auto-creation.");
+      }
     } catch (err: any) {
       console.warn("[DB WARNING] Failed to auto-create marketplace tables:", err.message);
     }

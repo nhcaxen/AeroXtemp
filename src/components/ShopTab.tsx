@@ -1141,7 +1141,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                 onClick={() => { setMarketSubTab("buyer"); setErrorMsg(null); }}
                 className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer text-center ${
                   marketSubTab === "buyer"
-                    ? "bg-white text-black shadow-md font-extrabold"
+                    ? "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md font-extrabold border border-rose-500/20 shadow-rose-500/10"
                     : "text-neutral-500 hover:text-neutral-300"
                 }`}
               >
@@ -1153,7 +1153,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                   onClick={() => { setMarketSubTab("seller"); setErrorMsg(null); }}
                   className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer text-center ${
                     marketSubTab === "seller"
-                      ? "bg-white text-black shadow-md font-extrabold"
+                      ? "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md font-extrabold border border-rose-500/20 shadow-rose-500/10"
                       : "text-neutral-500 hover:text-neutral-300"
                   }`}
                 >
@@ -1166,7 +1166,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                   onClick={() => { setMarketSubTab("admin"); setErrorMsg(null); }}
                   className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer text-center ${
                     marketSubTab === "admin"
-                      ? "bg-white text-black shadow-md font-extrabold"
+                      ? "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md font-extrabold border border-rose-500/20 shadow-rose-500/10"
                       : "text-neutral-500 hover:text-neutral-300"
                   }`}
                 >
@@ -1257,7 +1257,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                 onClick={() => { setSelectedMarketProduct(null); setCheckoutOffering(null); setSelectedOrder(null); }}
                 className={`py-2 rounded-lg text-[9px] font-black tracking-wider uppercase transition-all cursor-pointer text-center ${
                   !selectedOrder
-                    ? "bg-white/10 border border-white/20 text-white font-extrabold shadow-sm"
+                    ? "bg-[#0a0304] border border-rose-500/30 text-rose-300 font-extrabold shadow-[0_0_15px_rgba(244,63,94,0.08)]"
                     : "border border-transparent text-neutral-500 hover:text-neutral-300"
                 }`}
               >
@@ -1275,7 +1275,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                 }}
                 className={`py-2 rounded-lg text-[9px] font-black tracking-wider uppercase transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   selectedOrder
-                    ? "bg-white/10 border border-white/20 text-white font-extrabold shadow-sm"
+                    ? "bg-[#0a0304] border border-rose-500/30 text-rose-300 font-extrabold shadow-[0_0_15px_rgba(244,63,94,0.08)]"
                     : "border border-transparent text-neutral-500 hover:text-neutral-300"
                 }`}
               >
@@ -1505,7 +1505,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                         </div>
                         <button
                           onClick={() => { setMarketSubTab("seller"); setErrorMsg(null); }}
-                          className="px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black font-black text-[9px] uppercase tracking-wider active:scale-95 transition-all cursor-pointer shadow-md shrink-0 font-mono"
+                          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 border border-rose-500/20 text-white font-black text-[9px] uppercase tracking-wider active:scale-95 transition-all cursor-pointer shadow-lg shadow-rose-500/10 shrink-0 font-mono"
                         >
                           {sellerApp ? "View Status" : "Apply Now"}
                         </button>
@@ -1575,7 +1575,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                             {/* Buy offering button */}
                             <button
                               onClick={() => setCheckoutOffering(offering)}
-                              className="py-3 rounded-xl bg-white hover:bg-zinc-200 text-black text-[9px] font-black tracking-widest uppercase transition-all text-center cursor-pointer shadow-md active:scale-[0.98]"
+                              className="py-3 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 border border-rose-500/20 text-white text-[9px] font-black tracking-widest uppercase transition-all text-center cursor-pointer shadow-lg shadow-rose-500/10 active:scale-[0.98]"
                             >
                               🛒 Request Escrow Deal
                             </button>
@@ -1625,14 +1625,14 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                           <div className="flex gap-3 pt-2">
                             <button
                               onClick={() => setCheckoutOffering(null)}
-                              className="flex-1 py-2.5 rounded-xl border border-white/[0.05] bg-slate-900 hover:bg-slate-800 text-neutral-300 text-[10px] font-black tracking-widest uppercase transition-all cursor-pointer"
+                              className="flex-1 py-2.5 rounded-xl border border-rose-500/10 hover:border-rose-500/30 bg-[#0a0304] hover:bg-rose-950/20 text-neutral-300 hover:text-rose-300 text-[10px] font-black tracking-widest uppercase transition-all cursor-pointer"
                             >
                               Cancel
                             </button>
                             <button
                               onClick={() => handleBuyMarketplaceProduct(checkoutOffering)}
                               disabled={orderActionLoading}
-                              className="flex-1 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-[10px] font-black tracking-widest uppercase transition-all text-center cursor-pointer disabled:opacity-50"
+                              className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 border border-rose-500/20 text-white text-[10px] font-black tracking-widest uppercase transition-all text-center cursor-pointer disabled:opacity-50 shadow-lg shadow-rose-500/10"
                             >
                               {orderActionLoading ? "CREATING DEAL..." : "AUTHORIZE DEAL"}
                             </button>
@@ -1752,7 +1752,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                           onClick={() => {
                             setSellerApp(null); // Clears application to let them resubmit
                           }}
-                          className="w-full py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-black tracking-widest uppercase transition-all text-center cursor-pointer"
+                          className="w-full py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 border border-rose-500/20 text-white text-xs font-black tracking-widest uppercase transition-all text-center cursor-pointer shadow-lg shadow-rose-500/10"
                         >
                           ✏️ Modify & Re-Apply
                         </button>
@@ -1842,7 +1842,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                     <button
                       type="submit"
                       disabled={submittingApp}
-                      className="mt-2 w-full py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-black tracking-widest uppercase transition-all text-center cursor-pointer shadow-lg disabled:opacity-50"
+                      className="mt-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 border border-rose-500/20 text-white text-xs font-black tracking-widest uppercase transition-all text-center cursor-pointer shadow-lg shadow-rose-500/10 disabled:opacity-50"
                     >
                       {submittingApp ? "SUBMITTING PROPOSAL..." : "SUBMIT APPLICATION"}
                     </button>
@@ -1850,7 +1850,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                     <button
                       type="button"
                       onClick={() => setMarketSubTab("buyer")}
-                      className="w-full py-2.5 rounded-xl bg-slate-900 border border-white/[0.04] text-neutral-400 hover:text-white text-xs font-black tracking-widest uppercase transition-all text-center cursor-pointer"
+                      className="w-full py-2.5 rounded-xl bg-[#0a0304] border border-rose-500/10 hover:border-rose-500/30 text-neutral-400 hover:text-rose-300 text-xs font-black tracking-widest uppercase transition-all text-center cursor-pointer"
                     >
                       ← Cancel & Back to Market
                     </button>
@@ -1935,7 +1935,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                     <button
                       type="submit"
                       disabled={savingSettings}
-                      className="w-full py-2 bg-white hover:bg-zinc-200 text-black text-[10px] font-black tracking-widest uppercase rounded-xl transition-all cursor-pointer"
+                      className="w-full py-2 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 border border-rose-500/20 text-white text-[10px] font-black tracking-widest uppercase rounded-xl transition-all cursor-pointer shadow-lg shadow-rose-500/10"
                     >
                       {savingSettings ? "SAVING..." : "SAVE STORE SETTINGS"}
                     </button>
@@ -1975,7 +1975,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                             <button
                               onClick={() => handleSellerRespondOrder(selectedOrder.id, "accept")}
                               disabled={orderActionLoading}
-                              className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[9px] uppercase tracking-wider rounded-lg cursor-pointer text-center"
+                              className="flex-1 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 border border-emerald-500/20 text-white font-black text-[9px] uppercase tracking-wider rounded-lg cursor-pointer text-center shadow-md shadow-emerald-500/10"
                             >
                               ✅ Accept Deal
                             </button>
@@ -2002,7 +2002,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                           <button
                             onClick={() => handleUpdateOrderStatus(selectedOrder.id, "delivering")} // Triggers delivery notify in backend
                             disabled={orderActionLoading}
-                            className="mt-1 w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-black text-[9px] uppercase tracking-widest rounded-lg cursor-pointer text-center"
+                            className="mt-1 w-full py-2 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 border border-rose-500/20 text-white font-black text-[9px] uppercase tracking-widest rounded-lg cursor-pointer text-center shadow-lg shadow-rose-500/10"
                           >
                             📤 Notify Credentials Delivered
                           </button>
@@ -2020,7 +2020,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                             href={selectedOrder.dealGroupLink} 
                             target="_blank" 
                             rel="noreferrer" 
-                            className="py-2.5 rounded-xl bg-indigo-600 text-white text-center font-black tracking-widest text-[9px] uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            className="py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 border border-rose-500/20 text-white text-center font-black tracking-widest text-[9px] uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-rose-500/10"
                           >
                             <Send className="w-3.5 h-3.5" />
                             Open Telegram Deal chat
@@ -2031,7 +2031,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
 
                     <button
                       onClick={() => setSelectedOrder(null)}
-                      className="py-2.5 rounded-xl border border-white/[0.05] bg-white/5 text-neutral-400 text-[9px] font-black tracking-widest uppercase cursor-pointer text-center"
+                      className="py-2.5 rounded-xl border border-rose-500/10 hover:border-rose-500/30 bg-[#0a0304] text-neutral-400 hover:text-rose-300 text-[9px] font-black tracking-widest uppercase cursor-pointer text-center transition-all"
                     >
                       Back to Dashboard
                     </button>
@@ -2044,7 +2044,11 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                     <div className="grid grid-cols-2 gap-1 bg-[#02040c]/50 p-1 rounded-xl border border-white/[0.02]">
                       <button
                         onClick={() => { setShowAddProductModal(false); setShowEditProductModal(null); }}
-                        className="py-1.5 rounded-lg text-[9px] font-black tracking-wider uppercase transition-all cursor-pointer bg-white/5 text-white"
+                        className={`py-1.5 rounded-lg text-[9px] font-black tracking-wider uppercase transition-all cursor-pointer ${
+                          !showAddProductModal && !showEditProductModal
+                            ? "bg-[#0a0304] border border-rose-500/30 text-rose-300 font-extrabold shadow-[0_0_15px_rgba(244,63,94,0.08)]"
+                            : "border border-transparent text-neutral-500 hover:text-neutral-300"
+                        }`}
                       >
                         🏪 Listed Items ({sellerProducts.length})
                       </button>
@@ -2057,7 +2061,11 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                             setErrorMsg("No incoming deals have been assigned to your store yet.");
                           }
                         }}
-                        className="py-1.5 rounded-lg text-[9px] font-black tracking-wider uppercase transition-all cursor-pointer text-neutral-500 hover:text-neutral-300"
+                        className={`py-1.5 rounded-lg text-[9px] font-black tracking-wider uppercase transition-all cursor-pointer ${
+                          selectedOrder
+                            ? "bg-[#0a0304] border border-rose-500/30 text-rose-300 font-extrabold shadow-[0_0_15px_rgba(244,63,94,0.08)]"
+                            : "border border-transparent text-neutral-500 hover:text-neutral-300"
+                        }`}
                       >
                         📥 Incoming Deals ({sellerOrders.length})
                       </button>
@@ -2077,7 +2085,7 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                             setProdStockStatus("in_stock");
                             setShowAddProductModal(true);
                           }}
-                          className="py-1 px-2.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[9px] font-black uppercase font-mono flex items-center gap-1 cursor-pointer"
+                          className="py-1 px-2.5 rounded-lg bg-[#0a0304] border border-rose-500/20 hover:border-rose-500/40 text-rose-300 hover:text-rose-200 text-[9px] font-black uppercase font-mono flex items-center gap-1 cursor-pointer transition-all"
                         >
                           <Plus className="w-3 h-3" />
                           Add Listing
@@ -2212,14 +2220,14 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                               <button
                                 type="button"
                                 onClick={() => setShowAddProductModal(false)}
-                                className="flex-1 py-2 rounded-xl border border-white/[0.05] bg-slate-900 text-neutral-300 text-[10px] font-black uppercase"
+                                className="flex-1 py-2 rounded-xl border border-rose-500/10 hover:border-rose-500/30 bg-[#0a0304] hover:bg-rose-950/20 text-neutral-300 hover:text-rose-300 text-[10px] font-black uppercase transition-all cursor-pointer"
                               >
                                 Dismiss
                               </button>
                               <button
                                 type="submit"
                                 disabled={submittingProduct}
-                                className="flex-1 py-2 rounded-xl bg-white hover:bg-zinc-200 text-black text-[10px] font-black uppercase"
+                                className="flex-1 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 border border-rose-500/20 text-white text-[10px] font-black uppercase transition-all cursor-pointer shadow-lg shadow-rose-500/10"
                               >
                                 {submittingProduct ? "LISTING..." : "LIST DEPLOY"}
                               </button>
@@ -2308,14 +2316,14 @@ export default function ShopTab({ userRole: initialUserRole }: { userRole?: stri
                               <button
                                 type="button"
                                 onClick={() => setShowEditProductModal(null)}
-                                className="flex-1 py-2 rounded-xl border border-white/[0.05] bg-slate-900 text-neutral-300 text-[10px] font-black uppercase"
+                                className="flex-1 py-2 rounded-xl border border-rose-500/10 hover:border-rose-500/30 bg-[#0a0304] hover:bg-rose-950/20 text-neutral-300 hover:text-rose-300 text-[10px] font-black uppercase transition-all cursor-pointer"
                               >
                                 Dismiss
                               </button>
                               <button
                                 type="submit"
                                 disabled={submittingProduct}
-                                className="flex-1 py-2 rounded-xl bg-white hover:bg-zinc-200 text-black text-[10px] font-black uppercase"
+                                className="flex-1 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 border border-rose-500/20 text-white text-[10px] font-black uppercase transition-all cursor-pointer shadow-lg shadow-rose-500/10"
                               >
                                 {submittingProduct ? "SAVING..." : "SAVE UPDATE"}
                               </button>

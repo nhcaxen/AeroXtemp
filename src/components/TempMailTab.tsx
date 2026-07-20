@@ -636,7 +636,7 @@ export default function TempMailTab() {
           }}
           className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${
             mode === "active"
-              ? "bg-white text-black shadow-md font-extrabold"
+              ? "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md font-extrabold border border-rose-500/20 shadow-rose-500/10"
               : "text-neutral-400 hover:text-neutral-200"
           }`}
         >
@@ -650,7 +650,7 @@ export default function TempMailTab() {
           }}
           className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${
             mode === "recovery"
-              ? "bg-white text-black shadow-md font-extrabold"
+              ? "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md font-extrabold border border-rose-500/20 shadow-rose-500/10"
               : "text-neutral-400 hover:text-neutral-200"
           }`}
         >
@@ -721,16 +721,16 @@ export default function TempMailTab() {
               <button
                 onClick={() => handleRefreshInbox(true)}
                 disabled={refreshing || loadingAddress || !emailAddress}
-                className="py-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] active:scale-95 text-xs font-bold text-white border border-white/[0.05] transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
+                className="py-2.5 rounded-xl bg-white/[0.03] hover:bg-rose-950/20 hover:text-rose-300 hover:border-rose-500/20 active:scale-95 text-xs font-bold text-white border border-white/[0.05] transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-zinc-400" : ""}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-rose-400" : ""}`} />
                 <span>{refreshing ? "Refreshing..." : "Refresh Inbox"}</span>
               </button>
 
               <button
                 onClick={handleDeleteMailbox}
                 disabled={loadingAddress}
-                className="py-2.5 rounded-xl bg-white hover:bg-zinc-200 active:scale-95 text-xs font-black uppercase text-black shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
+                className="py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 border border-rose-500/20 shadow-lg shadow-rose-500/10 active:scale-95 text-xs font-black uppercase text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
                 title="Delete current mailbox and register a brand new one"
               >
                 <Trash2 className="w-3.5 h-3.5" />
